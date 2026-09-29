@@ -1,0 +1,25 @@
+# A Casa em Silencio - regenera todas as versoes a partir da cena principal.
+#   01_Cena_Render_Cycles\casa_em_silencio.blend  (FONTE: modele aqui)
+#     -> 02_Cena_VR_Otimizada  (Unity / Unreal: .blend, .glb, .fbx)
+#     -> 04_ThreeJS\web         (WebXR: cena.glb, lightmaps, cena.json)
+#
+# Uso:  .\atualizar_tudo.ps1            (padrao: ~6 min no total)
+#       .\atualizar_tudo.ps1 rapido     (teste: ~3 min no total)
+#       .\atualizar_tudo.ps1 alta       (qualidade maxima: ~30-60 min)
+$ErrorActionPreference = "Stop"
+$B = "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe"
+$D = $PSScriptRoot
+
+Write-Host "1/2  Gerando versao VR (Unity/Unreal)..."
+Push-Location "$D\02_Cena_VR_Otimizada"
+& $B -b "$D\01_Cena_Render_Cycles\casa_em_silencio.blend" --python "otimizar_para_vr.py" *> vr_log.txt
+Pop-Location
+Select-String -Path "$D\02_Cena_VR_Otimizada\vr_log.txt" -Pattern '^\[VR\] TOTAL' | ForEach-Object { $_.Line }
+
+Write-Host "2/2  Gerando versao three.js (bake de lightmaps)..."
+Push-Location "$D\04_ThreeJS"
+& $B -b "$D\02_Cena_VR_Otimizada\casa_em_silencio_VR.blend" --python "pipeline_threejs.py" -- $args *> pipeline_log.txt
+Pop-Location
+Select-String -Path "$D\04_ThreeJS\pipeline_log.txt" -Pattern '^\[THREE\]' | ForEach-Object { $_.Line }
+
+Write-Host "Pronto. Para ver no navegador: 04_ThreeJS\web\iniciar_servidor.bat"

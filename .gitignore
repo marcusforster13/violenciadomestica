@@ -1,0 +1,10 @@
+# gerados / temporarios
+*.blend1
+*_log.txt
+vr_log.txt
+_cache_texturas/
+01_Cena_Render_Cycles/backup/
+.claude/
+__pycache__/
+Thumbs.db
+desktop.ini

@@ -1,0 +1,469 @@
+"""
+A Casa em Silencio - gera a versao otimizada para VR a partir da cena de render.
+
+Uso (linha de comando):
+  blender -b ../01_Cena_Render_Cycles/casa_em_silencio.blend --python otimizar_para_vr.py
+Saidas nesta pasta: casa_em_silencio_VR.blend, .glb, .fbx, texturas/ e RELATORIO_VR.txt
+A cena original NAO e alterada (o script salva com outro nome).
+"""
+import bpy, bmesh, math, os, random
+import numpy as np
+from collections import defaultdict
+from mathutils import Vector, Matrix
+
+try:
+    OUT = os.path.dirname(os.path.abspath(bpy.path.abspath(bpy.context.space_data.text.filepath)))
+except Exception:
+    OUT = ""
+if not os.path.isdir(OUT):
+    OUT = os.path.dirname(os.path.abspath(__file__))
+if not os.path.isdir(OUT) or OUT.lower().endswith(".blend"):
+    OUT = os.path.join(os.path.expanduser("~"), "Downloads", "DV", "02_Cena_VR_Otimizada")
+TEX_DIR = os.path.join(OUT, "texturas")
+os.makedirs(TEX_DIR, exist_ok=True)
+scene = bpy.context.scene
+rnd = random.Random(2026)
+PI = math.pi
+log = []
+
+def say(msg):
+    print("[VR] " + msg); log.append(msg)
+
+def tri_count(objs=None):
+    dg = bpy.context.evaluated_depsgraph_get()
+    per = defaultdict(int)
+    for ob in (objs or scene.objects):
+        if ob.type not in {"MESH", "CURVE", "FONT"} or ob.hide_render:
+            continue
+        if any(c.hide_render for c in ob.users_collection):
+            continue
+        ev = ob.evaluated_get(dg)
+        try:
+            me = ev.to_mesh()
+        except Exception:
+            continue
+        if me:
+            me.calc_loop_triangles()
+            per[ob.users_collection[0].name if ob.users_collection else "?"] += len(me.loop_triangles)
+            ev.to_mesh_clear()
+    return per
+
+# ------------------------------------------------------------------ 1. limpar o que nao vai para VR
+def remove_collection_objects(name):
+    c = bpy.data.collections.get(name)
+    if c:
+        for ob in list(c.objects):
+            bpy.data.objects.remove(ob, do_unlink=True)
+        bpy.data.collections.remove(c)
+
+remove_collection_objects("11_Neblina")
+say("Neblina volumetrica removida (em VR use fog do motor).")
+
+# cobogo 3D -> placa com transparencia
+for nm in ("Cobogo_Bloco", "Cobogo_Furos"):
+    ob = bpy.data.objects.get(nm)
+    if ob:
+        bpy.data.objects.remove(ob, do_unlink=True)
+
+def np_to_image(name, arr):
+    h, w, ch = arr.shape
+    rgba = np.ones((h, w, 4), dtype=np.float32)
+    rgba[..., :ch] = arr
+    img = bpy.data.images.new(name, w, h, alpha=True)
+    img.pixels.foreach_set(np.flipud(rgba).ravel()); img.pack()
+    return img
+
+S = 256
+yy, xx = np.mgrid[0:S, 0:S] / S
+cob = np.ones((S, S, 4)); cob[..., :3] = (.91, .89, .85)
+for cx, cy in ((.3, .3), (.7, .3), (.3, .7), (.7, .7)):
+    cob[..., 3][np.hypot(xx - cx, yy - cy) < .17] = 0
+img_cob = np_to_image("cobogo_alpha", cob)
+
+def alpha_clip_mat(name, img, rough=.9):
+    m = bpy.data.materials.new(name)
+    nt = m.node_tree; b = nt.nodes.get("Principled BSDF")
+    t = nt.nodes.new("ShaderNodeTexImage"); t.image = img
+    rnd_ = nt.nodes.new("ShaderNodeMath"); rnd_.operation = "ROUND"
+    nt.links.new(t.outputs["Color"], b.inputs["Base Color"])
+    nt.links.new(t.outputs["Alpha"], rnd_.inputs[0]); nt.links.new(rnd_.outputs[0], b.inputs["Alpha"])
+    b.inputs["Roughness"].default_value = rough
+    for attr, val in (("surface_render_method", "DITHERED"), ("blend_method", "CLIP")):
+        try: setattr(m, attr, val)
+        except Exception: pass
+    m.use_backface_culling = False
+    return m
+
+m_cob = alpha_clip_mat("Cobogo_Alpha", img_cob)
+vs = [(-6, 4.1, 0), (-2, 4.1, 0), (-2, 4.1, 3), (-6, 4.1, 3)]
+me = bpy.data.meshes.new("Cobogo_Placa"); me.from_pydata(vs, [], [(0, 1, 2, 3)])
+uv = me.uv_layers.new()
+for li, (u, v) in zip(range(4), ((0, 0), (16, 0), (16, 12), (0, 12))):
+    uv.data[li].uv = (u, v)
+me.materials.append(m_cob)
+ob = bpy.data.objects.new("Cobogo_Placa", me); bpy.data.collections["01_Estrutura"].objects.link(ob)
+say("Cobogo 3D (~60 mil tris) trocado por placa com textura alfa (2 tris).")
+
+# ------------------------------------------------------------------ 2. ajustar modificadores antes de aplicar
+lawns = []
+for ob in scene.objects:
+    for md in list(ob.modifiers):
+        if md.type == "NODES" and md.name == "Grama":
+            ob.modifiers.remove(md); lawns.append(ob.name)
+        elif md.type == "SUBSURF":
+            md.levels = 1; md.render_levels = 1
+        elif md.type == "REMESH":
+            md.voxel_size = .16
+    if ob.type == "MESH" and any(md.type == "DISPLACE" for md in ob.modifiers):
+        dec = ob.modifiers.new("VR_Decimate", "DECIMATE"); dec.ratio = .35
+    if ob.type == "MESH" and ob.name.endswith(("_Pneu", "_Aro")):
+        dec = ob.modifiers.new("VR_Decimate", "DECIMATE"); dec.ratio = .5
+    if ob.type == "CURVE":
+        ob.data.bevel_resolution = 0; ob.data.resolution_u = 4
+say("Grama instanciada removida de %d gramados; subdivisao=1, remesh 0.16 m, decimate 35%% na folhagem." % len(lawns))
+
+# ------------------------------------------------------------------ 3. aplicar tudo (malhas finais)
+dg = bpy.context.evaluated_depsgraph_get()
+fonte = bpy.data.objects.get("Fonte_Tufo_Grama")
+cut_col = bpy.data.collections.get("99_Cortadores")
+cutters = set(cut_col.objects) if cut_col else set()
+novos = []
+for ob in list(scene.objects):
+    if ob.type not in {"MESH", "CURVE", "FONT"} or ob in cutters or ob == fonte:
+        continue
+    ev = ob.evaluated_get(dg)
+    me = bpy.data.meshes.new_from_object(ev, preserve_all_data_layers=True, depsgraph=dg)
+    novos.append((ob, me))
+for ob, me in novos:
+    if ob.type == "MESH":
+        ob.modifiers.clear(); ob.data = me
+    else:
+        new = bpy.data.objects.new(ob.name, me)
+        for c in ob.users_collection:
+            c.objects.link(new)
+        new.parent = ob.parent; new.matrix_parent_inverse = ob.matrix_parent_inverse.copy()
+        new.matrix_basis = ob.matrix_basis.copy()
+        nm = ob.name; bpy.data.objects.remove(ob, do_unlink=True); new.name = nm
+for nm in {o.name for o in cutters} | ({fonte.name} if fonte else set()):
+    o = bpy.data.objects.get(nm)
+    if o:
+        bpy.data.objects.remove(o, do_unlink=True)
+if cut_col:
+    bpy.data.collections.remove(cut_col)
+say("Modificadores aplicados em %d objetos; textos e fios convertidos em malha." % len(novos))
+
+# ------------------------------------------------------------------ 4. materiais: bake dos procedurais, UV no lugar de projecao
+MAT_TILE = {}
+UV_NATIVE = {"Rede_Listrada", "Tapete", "Grama_Cartao", "Cobogo_Alpha"}
+
+def bake_tile(mat, tile, res, vertical=False):
+    img = bpy.data.images.new(mat.name + "_bake", res, res, alpha=False)
+    h = tile / 2
+    vs = [(-h, 0, -h), (h, 0, -h), (h, 0, h), (-h, 0, h)] if vertical else [(-h, -h, 0), (h, -h, 0), (h, h, 0), (-h, h, 0)]
+    me = bpy.data.meshes.new("_bake"); me.from_pydata(vs, [], [(0, 1, 2, 3)])
+    uvl = me.uv_layers.new()
+    for li, uvv in enumerate(((0, 0), (1, 0), (1, 1), (0, 1))):
+        uvl.data[li].uv = uvv
+    me.materials.append(mat)
+    ob = bpy.data.objects.new("_bake", me); scene.collection.objects.link(ob)
+    nt = mat.node_tree; node = nt.nodes.new("ShaderNodeTexImage"); node.image = img; nt.nodes.active = node
+    for o in scene.objects:
+        o.select_set(False)
+    ob.select_set(True); bpy.context.view_layer.objects.active = ob
+    with bpy.context.temp_override(object=ob, active_object=ob, selected_objects=[ob], selected_editable_objects=[ob]):
+        bpy.ops.object.bake(type="DIFFUSE", pass_filter={"COLOR"}, margin=0, use_clear=True)
+    nt.nodes.remove(node); bpy.data.objects.remove(ob, do_unlink=True); bpy.data.meshes.remove(me)
+    img.pack()
+    return img
+
+def set_image_base(mat, img, rough=None):
+    nt = mat.node_tree; b = nt.nodes.get("Principled BSDF")
+    for inp in ("Base Color", "Normal", "Roughness"):
+        for l in list(b.inputs[inp].links):
+            nt.links.remove(l)
+    t = nt.nodes.new("ShaderNodeTexImage"); t.image = img
+    nt.links.new(t.outputs["Color"], b.inputs["Base Color"])
+    if rough is not None:
+        b.inputs["Roughness"].default_value = rough
+
+scene.render.engine = "CYCLES"; scene.cycles.samples = 4; scene.cycles.device = "CPU"
+PROC = {  # material: (tamanho do tile em m, resolucao, vertical, rugosidade)
+    "Madeira_Freijo": (1.0, 512, False, .55), "Madeira_Jacaranda": (1.0, 512, False, .45),
+    "Madeira_Forro": (1.0, 512, False, .7), "Asfalto": (4.0, 1024, False, .88),
+    "Filete_de_Pedra": (1.0, 512, True, .9), "Piso_Intertravado": (1.0, 512, False, .85),
+    "Folhagem": (2.0, 512, False, .75), "Folhagem_Escura": (2.0, 512, False, .75),
+    "Flores_Ipe_Amarelo": (2.0, 512, False, .75),
+}
+for name, (tile, res, vert, rough) in PROC.items():
+    m = bpy.data.materials.get(name)
+    if not m or "cc0_pasta" in m:      # materiais CC0 sao tratados abaixo, sem bake
+        continue
+    img = bake_tile(m, tile, res, vert)
+    set_image_base(m, img, rough); MAT_TILE[name] = tile
+say("Bake de %d materiais procedurais em texturas de imagem." % len(MAT_TILE))
+
+# materiais com texturas CC0 (aplicadas na cena principal por aplicar_texturas_cc0.py):
+# projecao em caixa -> UV em metros; EXR -> PNG; relevo -> normal map GL
+TEX_CC0 = os.path.normpath(os.path.join(OUT, "..", "04_ThreeJS", "texturas_cc0"))
+CACHE_CC0 = os.path.normpath(os.path.join(OUT, "..", "04_ThreeJS", "_cache_texturas"))
+os.makedirs(CACHE_CC0, exist_ok=True)
+
+def cc0_arquivo(pasta, chave):
+    d = os.path.join(TEX_CC0, pasta)
+    return next((os.path.join(d, f) for f in sorted(os.listdir(d)) if chave in f.lower()), None)
+
+def cc0_png(path, nome):
+    if path is None or path.lower().endswith((".jpg", ".png")):
+        return path
+    out = os.path.join(CACHE_CC0, nome + ".png")
+    if not os.path.exists(out):
+        src = bpy.data.images.load(path); src.colorspace_settings.name = "Non-Color"
+        w, h = src.size; px = np.empty(w * h * 4, np.float32); src.pixels.foreach_get(px)
+        dst = bpy.data.images.new("_tmp_" + nome, w, h, alpha=False); dst.colorspace_settings.name = "Non-Color"
+        dst.pixels.foreach_set(np.clip(px, 0, 1)); dst.filepath_raw = out; dst.file_format = "PNG"; dst.save()
+        bpy.data.images.remove(src); bpy.data.images.remove(dst)
+    return out
+
+n_cc0 = 0
+for m in bpy.data.materials:
+    if not m.node_tree or "cc0_pasta" not in m:
+        continue
+    pasta = m["cc0_pasta"]
+    if not os.path.isdir(os.path.join(TEX_CC0, pasta)):
+        continue
+    nt = m.node_tree
+    diff = next((n.image for n in nt.nodes if n.type == "TEX_IMAGE" and n.image and n.image.colorspace_settings.name == "sRGB"), None)
+    mix = next((n for n in nt.nodes if n.type == "MIX"), None)
+    fator = tuple(next(i for i in mix.inputs if i.name == "B" and i.type == "RGBA").default_value) if mix else (1, 1, 1, 1)
+    rough = cc0_png(cc0_arquivo(pasta, "_rough"), pasta + "_rough")
+    nor = cc0_png(cc0_arquivo(pasta, "_nor_gl"), pasta + "_normal")
+    out_n = next(n for n in nt.nodes if n.type == "OUTPUT_MATERIAL")
+    b = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED")
+    for n in list(nt.nodes):
+        if n not in (b, out_n):
+            nt.nodes.remove(n)
+    for inp in b.inputs:
+        for l in list(inp.links):
+            nt.links.remove(l)
+    L = nt.links.new
+    uvn = nt.nodes.new("ShaderNodeUVMap"); uvn.uv_map = "UVMap"
+    def tex(img):
+        t = nt.nodes.new("ShaderNodeTexImage"); t.image = img; L(uvn.outputs["UV"], t.inputs["Vector"]); return t
+    td = tex(diff)
+    mx = nt.nodes.new("ShaderNodeMix"); mx.data_type = "RGBA"; mx.blend_type = "MULTIPLY"
+    next(i for i in mx.inputs if i.name == "Factor" and i.type == "VALUE").default_value = 1.0
+    L(td.outputs["Color"], next(i for i in mx.inputs if i.name == "A" and i.type == "RGBA"))
+    next(i for i in mx.inputs if i.name == "B" and i.type == "RGBA").default_value = fator
+    L(next(o for o in mx.outputs if o.name == "Result" and o.type == "RGBA"), b.inputs["Base Color"])
+    if rough:
+        img = bpy.data.images.load(rough, check_existing=True); img.colorspace_settings.name = "Non-Color"
+        sep = nt.nodes.new("ShaderNodeSeparateColor"); L(tex(img).outputs["Color"], sep.inputs["Color"])
+        L(sep.outputs["Green"], b.inputs["Roughness"])
+    if nor:
+        img = bpy.data.images.load(nor, check_existing=True); img.colorspace_settings.name = "Non-Color"
+        nm = nt.nodes.new("ShaderNodeNormalMap"); nm.uv_map = "UVMap"
+        L(tex(img).outputs["Color"], nm.inputs["Color"]); L(nm.outputs["Normal"], b.inputs["Normal"])
+    MAT_TILE[m.name] = float(m["cc0_tile"]); n_cc0 += 1
+say("%d materiais com texturas CC0 convertidos para UV + PNG (cor, rugosidade, normal)." % n_cc0)
+
+for m in bpy.data.materials:
+    if not m.node_tree:
+        continue
+    nt = m.node_tree; b = nt.nodes.get("Principled BSDF")
+    mp = next((n for n in nt.nodes if n.type == "MAPPING"), None)
+    img_node = next((n for n in nt.nodes if n.type == "TEX_IMAGE"), None)
+    if img_node and mp and m.name not in MAT_TILE:          # projecao em caixa -> UV
+        MAT_TILE[m.name] = 1.0 / max(mp.inputs["Scale"].default_value[0], 1e-6)
+        for l in list(img_node.inputs["Vector"].links):
+            nt.links.remove(l)
+        img_node.projection = "FLAT"
+    if b and b.inputs["Emission Strength"].is_linked:          # janelas com cortina -> emissao constante
+        mr = next((n for n in nt.nodes if n.type == "MAP_RANGE"), None)
+        val = mr.inputs["To Max"].default_value if mr else 3.0
+        for l in list(b.inputs["Emission Strength"].links):
+            nt.links.remove(l)
+        b.inputs["Emission Strength"].default_value = val
+
+# ------------------------------------------------------------------ 5. UV em caixa (metros) para todas as malhas
+def box_uv(ob):
+    me = ob.data
+    bm = bmesh.new(); bm.from_mesh(me)
+    had = len(me.uv_layers) > 0
+    uvl = bm.loops.layers.uv.active or bm.loops.layers.uv.new("UVMap")
+    mats = me.materials
+    for f in bm.faces:
+        mn = mats[f.material_index].name if f.material_index < len(mats) and mats[f.material_index] else ""
+        if mn in UV_NATIVE and had:
+            continue
+        t = MAT_TILE.get(mn, 1.0)
+        n = f.normal; ax = max(range(3), key=lambda i: abs(n[i]))
+        for l in f.loops:
+            c = l.vert.co
+            u, v = ((c.y, c.z), (c.x, c.z), (c.x, c.y))[ax]
+            l[uvl].uv = (u / t, v / t)
+    bm.to_mesh(me); bm.free()
+
+for ob in scene.objects:
+    if ob.type == "MESH" and ob.name != "Cobogo_Placa":
+        box_uv(ob)
+say("UVs em caixa (escala real em metros) aplicadas em todas as malhas.")
+
+# ------------------------------------------------------------------ 6. grama: textura de chao + cartoes com alfa
+def tex_grama_chao(S=512):
+    r = np.random.default_rng(11)
+    base = np.array((.2, .33, .13))
+    a = np.ones((S, S, 3)) * base
+    n = r.normal(0, 1, (S // 8, S // 8, 1))
+    n = np.kron(n, np.ones((8, 8, 1)))
+    a = a * (1 + .18 * n) + r.normal(0, .035, (S, S, 1))
+    return np.clip(a, 0, 1)
+
+def tex_grama_cartao(W=256, H=128):
+    r = np.random.default_rng(12)
+    a = np.zeros((H, W, 4))
+    for k in range(70):
+        x0 = r.uniform(4, W - 4); h = r.uniform(.45, 1) * H; lean = r.uniform(-18, 18)
+        col = np.array((.18, .32, .1)) * r.uniform(.8, 1.35) + np.array((r.uniform(0, .08), r.uniform(0, .06), 0))
+        for yy_ in range(int(h)):
+            s = yy_ / h; x = x0 + lean * s * s; w = 2.2 * (1 - s) + .4
+            y = H - 1 - yy_
+            x_a, x_b = int(max(0, x - w)), int(min(W - 1, x + w))
+            a[y, x_a:x_b + 1, :3] = col * (.7 + .5 * s); a[y, x_a:x_b + 1, 3] = 1
+    return a
+
+m_solo = bpy.data.materials.get("Solo_Grama")
+if m_solo and "cc0_pasta" in m_solo:          # usa a textura de grama do Poly Haven da cena principal
+    m_chao = m_solo
+else:
+    m_chao = bpy.data.materials.new("Grama_Chao")
+    b = m_chao.node_tree.nodes.get("Principled BSDF"); b.inputs["Roughness"].default_value = .95
+    t = m_chao.node_tree.nodes.new("ShaderNodeTexImage"); t.image = np_to_image("grama_chao", tex_grama_chao())
+    m_chao.node_tree.links.new(t.outputs["Color"], b.inputs["Base Color"]); MAT_TILE["Grama_Chao"] = 1.0
+m_card = alpha_clip_mat("Grama_Cartao", np_to_image("grama_cartao", tex_grama_cartao()), .6)
+
+DENS_CARTOES = 6   # tufos por m2
+total_cards = 0
+for nm in lawns:
+    ob = bpy.data.objects.get(nm)
+    if not ob:
+        continue
+    me = ob.data
+    me.materials.clear(); me.materials.append(m_chao); me.materials.append(m_card)
+    box_uv(ob)
+    bm = bmesh.new(); bm.from_mesh(me)
+    uvl = bm.loops.layers.uv.active
+    faces = list(bm.faces)
+    areas = [f.calc_area() for f in faces]
+    n = int(sum(areas) * DENS_CARTOES)
+    if n == 0:
+        bm.free(); continue
+    for f in rnd.choices(faces, weights=areas, k=n):
+        vs_ = [v.co for v in f.verts]
+        u, v = rnd.random(), rnd.random()
+        p = (vs_[0] * (1 - u) + vs_[1] * u) * (1 - v) + (vs_[3] * (1 - u) + vs_[2] * u) * v if len(vs_) == 4 else vs_[0]
+        w = rnd.uniform(.28, .45); h = rnd.uniform(.12, .22); a0 = rnd.random() * PI
+        for a in (a0, a0 + PI / 2):
+            d = Vector((math.cos(a), math.sin(a), 0)) * w / 2
+            q = [bm.verts.new(p - d), bm.verts.new(p + d), bm.verts.new(p + d + Vector((0, 0, h))), bm.verts.new(p - d + Vector((0, 0, h)))]
+            fc = bm.faces.new(q); fc.material_index = 1
+            for l, uvv in zip(fc.loops, ((0, 0), (1, 0), (1, 1), (0, 1))):
+                l[uvl].uv = uvv
+    total_cards += n
+    bm.to_mesh(me); bm.free()
+say("Grama: %d tufos em cartoes cruzados com alfa (%d tris) no lugar de ~15 milhoes de tris." % (total_cards, total_cards * 4))
+
+# ------------------------------------------------------------------ 7. juntar geometria estatica por colecao
+INTERATIVO_COL = {"08_Vestigios", "10_Viatura_PMERJ", "09_Luzes_Cameras"}
+INTERATIVO_PAI = ("Porta_Quarto_Dobradica", "Portao_Folha", "Viatura_PMERJ", "V_")
+
+def interativo(ob):
+    if any(c.name in INTERATIVO_COL for c in ob.users_collection):
+        return True
+    p = ob
+    while p:
+        if p.name.startswith(INTERATIVO_PAI):
+            return True
+        p = p.parent
+    return False
+
+juntados = 0
+for col in list(bpy.data.collections):
+    objs = [o for o in col.objects if o.type == "MESH" and not interativo(o)]
+    if len(objs) < 2:
+        continue
+    for o in objs:
+        mw = o.matrix_world.copy(); o.parent = None; o.matrix_world = mw
+    alvo = objs[0]
+    for o in scene.objects:
+        o.select_set(False)
+    for o in objs:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = alvo
+    with bpy.context.temp_override(active_object=alvo, selected_objects=objs, selected_editable_objects=objs):
+        bpy.ops.object.join()
+    alvo.name = col.name + "_Estatico"; alvo.data.name = alvo.name
+    juntados += len(objs)
+say("%d objetos estaticos unidos em 1 malha por colecao (menos draw calls)." % juntados)
+
+# empties que ficaram sem filhos
+for ob in list(scene.objects):
+    if ob.type == "EMPTY" and not ob.children and not interativo(ob):
+        bpy.data.objects.remove(ob, do_unlink=True)
+bpy.data.orphans_purge(do_local_ids=True, do_linked_ids=True, do_recursive=True)
+
+# ------------------------------------------------------------------ 8. relatorio, salvar e exportar
+per = tri_count()
+total = sum(per.values())
+meshes = [o for o in scene.objects if o.type == "MESH"]
+slots = sum(len(o.data.materials) for o in meshes)
+luzes = [o for o in scene.objects if o.type == "LIGHT"]
+
+for img in bpy.data.images:
+    if img.type != "IMAGE" or img.size[0] == 0:
+        continue
+    path = os.path.join(TEX_DIR, bpy.path.clean_name(img.name) + ".png")
+    img.filepath_raw = path; img.file_format = "PNG"
+    try:
+        img.save()
+    except Exception as e:
+        say("Aviso: nao salvou %s (%s)" % (img.name, e))
+
+bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "casa_em_silencio_VR.blend"))
+try:
+    bpy.ops.export_scene.gltf(filepath=os.path.join(OUT, "casa_em_silencio_VR.glb"), export_format="GLB", export_lights=True, export_cameras=True)
+    say("Exportado: casa_em_silencio_VR.glb")
+except Exception as e:
+    say("Falha no GLB: %s" % e)
+try:
+    bpy.ops.export_scene.fbx(filepath=os.path.join(OUT, "casa_em_silencio_VR.fbx"), path_mode="COPY", embed_textures=True,
+                             object_types={"MESH", "LIGHT", "CAMERA", "EMPTY"}, apply_scale_options="FBX_SCALE_ALL")
+    say("Exportado: casa_em_silencio_VR.fbx")
+except Exception as e:
+    say("Falha no FBX: %s" % e)
+
+with open(os.path.join(OUT, "RELATORIO_VR.txt"), "w", encoding="utf-8") as f:
+    f.write("A CASA EM SILENCIO - VERSAO VR OTIMIZADA\n\n")
+    f.write("ANTES (cena de render): ~920.000 tris de geometria + ~15.000.000 tris de grama instanciada\n")
+    f.write("DEPOIS: %d tris | %d malhas | %d slots de material (~draw calls) | %d luzes\n\n" % (total, len(meshes), slots, len(luzes)))
+    f.write("Triangulos por colecao:\n")
+    for k, v in sorted(per.items(), key=lambda kv: -kv[1]):
+        f.write("  %-32s %10d\n" % (k, v))
+    f.write("\nEtapas:\n")
+    for m in log:
+        f.write("  - " + m + "\n")
+    f.write("""
+Proximos passos no motor (Unity/Unreal):
+  - Iluminacao: marcar a geometria estatica como Static e fazer bake de lightmaps
+    (Unity: ativar "Generate Lightmap UVs" no import do FBX). Manter dinamicas so:
+    giroflex (vermelho/azul), farois da viatura, TV e a lanterna do policial.
+  - O giroflex esta animado apenas no Blender (Cycles); recriar o pisca no motor
+    com um script alternando as luzes e a emissao das lentes.
+  - Colisao: mesh collider simplificado para paredes/pisos; box colliders nos moveis.
+  - Objetos interativos ja estao separados: colecoes 08_Vestigios e 10_Viatura_PMERJ,
+    porta do quarto (Porta_Quarto_Dobradica) e folhas do portao (Portao_Folha_*).
+  - Neblina: usar a fog do motor no lugar do volume do Blender.
+  - Quest 3 standalone: alvo de ~750 mil tris e < 200 draw calls; se precisar,
+    desligar as casas vizinhas laterais ou gerar LODs (Unity LOD Group / Unreal Nanite
+    nao se aplica ao Quest).
+""")
+say("TOTAL: %d tris, %d malhas, %d slots de material, %d luzes" % (total, len(meshes), slots, len(luzes)))
