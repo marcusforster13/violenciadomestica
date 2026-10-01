@@ -11,6 +11,19 @@ COMO VER
        1 a 5 = pontos de vista (Rua, Viatura, Vizinhos, Varanda, Interior)
      Os controles deslizantes ajustam exposicao e intensidade dos lightmaps.
 
+MODO TREINAMENTO (fase 2)
+  Botao "Iniciar treinamento" no painel (ou tecla T). Aviso de conteudo -> ligacao do 190 com legendas
+  (voz sintetica opcional) -> despacho -> voce comeca na rua, perto da viatura. Marcadores ficam ocultos.
+  Computador: clique = usar a ferramenta / falar com as pessoas / botoes
+              T = ferramentas (mao, camera, placa, fita, algemas, luvas, lanterna, radio, checklist, encerrar)
+              R = radio   K = checklist
+  Quest:      gatilho direito = usar / clicar   grip esquerdo = ferramentas   grip direito = lanterna
+  Ao encerrar: nota por fase, falhas graves, base legal e botao para baixar o relatorio (JSON).
+  Instrutor pode forcar variacoes pela URL:
+     ...vercel.app/?v=agressor:agressivo,faca:pia,vitima:retrata,crianca:quarto,vizinho:presente,medida_protetiva:vigente
+  Pontos, falas e variacoes ficam em 05_Treinamento\cenario_vd_01.json (o pipeline copia para web\treinamento\).
+  Personagens atuais sao bonecos provisorios; os modelos reais entram na fase 3.
+
 COMO VER NO QUEST 3
   - O WebXR exige HTTPS (exceto localhost). Opcoes:
     a) Quest Link / Air Link: abra http://localhost:8000 no Chrome do PC e clique "Enter VR".

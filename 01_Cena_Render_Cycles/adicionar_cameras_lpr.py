@@ -12,6 +12,9 @@ import bpy, bmesh, math, re
 from mathutils import Vector, Matrix
 
 PI = math.pi
+# Paineis solares se viram para o sol: no hemisferio sul, para o NORTE (~25 graus de inclinacao).
+# A cena nao tem norte definido; aqui o norte = -Y (direcao da rua vista da casa). Todos ficam iguais.
+NORTE_Y = -1
 COL = bpy.data.collections.get("07_Rua_Condominio") or bpy.context.scene.collection
 
 def mat(nome, cor, rough=.5, metal=0., emit=None, emit_str=0.):
@@ -99,7 +102,7 @@ for col in postes:
     # painel solar num mastro curto acima da abracadeira, inclinado ~25 graus
     cilindro("CamLPR_%02d_Mastro" % n, .018, .5, (0, lado * .3, .25), M_FERRAGEM, raiz, seg=10)
     pnl = bpy.data.objects.new("CamLPR_%02d_Painel" % n, None); COL.objects.link(pnl)
-    pnl.parent = raiz; pnl.location = (0, lado * .3, .52); pnl.rotation_euler = (math.radians(25) * lado, 0, 0)
+    pnl.parent = raiz; pnl.location = (0, lado * .3, .52); pnl.rotation_euler = (math.radians(25) * -NORTE_Y, 0, 0)
     caixa("CamLPR_%02d_Solar" % n, .52, .36, .02, (0, 0, 0), M_SOLAR, pnl, chanfro=.003)
     for sy in (-1, 1):
         caixa("CamLPR_%02d_Moldura_Solar" % n, .54, .015, .03, (0, sy * .18, 0), M_ALU, pnl)

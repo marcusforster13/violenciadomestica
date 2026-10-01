@@ -1,22 +1,22 @@
 A CASA EM SILENCIO - VERSAO VR OTIMIZADA
 
 ANTES (cena de render): ~920.000 tris de geometria + ~15.000.000 tris de grama instanciada
-DEPOIS: 319894 tris | 183 malhas | 349 slots de material (~draw calls) | 45 luzes
+DEPOIS: 359654 tris | 183 malhas | 349 slots de material (~draw calls) | 45 luzes
 
 Triangulos por colecao:
-  10b_Carros_Moradores                  80856
-  07c_Grama_Vegetacao                   65200
-  07b_Casas_Vizinhas                    44100
-  07_Rua_Condominio                     42500
-  10_Viatura_PMERJ                      32984
-  08_Vestigios                          18800
-  02_Sala                               11104
-  07d_Postes_Fiacao                      7728
-  03_Jantar                              4976
-  01_Estrutura                           4574
-  05_Varanda                             3356
-  06_Jardim                              1992
-  04_Cozinha                             1724
+  10b_Carros_Moradores                  81640
+  07c_Grama_Vegetacao                   65896
+  07_Rua_Condominio                     51644
+  07b_Casas_Vizinhas                    51612
+  10_Viatura_PMERJ                      33828
+  08_Vestigios                          27192
+  02_Sala                               11816
+  07d_Postes_Fiacao                     10088
+  03_Jantar                             10076
+  01_Estrutura                           5094
+  05_Varanda                             4140
+  04_Cozinha                             4132
+  06_Jardim                              2496
 
 Etapas:
   - Neblina volumetrica removida (em VR use fog do motor).
@@ -27,11 +27,11 @@ Etapas:
   - 20 materiais com texturas CC0 convertidos para UV + PNG (cor, rugosidade, normal).
   - UVs em caixa (escala real em metros) aplicadas em todas as malhas.
   - Grama: 6381 tufos em cartoes cruzados com alfa (25524 tris) no lugar de ~15 milhoes de tris.
-  - Colisao: 1205 caixas orientadas preparadas.
+  - Colisao: 1204 caixas orientadas preparadas.
   - 1645 objetos estaticos unidos em 1 malha por colecao (menos draw calls).
   - Exportado: casa_em_silencio_VR.glb
   - Exportado: casa_em_silencio_VR.fbx
-  - Colisao: 1205 caixas, 14460 tris -> colisao.glb / colisao.fbx
+  - Colisao: 1204 caixas, 14448 tris -> colisao.glb / colisao.fbx
 
 Proximos passos no motor (Unity/Unreal):
   - Iluminacao: marcar a geometria estatica como Static e fazer bake de lightmaps

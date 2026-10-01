@@ -24,7 +24,15 @@
   button:hover,button.on{border-color:var(--amber)} button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
   .count{margin:0;font:500 12px/1 var(--mono)} .help{margin:0;padding-top:8px;border-top:1px solid var(--line);color:var(--mute)}
   .help b{color:var(--ink);font-family:var(--mono);font-weight:500}
-  #hud.min > :not(.eyebrow):not(#acoes){display:none} #hud.min #acoes button:not(#bMin){display:none}
+  #hud.min > :not(.eyebrow):not(#acoes){display:none} #hud.min #acoes button:not(#bMin):not(#bTrein){display:none}
+  #statusTrein{position:fixed;right:16px;top:16px;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:10px 14px;font:500 12px/1.6 var(--mono);z-index:5;max-width:calc(100% - 32px)}
+  #statusTrein b{color:var(--amber)}
+  #legendaHTML{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);width:min(900px,calc(100% - 32px));background:rgba(5,7,12,.88);border:1px solid var(--line);border-radius:6px;padding:12px 18px;font-size:17px;line-height:1.45;z-index:6}
+  #legendaHTML b{color:var(--amber)}
+  #relatorioHTML{position:fixed;inset:4% max(16px,8%);overflow:auto;background:rgba(11,14,22,.97);border:1px solid var(--line);border-radius:6px;padding:20px 26px;z-index:20;font-size:14px;line-height:1.5}
+  #relatorioHTML h2{margin:0 0 6px;color:var(--amber)} #relatorioHTML h3{margin:16px 0 4px;font-size:15px}
+  #relatorioHTML h3 small{color:var(--mute);font:500 12px var(--mono)} #relatorioHTML ul{margin:0;padding-left:18px}
+  #relatorioHTML li.ok{color:#9fd49a} #relatorioHTML li.nao{color:var(--mute)} #relatorioHTML em{color:var(--mute)}
 </style>
 </head>
 <body>
@@ -53,6 +61,9 @@
   <p class="count"><span id="count">0</span> vestígios lidos</p>
   <p class="help">Violência contra a mulher: <b>Ligue 180</b> · Emergência: <b>190</b></p>
 </aside>
+<div id="statusTrein" hidden></div>
+<div id="legendaHTML" hidden></div>
+<div id="relatorioHTML" hidden></div>
 
 <script type="importmap">
 {"imports":{
@@ -321,6 +332,7 @@ el.addEventListener('pointermove', e => { if (!drag) return; const dx = e.client
 el.addEventListener('pointerup', e => {
   if (drag && drag.m < 6) {
     ray.setFromCamera(new THREE.Vector2(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1), camera);
+    if (window.__trein?.clique(ray)) { drag = null; return; }
     const h = hotspots.visible ? ray.intersectObjects(hitMeshes, false) : [];
     if (h.length) showPanel(h[0].object.userData.index); else panel.visible = false;
   }
@@ -346,13 +358,16 @@ for (const i of [0, 1]) {
   linha.scale.z = 6; c.add(linha);
   c.addEventListener('selectstart', () => {
     mirar(c);
+    if (window.__trein?.gatilho(ray, c)) return;
     const h = hotspots.visible ? ray.intersectObjects(hitMeshes, false) : [];
     if (h.length) return showPanel(h[0].object.userData.index);
     if (panel.visible) { panel.visible = false; return; }
     const p = alvoTeleporte(c);
     if (p) { camera.getWorldPosition(V1); rig.position.x += p.x - V1.x; rig.position.z += p.z - V1.z; rig.position.y = p.y; }
   });
-  c.addEventListener('squeezestart', () => setLanterna(!lantOn, c));
+  c.addEventListener('connected', e => { c.userData.mao = e.data.handedness; });
+  // grip esquerdo = menu de ferramentas do treinamento; grip direito = lanterna
+  c.addEventListener('squeezestart', () => { if (c.userData.mao === 'left' && window.__trein) return window.__trein.menu(); setLanterna(!lantOn, c); });
   rig.add(c); controles.push(c);
   const grip = renderer.xr.getControllerGrip(i); grip.add(cmf.createControllerModel(grip)); rig.add(grip);
 }
@@ -411,8 +426,16 @@ renderer.setAnimationLoop(() => {
   viewer().getWorldPosition(V1);
   ceu.position.copy(V1); ceu.material.uniforms.uTempo.value = t;
   hotspots.children.forEach((g, i) => { g.lookAt(V1); g.userData.ring.scale.setScalar(1 + .18 * Math.sin(t * 3 + i)); });
+  window.__trein?.quadro();
   renderer.render(scene, camera);
 });
+
+/* ---------- motor do treinamento (fase 2) ---------- */
+import('./treinamento.js').then(m => m.iniciar({
+  scene, camera, rig, renderer, hotspots, setLanterna,
+  lanternaLigada: () => lantOn, colisao: () => alvosCol,
+  setYaw: y => { yaw = y; pitch = 0; }
+})).catch(e => console.error('Treinamento não carregou:', e));
 </script>
 </body>
 </html>

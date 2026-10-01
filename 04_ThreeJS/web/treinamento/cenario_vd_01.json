@@ -1,0 +1,137 @@
+{
+  "id": "vd_01",
+  "titulo": "A Casa em Silêncio — violência doméstica com vítima ferida",
+  "versao": "0.1",
+  "status": "rascunho para validação (itens com validar=true dependem dos POPs da PMERJ)",
+  "aprovacao": { "pontos_minimos": 70, "sem_falha_grave": true, "validar": true },
+
+  "chamada_190": {
+    "audio": "audio/chamada_190.mp3",
+    "legenda": [
+      ["Atendente", "Polícia Militar, qual a sua emergência?"],
+      ["Vítima", "Moço… eu preciso de ajuda. Meu marido me bateu. Ele… ele tá aqui em casa ainda."],
+      ["Atendente", "A senhora está ferida?"],
+      ["Vítima", "Tô com a boca sangrando… meu braço tá doendo muito. Ele quebrou as coisas."],
+      ["Atendente", "Qual o endereço?"],
+      ["Vítima", "Rua das Amendoeiras, 147, condomínio… a casa com o portão preto."],
+      ["Atendente", "Tem mais alguém na casa?"],
+      ["Vítima", "Minha filha… ela tá no quarto. Ela tem seis anos."],
+      ["Atendente", "Ele está armado?"],
+      ["Vítima", "Não sei… tem faca na cozinha… ele tá vindo, eu vou desligar…"]
+    ],
+    "despacho": "Ocorrência de violência doméstica. Rua das Amendoeiras, 147. Vítima ferida, agressor no local, criança de 6 anos na residência, possível faca."
+  },
+
+  "fases": [
+    { "id": "F1", "nome": "Chegada e aproximação", "acoes": [
+      { "id": "radio_chegada", "texto": "Informar chegada pelo rádio", "pontos": 2 },
+      { "id": "observar_fachada", "texto": "Observar a fachada antes de entrar", "pontos": 3 },
+      { "id": "aproximacao_segura", "texto": "Aproximação sem ficar alinhado à porta", "pontos": 3, "validar": true },
+      { "id": "uso_lanterna", "texto": "Uso adequado da lanterna", "pontos": 2 }
+    ]},
+    { "id": "F2", "nome": "Acesso", "acoes": [
+      { "id": "identificar_se", "texto": "Bater e se identificar como Polícia Militar", "pontos": 3 },
+      { "id": "entrada_legitima", "texto": "Entrar diante de pedido de socorro / flagrante", "pontos": 5, "base": "CF art. 5º, XI" }
+    ], "erros": [
+      { "id": "entrada_sem_identificacao", "texto": "Entrar sem se identificar sem urgência", "pontos": -3 }
+    ]},
+    { "id": "F3", "nome": "Controle da cena", "acoes": [
+      { "id": "separar_partes", "texto": "Separar agressor e vítima", "pontos": 6, "base": "LMP art. 10-A" },
+      { "id": "neutralizar_faca", "texto": "Neutralizar o risco da faca e registrar", "pontos": 4, "condicao": "variacao.faca != 'ausente'" },
+      { "id": "algemas_justificadas", "texto": "Algemas somente com justificativa", "pontos": 4, "base": "STF SV 11" },
+      { "id": "localizar_crianca", "texto": "Localizar a criança", "pontos": 5 }
+    ], "falhas_graves": [
+      { "id": "vitima_com_agressor", "texto": "Deixar vítima e agressor juntos sem controle", "pontos": -15 }
+    ]},
+    { "id": "F4", "nome": "Atendimento à vítima", "acoes": [
+      { "id": "acionar_samu", "texto": "Acionar SAMU (192) com lesão visível", "pontos": 6, "base": "LMP art. 11, II" },
+      { "id": "linguagem_acolhedora", "texto": "Linguagem acolhedora, sem julgamento", "pontos": 5, "base": "LMP art. 10-A" },
+      { "id": "sem_repeticao", "texto": "Não repetir perguntas desnecessárias", "pontos": 2, "base": "LMP art. 10-A" },
+      { "id": "info_risco", "texto": "Levantar informações de risco", "pontos": 4, "base": "Lei 14.149/2021" },
+      { "id": "proteger_crianca", "texto": "Proteger a criança e comunicar o Conselho Tutelar", "pontos": 4, "base": "ECA", "validar": true }
+    ], "falhas_graves": [
+      { "id": "sem_socorro", "texto": "Não acionar socorro com lesão visível", "pontos": -15 }
+    ]},
+    { "id": "F5", "nome": "Preservação dos vestígios", "acoes": [
+      { "id": "isolar_local", "texto": "Isolar sala e jantar", "pontos": 5, "base": "CPP art. 6º, I" },
+      { "id": "reconhecer_vestigios", "texto": "Reconhecer vestígios", "pontos_por_item": 1, "max": 10, "base": "CPP art. 158-A, §2º" },
+      { "id": "fotografar_vestigios", "texto": "Fotografar vestígios com placa, sem mover", "pontos": 5 },
+      { "id": "qualificar_testemunha", "texto": "Identificar e qualificar a testemunha", "pontos": 3 },
+      { "id": "solicitar_pericia", "texto": "Solicitar perícia pelo rádio", "pontos": 3, "base": "CPP art. 158-C" }
+    ], "erros": [
+      { "id": "tocar_vestigio", "texto": "Tocar/mover vestígio sem necessidade", "pontos": -3, "por_ocorrencia": true }
+    ], "falhas_graves": [
+      { "id": "alterar_local", "texto": "Limpar, arrumar ou recolher vestígios", "pontos": -15 }
+    ]},
+    { "id": "F6", "nome": "Decisão jurídica", "acoes": [
+      { "id": "flagrante", "texto": "Prisão em flagrante e condução", "pontos": 6, "base": "CP art. 129, §13" },
+      { "id": "explicar_incondicionada", "texto": "Explicar que o caso segue mesmo se a vítima desistir", "pontos": 5, "base": "STJ Súmula 542" },
+      { "id": "descumprimento_mpu", "texto": "Reconhecer descumprimento de medida protetiva", "pontos": 4, "base": "LMP art. 24-A", "condicao": "variacao.medida_protetiva == 'vigente'" }
+    ], "falhas_graves": [
+      { "id": "liberar_agressor", "texto": "Liberar o agressor porque a vítima desistiu", "pontos": -15 }
+    ]},
+    { "id": "F7", "nome": "Encaminhamentos", "acoes": [
+      { "id": "informar_direitos", "texto": "Informar direitos e serviços", "pontos": 5, "base": "LMP art. 11, V" },
+      { "id": "iml_saude", "texto": "Encaminhar ao IML e à saúde", "pontos": 3, "base": "LMP art. 11, II" },
+      { "id": "local_seguro", "texto": "Oferecer transporte a local seguro se houver risco", "pontos": 3, "base": "LMP art. 11, III" },
+      { "id": "conducao_deam", "texto": "Condução à delegacia (DEAM, se houver)", "pontos": 3 },
+      { "id": "retirada_pertences", "texto": "Acompanhar retirada de pertences, se necessário", "pontos": 2, "base": "LMP art. 11, IV" }
+    ]}
+  ],
+
+  "vestigios": [
+    { "id": "V01", "nome": "Cadeira tombada", "pos": [1.95, 0.7, 2.3], "objeto_blender": "V_Cadeira_Tombada" },
+    { "id": "V02", "nome": "Cacos de prato em leque", "pos": [0.2, 0.35, 1.95], "objeto_blender": "V_Cacos_Prato" },
+    { "id": "V03", "nome": "Copo derramado", "pos": [1.1, 0.85, 1.1], "objeto_blender": "V_Copo_Tombado" },
+    { "id": "V04", "nome": "Buraco de soco na parede", "pos": [-5.72, 1.5, 0.85], "objeto_blender": "Parede_Esquerda_A" },
+    { "id": "V05", "nome": "Porta-retrato quebrado", "pos": [-5.45, 0.35, 0.45], "objeto_blender": "V_Porta_Retrato" },
+    { "id": "V06", "nome": "Celular com tela trincada", "pos": [-2.85, 0.3, 0.62], "objeto_blender": "V_Celular" },
+    { "id": "V07", "nome": "Luminária derrubada", "pos": [-4.9, 0.55, 2.2], "objeto_blender": "V_Luminaria_Base" },
+    { "id": "V08", "nome": "Desenho da criança", "pos": [5.1, 1.35, 2.45], "objeto_blender": "V_Desenho_Crianca" },
+    { "id": "V09", "nome": "Ursinho no corredor", "pos": [-5.45, 0.3, 3.05], "objeto_blender": "V_Ursinho" },
+    { "id": "V10", "nome": "Mala feita às pressas", "pos": [-4.6, 0.7, 3.3], "objeto_blender": "V_Mala" },
+    { "id": "V11", "nome": "Garrafas vazias", "pos": [4.7, 1.3, -3.55], "objeto_blender": "V_Garrafa_1" },
+    { "id": "V12", "nome": "Faca", "pos": [4.2, 0.95, -3.6], "objeto_blender": null, "condicao": "variacao.faca != 'ausente'", "risco": true }
+  ],
+
+  "personagens": {
+    "vitima":   { "idade": 30, "estados": ["colabora", "minimiza", "retrata"], "lesoes": ["lábio", "braço"] },
+    "agressor": { "idade": 35, "estados": ["calmo_manipulador", "agressivo", "escondido", "fugiu"] },
+    "crianca":  { "idade": 6,  "estados": ["quarto", "corredor", "vizinha"] },
+    "vizinho":  { "estados": ["presente", "ausente"], "informacao": "Ouviu gritos e vidro quebrando; diz que já aconteceu antes." }
+  },
+
+  "variacoes": {
+    "agressor": ["calmo_manipulador", "agressivo", "escondido", "fugiu"],
+    "faca": ["ausente", "pia", "na_mao"],
+    "vitima": ["colabora", "minimiza", "retrata"],
+    "medida_protetiva": ["inexistente", "vigente"],
+    "crianca": ["quarto", "corredor", "vizinha"],
+    "vizinho": ["presente", "ausente"]
+  },
+
+  "dialogos": {
+    "vitima_primeiro_contato": [
+      { "fala": "Senhora, sou da Polícia Militar. A senhora está segura agora. Onde está machucada?", "efeito": { "pontos": 2, "confianca": 2 }, "acao": "linguagem_acolhedora" },
+      { "fala": "O que aconteceu aqui? A senhora provocou ele?", "efeito": { "pontos": -5, "confianca": -3 }, "feedback": "Revitimização (LMP art. 10-A)." },
+      { "fala": "Precisa mesmo disso tudo? Vocês vão se acertar.", "efeito": { "pontos": -5, "confianca": -2 }, "feedback": "Minimização da violência." }
+    ],
+    "vitima_desiste": [
+      { "fala": "Entendo o seu medo. Nesse tipo de crime o caso segue mesmo sem a senhora representar, e a senhora vai ter apoio e proteção.", "efeito": { "pontos": 5 }, "acao": "explicar_incondicionada" },
+      { "fala": "Então tudo bem, vamos liberar ele.", "efeito": { "falha_grave": "liberar_agressor" }, "feedback": "Lesão corporal em violência doméstica é de ação pública incondicionada (STJ Súmula 542)." }
+    ],
+    "agressor_minimiza": [
+      { "fala": "Senhor, preciso que fique aqui comigo. Vamos conversar com calma.", "efeito": { "pontos": 4, "agressividade": -1 }, "acao": "separar_partes" },
+      { "fala": "Cala a boca, você vai preso!", "efeito": { "pontos": -3, "agressividade": 2 }, "feedback": "Escalada desnecessária." }
+    ]
+  },
+
+  "ferramentas": ["lanterna", "radio", "camera", "placas", "fita", "luvas", "algemas", "tablet"],
+  "radio": [
+    { "id": "radio_chegada", "texto": "Guarnição no local" },
+    { "id": "acionar_samu", "texto": "Solicitar SAMU (192)" },
+    { "id": "solicitar_pericia", "texto": "Solicitar perícia" },
+    { "id": "pedir_apoio", "texto": "Solicitar apoio" },
+    { "id": "caracteristicas_agressor", "texto": "Informar características do agressor (se fugiu)" }
+  ]
+}

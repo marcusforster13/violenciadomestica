@@ -284,6 +284,13 @@ col_src = os.path.normpath(os.path.join(BASE, "..", "02_Cena_VR_Otimizada", "col
 if os.path.exists(col_src):
     shutil.copy2(col_src, os.path.join(WEB, "colisao.glb"))
     say("colisao.glb copiado para web/")
+cen_src = os.path.normpath(os.path.join(BASE, "..", "05_Treinamento"))
+if os.path.isdir(cen_src):
+    os.makedirs(os.path.join(WEB, "treinamento"), exist_ok=True)
+    for f in os.listdir(cen_src):
+        if f.endswith(".json"):
+            shutil.copy2(os.path.join(cen_src, f), os.path.join(WEB, "treinamento", f))
+    say("cenarios de treinamento copiados para web/treinamento/")
 cfg = {"gerado_em": time.strftime("%Y-%m-%d %H:%M"), "qualidade": "rapida" if RAPIDO else ("alta" if ALTA else "padrao"),
        "lightmaps": lm_json, "lightmap_ganho": round(math.pi, 5), "exposicao": 1.0,
        "env": env_arq, "env_intensidade": .35, "cameras": cams, "giroflex": giro}
