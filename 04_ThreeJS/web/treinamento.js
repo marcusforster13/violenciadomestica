@@ -180,9 +180,9 @@ export async function iniciar(ctx) {
   }
   /* personagens reais (Rocketbox, licenca MIT) convertidos para personagens/*.glb; se faltar, usa o boneco */
   const modelos = {};
-  fetch('personagens/manifest.json').then(r => r.ok ? r.json() : {}).then(man => {
+  const modelosProntos = fetch('personagens/manifest.json').then(r => r.ok ? r.json() : {}).then(man => {
     const gl = new GLTFLoader();
-    for (const [papel, info] of Object.entries(man)) gl.loadAsync(info.arquivo).then(g => { modelos[papel] = g; }).catch(() => { });
+    return Promise.all(Object.entries(man).map(([papel, info]) => gl.loadAsync(info.arquivo).then(g => { modelos[papel] = g; }).catch(() => { })));
   }).catch(() => { });
   function personagem(papel, nome, cor, altura, calca) {
     const base = modelos[papel];
@@ -531,8 +531,18 @@ export async function iniciar(ctx) {
       ]
     });
   }
-  function comecar() {
-    fecharPaineis(); sortear();
+  async function comecar() {
+    fecharPaineis();
+    // espera os personagens terminarem de baixar (~19 MB; ate 30 s em rede lenta, depois usa os bonecos)
+    let carregou = false;
+    modelosProntos.then(() => { carregou = true; });
+    await new Promise(r => setTimeout(r, 0));
+    if (!carregou) {
+      menu.mostrar({ tag: 'Treinamento', titulo: 'Carregando personagens…', texto: 'Aguarde alguns segundos.', botoes: [] });
+      await Promise.race([modelosProntos, new Promise(r => setTimeout(r, 30000))]);
+      menu.esconder();
+    }
+    sortear();
     Object.assign(S, { ativo: true, inicio: performance.now(), fim: 0, feitos: new Map(), erros: [], graves: [], log: [], ferramenta: 'mao', luvas: false,
       identificado: false, socorroOuvido: false, entrou: false, contatoVitima: false, separado: false, algemado: false, desistenciaResolvida: false,
       criancaAchada: false, vestReconhecidos: new Set(), vestFotografados: new Set(), placas: 0, fitas: [], fitaInicio: null, tempoFachada: 0, tempoDentro: 0, avisoAgressor: false });
