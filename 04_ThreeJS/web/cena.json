@@ -1,18 +1,18 @@
 {
- "gerado_em": "2026-10-01 12:42",
+ "gerado_em": "2026-10-01 12:56",
  "qualidade": "padrao",
  "lightmaps": {
   "01_Estrutura_Estatico": {
    "lm": "lightmaps/LM_01_Estrutura.png",
-   "max": 0.29833
+   "max": 0.29841
   },
   "Porta_Quarto": {
    "lm": "lightmaps/LM_01_Estrutura.png",
-   "max": 0.29833
+   "max": 0.29841
   },
   "Macaneta": {
    "lm": "lightmaps/LM_01_Estrutura.png",
-   "max": 0.29833
+   "max": 0.29841
   },
   "02_Sala_Estatico": {
    "lm": "lightmaps/LM_02_Sala.png",
@@ -20,11 +20,11 @@
   },
   "03_Jantar_Estatico": {
    "lm": "lightmaps/LM_03_Jantar.png",
-   "max": 0.4645
+   "max": 0.47193
   },
   "04_Cozinha_Estatico": {
    "lm": "lightmaps/LM_04_Cozinha.png",
-   "max": 1.4462
+   "max": 1.37679
   },
   "05_Varanda_Estatico": {
    "lm": "lightmaps/LM_05_Varanda.png",

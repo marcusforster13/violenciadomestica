@@ -229,6 +229,29 @@ if raiz and not raiz.get("modelo_usuario"):
     fb = folha_m.node_tree.nodes.get("Principled BSDF")
     if "Subsurface Weight" in fb.inputs:
         fb.inputs["Subsurface Weight"].default_value = 0.0
+    # textura da folha gerada: nervura central, nervuras laterais na direcao dos recortes, bordas mais escuras
+    import numpy as np
+    img = bpy.data.images.get("textura_folha_costela")
+    if not img:
+        H, W = 512, 256
+        yy, xx = np.mgrid[0:H, 0:W]; u = 1 - yy / (H - 1); v = xx / (W - 1); d = np.abs(v - .5) * 2
+        base = np.array(lin("#1f4a24"))[None, None, :] * (1 - .25 * d[..., None] ** 2)
+        base = base * (1 + .1 * u[..., None])
+        veia = (((u + d * .22 * np.sin(np.pi * np.minimum(u, .92))) * 11) % 1 < .045) & (d > .04)
+        base = np.where(veia[..., None], base * 1.35 + .01, base)
+        nerv = d < .025
+        base = np.where(nerv[..., None], np.array(lin("#7f9e4c"))[None, None, :], base)
+        base = base * (1 + np.random.default_rng(3).normal(0, .04, (H, W, 1)))
+        srgb = np.where(base <= .0031308, base * 12.92, 1.055 * np.clip(base, 0, 1) ** (1 / 2.4) - .055)
+        rgba = np.ones((H, W, 4), np.float32); rgba[..., :3] = np.clip(srgb, 0, 1)
+        img = bpy.data.images.new("textura_folha_costela", W, H, alpha=False)
+        img.pixels.foreach_set(np.flipud(rgba).ravel()); img.pack()
+    nt = folha_m.node_tree
+    if not nt.nodes.get("Folha_Img"):
+        ti = nt.nodes.new("ShaderNodeTexImage"); ti.name = "Folha_Img"; ti.image = img
+        nt.links.new(ti.outputs["Color"], fb.inputs["Base Color"])
+        bp = nt.nodes.new("ShaderNodeBump"); bp.inputs["Strength"].default_value = .35
+        nt.links.new(ti.outputs["Color"], bp.inputs["Height"]); nt.links.new(bp.outputs["Normal"], fb.inputs["Normal"])
     caule_m = mat("Caule_Costela", "#2f5a2a", .45)
     for c in list(raiz.children):
         if c.name.startswith("Vaso_Barro"):
@@ -255,13 +278,15 @@ if raiz and not raiz.get("modelo_usuario"):
                 return False
             prof = cortes[i][0] if vc > 0 else cortes[i][1]
             return abs(vc) > 1 - prof
-        bm = bmesh.new()
+        bm = bmesh.new(); uvl = bm.loops.layers.uv.new("UVMap")
         vs = [[bm.verts.new(pos(i / NU, -1 + 2 * j / NV)) for j in range(NV + 1)] for i in range(NU + 1)]
         for i in range(NU):
             for j in range(NV):
                 vc = -1 + 2 * (j + .5) / NV
                 if not cortado(i, vc):
-                    bm.faces.new((vs[i][j], vs[i + 1][j], vs[i + 1][j + 1], vs[i][j + 1]))
+                    f = bm.faces.new((vs[i][j], vs[i + 1][j], vs[i + 1][j + 1], vs[i][j + 1]))
+                    for lp, (a, b) in zip(f.loops, ((i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1))):
+                        lp[uvl].uv = (b / NV, a / NU)          # u da imagem = largura, v = comprimento
         bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
         bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
         me = bpy.data.meshes.new(nome); bm.to_mesh(me); bm.free(); me.materials.append(folha_m)

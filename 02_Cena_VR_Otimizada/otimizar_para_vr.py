@@ -154,7 +154,7 @@ say("Modificadores aplicados em %d objetos; textos e fios convertidos em malha."
 
 # ------------------------------------------------------------------ 4. materiais: bake dos procedurais, UV no lugar de projecao
 MAT_TILE = {}
-UV_NATIVE = {"Rede_Listrada", "Tapete", "Grama_Cartao", "Cobogo_Alpha"}
+UV_NATIVE = {"Rede_Listrada", "Tapete", "Grama_Cartao", "Cobogo_Alpha", "Folha_Costela"}
 
 def bake_tile(mat, tile, res, vertical=False):
     img = bpy.data.images.new(mat.name + "_bake", res, res, alpha=False)
