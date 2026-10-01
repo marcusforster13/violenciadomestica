@@ -110,6 +110,26 @@
     "vizinho": ["presente", "ausente"]
   },
 
+  "relato_vitima": {
+    "_nota": "Relato livre da vitima (LMP art. 10-A: ouvir sem interromper e sem fazer repetir). Cada fala pode ter audio gravado em 06_Audio/brutos/<audio>.mp3; sem arquivo, o site usa a voz sintetica do navegador. gesto = animacao da personagem.",
+    "completo": [
+      { "audio": "fala_vitima_relato_01", "gesto": "nervosa",    "texto": "Ele chegou tarde… já tinha bebido. Eu estava terminando a janta com a minha filha." },
+      { "audio": "fala_vitima_relato_02", "gesto": "estressada", "texto": "Ele viu a mala no quarto. Eu falei que ia pra casa da minha mãe, e ele começou a gritar." },
+      { "audio": "fala_vitima_relato_03", "gesto": "estressada", "texto": "Jogou o prato no chão, deu um soco na parede… pegou o meu celular e jogou longe." },
+      { "audio": "fala_vitima_relato_04", "gesto": "falando",    "texto": "Aí ele me empurrou contra a mesa. A cadeira caiu, o copo virou… e ele me deu um tapa na boca." },
+      { "audio": "fala_vitima_relato_05", "gesto": "falando",    "texto": "O meu braço tá doendo muito. A minha filha viu tudo… ela correu pro quarto." },
+      { "audio": "fala_vitima_relato_06", "gesto": "nervosa",    "condicao": "variacao.agressor == 'escondido'", "texto": "Quando eu liguei pra vocês ele saiu pelos fundos. Ele não foi embora… ele tá aqui perto, eu sei." },
+      { "audio": "fala_vitima_relato_06b", "gesto": "nervosa",   "condicao": "variacao.agressor == 'fugiu'", "texto": "Quando ouviu a sirene ele saiu correndo pelo portão. Não sei pra onde ele foi." },
+      { "audio": "fala_vitima_relato_06c", "gesto": "nervosa",   "condicao": "variacao.agressor == 'calmo_manipulador'", "texto": "Ele tá lá na cozinha… agora fica fingindo que não aconteceu nada." },
+      { "audio": "fala_vitima_relato_06d", "gesto": "nervosa",   "condicao": "variacao.agressor == 'agressivo'", "texto": "Ele tá lá na cozinha… cuidado, ele tá muito alterado." },
+      { "audio": "fala_vitima_relato_07", "gesto": "ofegante",   "texto": "Por favor… eu não aguento mais. Ele já me ameaçou outras vezes." }
+    ],
+    "minimiza": [
+      { "audio": "fala_vitima_minimiza_01", "gesto": "nervosa",  "texto": "Foi só uma discussão… ele bebeu um pouco e a gente brigou." },
+      { "audio": "fala_vitima_minimiza_02", "gesto": "falando",  "texto": "Esse machucado? Eu bati na mesa. Não precisa fazer nada com ele, não." }
+    ]
+  },
+
   "dialogos": {
     "vitima_primeiro_contato": [
       { "fala": "Senhora, sou da Polícia Militar. A senhora está segura agora. Onde está machucada?", "efeito": { "pontos": 2, "confianca": 2 }, "acao": "linguagem_acolhedora" },

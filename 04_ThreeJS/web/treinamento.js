@@ -131,13 +131,48 @@ export async function iniciar(ctx) {
   }
   function falar(quem, texto, voz = 'f') {
     legenda(quem, texto, Math.max(3, texto.length / 14));
-    if (!S.voz || !('speechSynthesis' in window)) return;
+    return vozSintetica(texto, voz);
+  }
+  // voz do navegador (pt-BR). Retorna uma promessa que termina quando a fala acaba (ou null sem voz)
+  function vozSintetica(texto, voz = 'f') {
+    if (S.voz === false || !('speechSynthesis' in window)) return null;
+    const vs = speechSynthesis.getVoices().filter(v => v.lang && v.lang.replace('_', '-').startsWith('pt'));
+    if (!vs.length) return null;
     try {
       const u = new SpeechSynthesisUtterance(texto); u.lang = 'pt-BR';
-      const vs = speechSynthesis.getVoices().filter(v => v.lang && v.lang.startsWith('pt'));
-      if (vs.length) u.voice = vs[(voz === 'm' ? 1 : 0) % vs.length];
-      u.pitch = voz === 'c' ? 1.6 : voz === 'm' ? .8 : 1.1; u.rate = 1.0; speechSynthesis.speak(u);
-    } catch (e) { }
+      const br = vs.filter(v => /BR/i.test(v.lang)), lista = br.length ? br : vs;
+      const fem = lista.filter(v => /francisca|thalita|maria|luciana|feminin|female|google/i.test(v.name));
+      const mas = lista.filter(v => /antonio|daniel|ricardo|masculin|male/i.test(v.name) && !/female/i.test(v.name));
+      u.voice = (voz === 'm' ? mas[0] : fem[0]) || lista[(voz === 'm' ? 1 : 0) % lista.length];
+      u.pitch = voz === 'c' ? 1.6 : voz === 'm' ? .85 : 1.05; u.rate = voz === 'm' ? 1 : .95;
+      return new Promise(r => { u.onend = u.onerror = () => r(); speechSynthesis.speak(u); });
+    } catch (e) { return null; }
+  }
+  if ('speechSynthesis' in window) speechSynthesis.getVoices();      // o Chrome carrega a lista de vozes na primeira chamada
+
+  /* fala com audio gravado (06_Audio/brutos/<audio>.mp3) ou voz sintetica, legenda e gesto; termina quando a fala acaba */
+  const espera = ms => new Promise(r => setTimeout(r, ms));
+  async function dizer(npc, quem, linha, voz = 'f') {
+    const { texto, gesto, audio } = linha;
+    const som = window.__som, gravado = audio && som?.tem(audio);
+    const seg = gravado ? som.duracao(audio) : Math.max(2.5, texto.length / 13);
+    legenda(quem, texto, seg + .6);
+    if (npc && gesto) animar(npc, gesto, seg + 1.5);
+    if (gravado) { som.tocar(audio, npc ? npc.position.clone().setY(1.55) : null); await espera(seg * 1000 + 350); return; }
+    const p = vozSintetica(texto, voz);
+    await (p ? Promise.race([p, espera(seg * 1000 + 6000)]) : espera(seg * 1000));
+    await espera(350);
+  }
+  let narrando = false;
+  async function relatoVitima() {
+    const v = npcs.vitima; if (!v || narrando) return;
+    narrando = true;
+    try {
+      const R = CEN.relato_vitima || {};
+      const linhas = (['minimiza', 'retrata'].includes(S.variacao.vitima) && R.minimiza) ? R.minimiza : (R.completo || []);
+      for (const l of linhas) if (cond(l.condicao)) await dizer(v, 'Vítima', l, 'f');
+      animar(v, 'parada');
+    } finally { narrando = false; }
   }
 
   /* som simples (batida na porta, obturador da camera) */
@@ -187,7 +222,7 @@ export async function iniciar(ctx) {
   // modo exploracao (antes de iniciar o treinamento): personagens ja aparecem na cena, sem faca
   modelosProntos.then(() => {
     if (S.ativo || !Object.keys(modelos).length) return;
-    S.variacao = { agressor: 'calmo', crianca: 'quarto', vizinho: 'presente', faca: 'nenhuma' };
+    S.variacao = { agressor: 'escondido', crianca: 'quarto', vizinho: 'presente', faca: 'ausente', vitima: 'colabora' };
     criarNPCs();
   });
   function personagem(papel, nome, cor, altura, calca) {
@@ -215,8 +250,9 @@ export async function iniciar(ctx) {
     return g;
   }
   function animar(npc, nome, segundos = 6) {
-    const u = npc?.userData; if (!u?.real || !u.acoes[nome] || u.atual === u.acoes[nome]) return;
-    const nova = u.acoes[nome]; nova.reset().play(); u.atual?.crossFadeTo(nova, .4, false); u.atual = nova;
+    const u = npc?.userData; if (!u?.real || !u.acoes[nome]) return;
+    const nova = u.acoes[nome];
+    if (u.atual !== nova) { nova.reset().play(); u.atual?.crossFadeTo(nova, .5, false); u.atual = nova; }
     clearTimeout(u.volta);
     if (nome !== 'parada' && u.acoes.parada) u.volta = setTimeout(() => animar(npc, 'parada'), segundos * 1000);
   }
@@ -233,9 +269,11 @@ export async function iniciar(ctx) {
     const va = S.variacao.agressor;
     if (va !== 'fugiu') {
       const a = personagem('agressor', 'Agressor', 0x3d4045, 1.78);
-      if (va === 'escondido') a.position.set(-5.3, 0, 5.9); else a.position.set(3.6, 0, -1.6);
-      a.rotation.y = -2.2; npcs.agressor = a; scene.add(a);
-      if (va === 'agressivo') animar(a, 'parada'); else animar(a, 'nervoso', 9999);
+      if (va === 'escondido') { a.position.set(10.5, 0, -1.25); a.rotation.y = -.6; }   // agachado na grama ao lado da casa, atras do arbusto
+      else { a.position.set(3.6, 0, -1.6); a.rotation.y = -2.2; }
+      npcs.agressor = a; scene.add(a);
+      if (va === 'escondido') animar(a, a.userData.acoes?.escondido ? 'escondido' : 'nervoso', 1e6);
+      else if (va === 'agressivo') animar(a, 'parada'); else animar(a, 'nervoso', 1e6);
       if (S.variacao.faca === 'na_mao') {
         S.faca = faca();
         if (a.userData.real) { S.faca.scale.setScalar(100); S.faca.rotation.set(0, Math.PI / 2, 0); }   // a mao do Rocketbox esta em centimetros
@@ -367,6 +405,7 @@ export async function iniciar(ctx) {
       })), 'Primeiro contato');
     }
     const ops = [
+      ['A senhora pode me contar o que aconteceu? No seu tempo.', '__relato', null],
       ['A senhora já sofreu ameaças antes? Ele tem arma? Vocês estão se separando?', 'info_risco', 'Ele já me ameaçou outras vezes. Eu ia embora hoje… a mala está lá.'],
       ['Onde está a sua filha?', null, S.variacao.crianca === 'vizinha' ? 'Ela correu para a casa da vizinha.' : 'No quarto… ela está escondida.'],
       ['Vamos proteger a sua filha. O Conselho Tutelar será comunicado.', 'proteger_crianca', 'Tá… obrigada.'],
@@ -380,6 +419,7 @@ export async function iniciar(ctx) {
     falarDialogo('Vítima', ops.map(([fala, id, resp]) => ({
       label: fala, acao: () => {
         dialogo.esconder();
+        if (id === '__relato') return relatoVitima();
         if (id === '__repete') { penalidade(-2, 'Repetir perguntas sobre o mesmo fato', 'Evitar perguntas repetidas (LMP art. 10-A).'); }
         else if (id) registrar(id);
         if (id === 'conducao_deam' && ['minimiza', 'retrata'].includes(S.variacao.vitima) && !S.desistenciaResolvida) return vitimaDesiste();
@@ -448,8 +488,8 @@ export async function iniciar(ctx) {
 
   /* ================= uso das ferramentas ================= */
   function usar(ray) {
-    if (!S.ativo) return false;
     for (const p of paineis) if (p.clique(ray)) return true;
+    if (!S.ativo) return explorar(ray);
     // personagens
     const npcHits = Object.values(npcs).map(n => n.userData.hit);
     const hn = ray.intersectObjects(npcHits, false)[0];
@@ -606,6 +646,18 @@ export async function iniciar(ctx) {
     }
   }
 
+  /* ================= modo exploracao: clicar nos personagens antes de iniciar o treinamento ================= */
+  function explorar(ray) {
+    const hn = ray.intersectObjects(Object.values(npcs).map(n => n.userData.hit), false)[0];
+    if (!hn || hn.distance > 5) return false;
+    const n = hn.object.userData.npc;
+    if (n === 'Vítima') relatoVitima();
+    else if (n === 'Agressor') dizer(npcs.agressor, 'Agressor', { texto: 'O que vocês tão fazendo aqui? Eu não fiz nada, ela que tá inventando.', gesto: 'falando' }, 'm');
+    else if (n === 'Vizinho') dizer(npcs.vizinho, 'Vizinho', { texto: 'Eu ouvi gritaria e barulho de coisa quebrando. Já é a segunda vez esse mês.', gesto: 'falando' }, 'm');
+    else if (n === 'Criança') dizer(npcs.crianca, 'Criança', { texto: 'Moço… cadê a minha mãe?' }, 'c');
+    return true;
+  }
+
   /* ================= status (computador) ================= */
   function status() {
     const el = document.getElementById('statusTrein'); if (!el) return;
@@ -618,8 +670,18 @@ export async function iniciar(ctx) {
   function quadro() {
     const agora = performance.now(), dt = (agora - ultimo) / 1000; ultimo = agora;
     if (agora > legAte) { leg.visible = false; const hl = document.getElementById('legendaHTML'); if (hl && !hl.hidden) hl.hidden = true; }
-    if (!S.ativo) { for (const n of Object.values(npcs)) n.userData.mixer?.update(dt); return; }
     camera.getWorldPosition(V); camera.getWorldDirection(V2);
+    for (const n of Object.values(npcs)) {
+      n.userData.rotulo.visible = V.distanceTo(n.position) < 7;
+      n.userData.mixer?.update(dt);
+      // vira o rosto para o policial quando ele chega perto (modelo do Rocketbox olha para +Z)
+      if (n.userData.real && n !== npcs.crianca && V.distanceTo(n.position) < 3.5) {
+        const alvo = Math.atan2(V.x - n.position.x, V.z - n.position.z);
+        let d = alvo - n.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d));
+        n.rotation.y += d * Math.min(1, dt * 2.5);
+      }
+    }
+    if (!S.ativo) return;
     const dentroCasa = V.x > -6 && V.x < 6 && V.z > -4 && V.z < 4;
     if (dentroCasa && !S.entrou) { S.entrou = true; if (!S.identificado) registrar('entrada_sem_identificacao'); }
     if (V.z > 13.8 && V2.z < -.6) { S.tempoFachada += dt; if (S.tempoFachada > 3) registrar('observar_fachada'); }
@@ -631,16 +693,6 @@ export async function iniciar(ctx) {
       if (S.tempoDentro > 90 && !S.avisoAgressor) { S.avisoAgressor = true; falar('Agressor', 'Fala alguma coisa pra eles e eu te pego depois!', 'm'); }
       if (S.tempoDentro > 90) ag.position.lerp(new THREE.Vector3(-2.4, 0, 0.9), .01);
       if (S.tempoDentro > 120) registrar('vitima_com_agressor');
-    }
-    for (const n of Object.values(npcs)) {
-      n.userData.rotulo.visible = V.distanceTo(n.position) < 7;
-      n.userData.mixer?.update(dt);
-      // vira o rosto para o policial quando ele chega perto (modelo do Rocketbox olha para +Z)
-      if (n.userData.real && n !== npcs.crianca && V.distanceTo(n.position) < 3.5) {
-        const alvo = Math.atan2(V.x - n.position.x, V.z - n.position.z);
-        let d = alvo - n.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d));
-        n.rotation.y += d * Math.min(1, dt * 2.5);
-      }
     }
     if (Math.floor(agora / 1000) !== Math.floor((agora - dt * 1000) / 1000)) status();
   }

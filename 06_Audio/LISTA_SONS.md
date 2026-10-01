@@ -43,3 +43,28 @@
 As falas da **ligação do 190**, da **vítima**, do **agressor**, da **criança** e do **vizinho** estão no
 `05_Treinamento\cenario_vd_01.json` e no roteiro. O ideal é **gravar com atrizes e atores** (pode ser com
 celular num ambiente silencioso), um arquivo por fala. Enquanto isso, o visualizador usa voz sintética.
+
+### Relato da vítima (já ligado no site: é só gravar e salvar com o nome certo)
+
+Salve em `06_Audio\brutos\` com **exatamente** estes nomes (mp3). Rode o `atualizar_tudo.ps1` ou copie para
+`04_ThreeJS\web\audio\` e acrescente o nome em `audio\manifest.json`. A fala que tiver arquivo toca com a voz
+gravada saindo da personagem; a que não tiver continua com a voz sintética e legenda.
+Dica de gravação: voz baixa, cansada, com pausas — ela acabou de ser agredida. Não precisa ser "atuação" exagerada.
+
+| Arquivo | Fala |
+|---|---|
+| fala_vitima_relato_01.mp3 | Ele chegou tarde… já tinha bebido. Eu estava terminando a janta com a minha filha. |
+| fala_vitima_relato_02.mp3 | Ele viu a mala no quarto. Eu falei que ia pra casa da minha mãe, e ele começou a gritar. |
+| fala_vitima_relato_03.mp3 | Jogou o prato no chão, deu um soco na parede… pegou o meu celular e jogou longe. |
+| fala_vitima_relato_04.mp3 | Aí ele me empurrou contra a mesa. A cadeira caiu, o copo virou… e ele me deu um tapa na boca. |
+| fala_vitima_relato_05.mp3 | O meu braço tá doendo muito. A minha filha viu tudo… ela correu pro quarto. |
+| fala_vitima_relato_06.mp3 | Quando eu liguei pra vocês ele saiu pelos fundos. Ele não foi embora… ele tá aqui perto, eu sei. |
+| fala_vitima_relato_06b.mp3 | Quando ouviu a sirene ele saiu correndo pelo portão. Não sei pra onde ele foi. |
+| fala_vitima_relato_06c.mp3 | Ele tá lá na cozinha… agora fica fingindo que não aconteceu nada. |
+| fala_vitima_relato_06d.mp3 | Ele tá lá na cozinha… cuidado, ele tá muito alterado. |
+| fala_vitima_relato_07.mp3 | Por favor… eu não aguento mais. Ele já me ameaçou outras vezes. |
+| fala_vitima_minimiza_01.mp3 | Foi só uma discussão… ele bebeu um pouco e a gente brigou. |
+| fala_vitima_minimiza_02.mp3 | Esse machucado? Eu bati na mesa. Não precisa fazer nada com ele, não. |
+
+Os textos ficam em `05_Treinamento\cenario_vd_01.json` → `relato_vitima` (pode mudar o texto lá; o gesto de cada
+fala também: falando, estressada, nervosa, ofegante).

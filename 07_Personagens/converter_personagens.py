@@ -19,9 +19,10 @@ FORCAR = "--forcar" in sys.argv
 
 PAPEIS = {
     "vitima":   ("Female_Adult_08", {"parada": "f_idle_nervous_01", "falando": "f_gestic_talk_sad_01",
-                                     "estressada": "f_gestic_talk_femalestressed_01", "ofegante": "f_idle_breathe_01"}),
+                                     "estressada": "f_gestic_talk_femalestressed_01", "nervosa": "f_gestic_talk_nervous_01",
+                                     "ofegante": "f_idle_breathe_01"}),
     "agressor": ("Male_Adult_01",   {"parada": "m_idle_angry_01", "falando": "m_gestic_talk_neutral_01",
-                                     "nervoso": "m_idle_nervous_01"}),
+                                     "nervoso": "m_idle_nervous_01", "escondido": "m_crouch_idle"}),
     "crianca":  ("Female_Child_01", {"parada": "f_crouch_idle", "ofegante": "f_idle_breathe_01"}),
     "vizinho":  ("Male_Adult_14",   {"parada": "m_idle_neutral_01", "falando": "m_gestic_talk_neutral_01"}),
 }

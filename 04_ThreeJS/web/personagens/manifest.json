@@ -5,6 +5,7 @@
    "parada",
    "falando",
    "estressada",
+   "nervosa",
    "ofegante"
   ]
  },
@@ -13,7 +14,8 @@
   "animacoes": [
    "parada",
    "falando",
-   "nervoso"
+   "nervoso",
+   "escondido"
   ]
  },
  "crianca": {

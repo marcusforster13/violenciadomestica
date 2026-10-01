@@ -55,7 +55,7 @@ export async function iniciarAudio({ scene, camera, renderer }) {
   bt.onclick = desbloquear;
   if (navigator.userActivation?.hasBeenActive) desbloquear();     // ja houve clique antes deste modulo carregar
 
-  await Promise.all(Object.entries(arquivos).filter(([n]) => DEF[n]).map(([n, url]) =>
+  await Promise.all(Object.entries(arquivos).filter(([n]) => DEF[n] || n.startsWith('fala_')).map(([n, url]) =>
     loader.loadAsync(url).then(b => { buffers[n] = b; ganho[n] = normalizar(b); }).catch(() => console.warn('som nao carregou:', url))));
   pronto = true;
   if (gesto) ligar();
@@ -75,6 +75,7 @@ export async function iniciarAudio({ scene, camera, renderer }) {
     bt.remove();
     for (const [n, b] of Object.entries(buffers)) {
       const d = DEF[n];
+      if (!d) continue;                               // falas: so tocam quando o treinamento chama
       if (d.tipo === 'ambiente') {
         const a = new THREE.Audio(listener); a.setBuffer(b); a.setLoop(true); a.setVolume(0); a.play();
         ambientes.push({ a, d, n });
@@ -119,10 +120,11 @@ export async function iniciarAudio({ scene, camera, renderer }) {
 
   const api = {
     tem: n => !!buffers[n],
+    duracao: n => buffers[n]?.duration || 0,           // segundos (falas gravadas)
     tocar(n, pos) {                                   // eventos do treinamento; retorna false se o arquivo nao existe
       if (!buffers[n]) return false;
       ligar();
-      const d = DEF[n] || { vol: .7 };
+      const d = DEF[n] || { vol: n.startsWith('fala_') ? 1 : .7 };
       if (mudo) return true;
       if (pos) {
         const a = new THREE.PositionalAudio(listener); a.setBuffer(buffers[n]); a.setRefDistance(1.2); a.setVolume(vol(n, d.vol));
