@@ -74,6 +74,7 @@ else:
             for c in list(o.users_collection):
                 c.objects.unlink(o)
             col.objects.link(o)
+            o["modelo_usuario"] = arq          # os scripts de detalhamento nao mexem em modelos feitos a mao
             for slot in o.material_slots:
                 m = slot.material
                 if m and m not in mats_antes:
