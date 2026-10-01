@@ -9,6 +9,8 @@
   Variacoes forcadas pela URL (para o instrutor):  ?v=agressor:agressivo,faca:pia,vitima:retrata
 */
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 
 export async function iniciar(ctx) {
   const { scene, camera, rig, renderer } = ctx;
@@ -176,28 +178,72 @@ export async function iniciar(ctx) {
     g.userData = { hit, bracoD, rotulo, nome };
     return g;
   }
+  /* personagens reais (Rocketbox, licenca MIT) convertidos para personagens/*.glb; se faltar, usa o boneco */
+  const modelos = {};
+  fetch('personagens/manifest.json').then(r => r.ok ? r.json() : {}).then(man => {
+    const gl = new GLTFLoader();
+    for (const [papel, info] of Object.entries(man)) gl.loadAsync(info.arquivo).then(g => { modelos[papel] = g; }).catch(() => { });
+  }).catch(() => { });
+  function personagem(papel, nome, cor, altura, calca) {
+    const base = modelos[papel];
+    if (!base) return boneco(nome, cor, altura, calca);
+    const g = new THREE.Group(); g.name = 'NPC_' + nome;
+    const m = SkeletonUtils.clone(base.scene);
+    m.traverse(o => { if (o.isMesh) o.frustumCulled = false; });
+    g.add(m);
+    const mixer = new THREE.AnimationMixer(m), acoes = {};
+    for (const clip of base.animations) acoes[clip.name.replace(/\.\d+$/, '')] = mixer.clipAction(clip);
+    const parada = acoes.parada || Object.values(acoes)[0];
+    if (parada) { parada.play(); parada.time = Math.random() * parada.getClip().duration; }
+    const box = new THREE.Box3().setFromObject(m), alt = Math.max(box.max.y - box.min.y, altura * .6);
+    const hit = new THREE.Mesh(new THREE.CylinderGeometry(.38, .38, alt, 8), new THREE.MeshBasicMaterial({ visible: false }));
+    hit.position.y = alt / 2; hit.userData.npc = nome; g.add(hit);
+    const ecv = document.createElement('canvas'); ecv.width = 256; ecv.height = 64; const eg = ecv.getContext('2d');
+    eg.fillStyle = 'rgba(5,7,12,.7)'; eg.beginPath(); eg.roundRect(0, 0, 256, 64, 14); eg.fill();
+    eg.fillStyle = '#efe9df'; eg.font = '600 32px Segoe UI, sans-serif'; eg.textAlign = 'center'; eg.fillText(nome, 128, 44);
+    const et = new THREE.CanvasTexture(ecv); et.colorSpace = THREE.SRGBColorSpace;
+    const rotulo = new THREE.Sprite(new THREE.SpriteMaterial({ map: et, depthTest: true, transparent: true, fog: false }));
+    rotulo.scale.set(.5, .125, 1); rotulo.position.y = alt + .25; g.add(rotulo);
+    const mao = m.getObjectByName('Bip01_R_Hand') || m.getObjectByName('Bip01 R Hand');
+    g.userData = { hit, rotulo, nome, mixer, acoes, atual: parada, modelo: m, bracoD: mao || g, real: true };
+    return g;
+  }
+  function animar(npc, nome, segundos = 6) {
+    const u = npc?.userData; if (!u?.real || !u.acoes[nome] || u.atual === u.acoes[nome]) return;
+    const nova = u.acoes[nome]; nova.reset().play(); u.atual?.crossFadeTo(nova, .4, false); u.atual = nova;
+    clearTimeout(u.volta);
+    if (nome !== 'parada' && u.acoes.parada) u.volta = setTimeout(() => animar(npc, 'parada'), segundos * 1000);
+  }
   const npcs = {};
   function criarNPCs() {
     Object.values(npcs).forEach(n => scene.remove(n)); for (const k in npcs) delete npcs[k];
-    const v = boneco('Vítima', 0x9b2d3a, 1.64, 0x3a3f55); v.position.set(-3.1, 0, 0.7); v.rotation.y = 2.4;
-    const lesao = new THREE.MeshStandardMaterial({ color: 0x6a1010, roughness: .5 });
-    const l1 = new THREE.Mesh(new THREE.SphereGeometry(.018, 8, 6), lesao); l1.position.set(.03, 1.52, .1); v.add(l1);
-    const l2 = new THREE.Mesh(new THREE.SphereGeometry(.03, 8, 6), lesao); l2.position.set(.27, 1.05, .05); v.add(l2);
+    const v = personagem('vitima', 'Vítima', 0x9b2d3a, 1.64, 0x3a3f55); v.position.set(-3.1, 0, 0.7); v.rotation.y = 2.4;
+    if (!v.userData.real) {
+      const lesao = new THREE.MeshStandardMaterial({ color: 0x6a1010, roughness: .5 });
+      const l1 = new THREE.Mesh(new THREE.SphereGeometry(.018, 8, 6), lesao); l1.position.set(.03, 1.52, .1); v.add(l1);
+      const l2 = new THREE.Mesh(new THREE.SphereGeometry(.03, 8, 6), lesao); l2.position.set(.27, 1.05, .05); v.add(l2);
+    }
     npcs.vitima = v; scene.add(v);
     const va = S.variacao.agressor;
     if (va !== 'fugiu') {
-      const a = boneco('Agressor', 0x3d4045, 1.78);
+      const a = personagem('agressor', 'Agressor', 0x3d4045, 1.78);
       if (va === 'escondido') a.position.set(-5.3, 0, 5.9); else a.position.set(3.6, 0, -1.6);
       a.rotation.y = -2.2; npcs.agressor = a; scene.add(a);
-      if (S.variacao.faca === 'na_mao') { S.faca = faca(); S.faca.position.set(0, -.3, 0); a.userData.bracoD.add(S.faca); }
+      if (va === 'agressivo') animar(a, 'parada'); else animar(a, 'nervoso', 9999);
+      if (S.variacao.faca === 'na_mao') {
+        S.faca = faca();
+        if (a.userData.real) { S.faca.scale.setScalar(100); S.faca.rotation.set(0, Math.PI / 2, 0); }   // a mao do Rocketbox esta em centimetros
+        else S.faca.position.set(0, -.3, 0);
+        a.userData.bracoD.add(S.faca);
+      }
     }
     if (S.variacao.faca === 'pia') { S.faca = faca(); S.faca.position.set(5.55, .935, -0.9); S.faca.rotation.y = .4; scene.add(S.faca); }
     const vc = S.variacao.crianca;
-    const c = boneco('Criança', 0x2a6f97, 1.15, 0x1e2a44);
+    const c = personagem('crianca', 'Criança', 0x2a6f97, 1.15, 0x1e2a44);
     if (vc === 'quarto') c.position.set(-6.55, 0, 2.05); else if (vc === 'corredor') c.position.set(-5.5, 0, 2.6); else c.position.set(5.0, 0, 14.9);
     c.rotation.y = 1.4; npcs.crianca = c; scene.add(c);
     if (S.variacao.vizinho === 'presente' || vc === 'vizinha') {
-      const n = boneco('Vizinho', 0x3d6b3a, 1.72); n.position.set(4.2, .1, 14.7); n.rotation.y = Math.PI; npcs.vizinho = n; scene.add(n);
+      const n = personagem('vizinho', 'Vizinho', 0x3d6b3a, 1.72); n.position.set(4.2, .1, 14.7); n.rotation.y = Math.PI; npcs.vizinho = n; scene.add(n);
     }
   }
   function faca() {
@@ -305,6 +351,7 @@ export async function iniciar(ctx) {
     if (e.falha_grave) registrar(e.falha_grave);
   }
   function conversarVitima() {
+    animar(npcs.vitima, 'falando');
     if (!S.contatoVitima) {
       return falarDialogo('Vítima', dlg('vitima_primeiro_contato').map(op => ({
         label: op.fala, acao: () => {
@@ -335,16 +382,18 @@ export async function iniciar(ctx) {
     })), 'Atendimento à vítima');
   }
   function vitimaDesiste() {
+    animar(npcs.vitima, 'estressada', 8);
     falar('Vítima', S.variacao.vitima === 'minimiza' ? 'Não precisa disso tudo… eu caí, foi só uma discussão.' : 'Eu não quero dar queixa. Ele é o pai da minha filha.', 'f');
     setTimeout(() => falarDialogo('Vítima', dlg('vitima_desiste').map(op => ({
       label: op.fala, acao: () => { S.desistenciaResolvida = true; aplicarEfeito(op); dialogo.esconder(); if (op.acao) falar('Vítima', 'Tá… eu vou.', 'f'); }
     })), 'A vítima quer desistir'), 1500);
   }
   function conversarAgressor() {
+    animar(npcs.agressor, 'falando');
     const ops = dlg('agressor_minimiza').map(op => ({
       label: op.fala, acao: () => {
         aplicarEfeito(op); dialogo.esconder();
-        if (op.acao === 'separar_partes') { S.separado = true; npcs.agressor.position.set(-2.5, 0, 6.2); falar('Agressor', 'Tá bom, tá bom… mas foi só uma briga.', 'm'); }
+        if (op.acao === 'separar_partes') { S.separado = true; npcs.agressor.position.set(-2.5, 0, 6.2); animar(npcs.agressor, 'nervoso', 9999); falar('Agressor', 'Tá bom, tá bom… mas foi só uma briga.', 'm'); }
         else falar('Agressor', 'Você não manda na minha casa!', 'm');
       }
     }));
@@ -366,6 +415,7 @@ export async function iniciar(ctx) {
     })), 'Justificativa do uso de algemas (SV 11)');
   }
   function conversarVizinho() {
+    animar(npcs.vizinho, 'falando');
     falarDialogo('Vizinho', [{
       label: 'Boa noite. O senhor viu ou ouviu algo? Pode me passar nome e documento?', acao: () => {
         registrar('qualificar_testemunha'); dialogo.esconder();
@@ -566,7 +616,16 @@ export async function iniciar(ctx) {
       if (S.tempoDentro > 90) ag.position.lerp(new THREE.Vector3(-2.4, 0, 0.9), .01);
       if (S.tempoDentro > 120) registrar('vitima_com_agressor');
     }
-    for (const n of Object.values(npcs)) n.userData.rotulo.visible = V.distanceTo(n.position) < 7;
+    for (const n of Object.values(npcs)) {
+      n.userData.rotulo.visible = V.distanceTo(n.position) < 7;
+      n.userData.mixer?.update(dt);
+      // vira o rosto para o policial quando ele chega perto (modelo do Rocketbox olha para +Z)
+      if (n.userData.real && n !== npcs.crianca && V.distanceTo(n.position) < 3.5) {
+        const alvo = Math.atan2(V.x - n.position.x, V.z - n.position.z);
+        let d = alvo - n.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d));
+        n.rotation.y += d * Math.min(1, dt * 2.5);
+      }
+    }
     if (Math.floor(agora / 1000) !== Math.floor((agora - dt * 1000) / 1000)) status();
   }
 

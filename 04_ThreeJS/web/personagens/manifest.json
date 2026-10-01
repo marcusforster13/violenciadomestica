@@ -1,0 +1,33 @@
+{
+ "vitima": {
+  "arquivo": "personagens/vitima.glb",
+  "animacoes": [
+   "parada",
+   "falando",
+   "estressada",
+   "ofegante"
+  ]
+ },
+ "agressor": {
+  "arquivo": "personagens/agressor.glb",
+  "animacoes": [
+   "parada",
+   "falando",
+   "nervoso"
+  ]
+ },
+ "crianca": {
+  "arquivo": "personagens/crianca.glb",
+  "animacoes": [
+   "parada",
+   "ofegante"
+  ]
+ },
+ "vizinho": {
+  "arquivo": "personagens/vizinho.glb",
+  "animacoes": [
+   "parada",
+   "falando"
+  ]
+ }
+}
