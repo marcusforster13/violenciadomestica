@@ -4,8 +4,8 @@
 
   Controles
     Computador: clique = usar ferramenta / interagir / botoes   T = ferramentas   R = radio   K = checklist
-    Quest:      gatilho direito = usar ferramenta / botoes / teleporte
-                grip esquerdo = menu de ferramentas   grip direito = lanterna
+    Quest:      gatilho = usar ferramenta / botoes / teleporte
+                grip (qualquer mao) = lanterna   botao Y ou B = menu do treinamento
   Variacoes forcadas pela URL (para o instrutor):  ?v=agressor:agressivo,faca:pia,vitima:retrata
 */
 import * as THREE from 'three';
@@ -468,7 +468,7 @@ export async function iniciar(ctx) {
       tag: 'Treinamento', titulo: 'Ocorrência de violência doméstica',
       texto: 'Aviso de conteúdo: esta simulação trata de violência doméstica. Pause quando precisar.\n\n' +
         'Computador: clique para usar a ferramenta e falar com as pessoas · T ferramentas · R rádio · K checklist.\n' +
-        'Quest: gatilho direito usa/clica · grip esquerdo abre as ferramentas · grip direito lanterna.',
+        'Quest: gatilho usa/clica · botão Y ou B abre as ferramentas · grip liga a lanterna.',
       botoes: [
         { label: 'Começar (com voz sintética)', acao: () => { S.voz = true; comecar(); } },
         { label: 'Começar (só legendas)', acao: () => { S.voz = false; comecar(); } },

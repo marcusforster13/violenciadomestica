@@ -47,7 +47,7 @@
     <dt>Clique</dt><dd>abrir um vestígio</dd>
     <dt>F · G · H · L</dt><dd>lanterna · giroflex · marcadores · luz pré-calculada</dd>
     <dt>I · C · N</dt><dd>inverter o olhar · alternar céu · colisão liga/desliga</dd>
-    <dt>VR</dt><dd>gatilho teleporta ou abre vestígio · grip liga a lanterna · analógicos andam e giram</dd>
+    <dt>VR</dt><dd>gatilho teleporta / usa · grip liga a lanterna · Y ou B abre o menu do treinamento · analógicos andam e giram</dd>
   </dl>
   <label>Exposição <input id="exp" type="range" min="0.2" max="3" step="0.05" value="1"></label>
   <label>Luz pré-calculada <input id="lmg" type="range" min="0" max="3" step="0.05" value="1"></label>
@@ -366,8 +366,8 @@ for (const i of [0, 1]) {
     if (p) { camera.getWorldPosition(V1); rig.position.x += p.x - V1.x; rig.position.z += p.z - V1.z; rig.position.y = p.y; }
   });
   c.addEventListener('connected', e => { c.userData.mao = e.data.handedness; });
-  // grip esquerdo = menu de ferramentas do treinamento; grip direito = lanterna
-  c.addEventListener('squeezestart', () => { if (c.userData.mao === 'left' && window.__trein) return window.__trein.menu(); setLanterna(!lantOn, c); });
+  // grip (qualquer mao) = lanterna, sempre. O menu do treinamento fica nos botoes Y/B (ver vrMove).
+  c.addEventListener('squeezestart', () => setLanterna(!lantOn, c));
   rig.add(c); controles.push(c);
   const grip = renderer.xr.getControllerGrip(i); grip.add(cmf.createControllerModel(grip)); rig.add(grip);
 }
@@ -378,11 +378,15 @@ function alvoTeleporte(c) {
   const n = h.face.normal.clone().transformDirection(h.object.matrixWorld);
   return n.y > 0.7 && h.distance < 20 ? h.point : null;
 }
-let snapOk = true;
+let snapOk = true; const botoesAntes = {};
 function vrMove(dt) {
   const s = renderer.xr.getSession(); if (!s) return;
   for (const src of s.inputSources) {
     const gp = src.gamepad; if (!gp) continue;
+    // botao Y (esquerdo) ou B (direito) = menu do treinamento
+    const yb = !!gp.buttons[5]?.pressed, k = 'yb_' + src.handedness;
+    if (yb && !botoesAntes[k]) window.__trein?.menu();
+    botoesAntes[k] = yb;
     const x = gp.axes[2] ?? gp.axes[0] ?? 0, y = gp.axes[3] ?? gp.axes[1] ?? 0;
     if (src.handedness === 'left' && Math.hypot(x, y) > .15) {
       viewer().getWorldDirection(V2); V2.y = 0; V2.normalize();

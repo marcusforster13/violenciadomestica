@@ -17,7 +17,7 @@ MODO TREINAMENTO (fase 2)
   Computador: clique = usar a ferramenta / falar com as pessoas / botoes
               T = ferramentas (mao, camera, placa, fita, algemas, luvas, lanterna, radio, checklist, encerrar)
               R = radio   K = checklist
-  Quest:      gatilho direito = usar / clicar   grip esquerdo = ferramentas   grip direito = lanterna
+  Quest:      gatilho = usar / clicar   botao Y ou B = ferramentas   grip (qualquer mao) = lanterna
   Ao encerrar: nota por fase, falhas graves, base legal e botao para baixar o relatorio (JSON).
   Instrutor pode forcar variacoes pela URL:
      ...vercel.app/?v=agressor:agressivo,faca:pia,vitima:retrata,crianca:quarto,vizinho:presente,medida_protetiva:vigente
@@ -30,7 +30,7 @@ COMO VER NO QUEST 3
     b) Publicar a pasta web\ num host com HTTPS (GitHub Pages, Netlify, Cloudflare Pages)
        e abrir o link no navegador do Quest.
   - No VR: gatilho = teleporte (ou abre o vestigio que estiver na mira)
-           grip = lanterna na mao  |  analogico esq. = andar  |  analogico dir. = girar
+           grip = lanterna na mao  |  Y ou B = menu do treinamento  |  analogico esq. = andar  |  analogico dir. = girar
 
 COMO ATUALIZAR (depois de mexer na cena principal)
   Na pasta DV, rode no PowerShell:
