@@ -15,7 +15,9 @@ Push-Location "$D\01_Cena_Render_Cycles"
 & $B -b "casa_em_silencio.blend" --python "integrar_modelos.py" 2>&1 | Select-String -Pattern '^\[MODELOS\]' | ForEach-Object { $_.Line }
 & $B -b "casa_em_silencio.blend" --python "melhorias_modelagem.py" 2>&1 | Select-String -Pattern '^\[MODELAGEM\]' | ForEach-Object { $_.Line }
 & $B -b "casa_em_silencio.blend" --python "adicionar_cameras_lpr.py" 2>&1 | Select-String -Pattern '^\[LPR\]' | ForEach-Object { $_.Line }
+& $B -b "casa_em_silencio.blend" --python "pecas_detalhadas.py" 2>&1 | Select-String -Pattern '^\[DETALHE\]' | ForEach-Object { $_.Line }
 & $B -b "casa_em_silencio.blend" --python "suavizar_objetos.py" 2>&1 | Select-String -Pattern '^\[SUAVE\]' | ForEach-Object { $_.Line }
+& $B -b "casa_em_silencio.blend" --python "aplicar_texturas_cc0.py" 2>&1 | Select-String -Pattern '^\[CC0\]' | ForEach-Object { $_.Line }
 Pop-Location
 
 Write-Host "1/2  Gerando versao VR (Unity/Unreal)..."

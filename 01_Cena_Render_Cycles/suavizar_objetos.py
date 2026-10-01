@@ -21,7 +21,7 @@ feitos = 0
 for ob in bpy.data.objects:
     if ob.type != "MESH" or not any(a in ob.name for a in ALVOS) or any(p in ob.name for p in PULAR):
         continue
-    if ob.modifiers.get("MM_Suave") or any(m.type in {"ARRAY", "BOOLEAN", "SUBSURF", "WIREFRAME", "NODES"} for m in ob.modifiers):
+    if ob.get("detalhado") or ob.modifiers.get("MM_Suave") or any(m.type in {"ARRAY", "BOOLEAN", "SUBSURF", "WIREFRAME", "NODES"} for m in ob.modifiers):
         continue
     me = ob.data
     if len(me.vertices) < 12 or len(me.polygons) > 4000:

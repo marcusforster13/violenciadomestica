@@ -31,7 +31,7 @@ def lin(c):
 def arquivos(pasta):
     d = os.path.join(TEX, pasta); fs = sorted(os.listdir(d))
     pick = lambda k: next((os.path.join(d, f) for f in fs if k in f.lower()), None)
-    return pick("_diff"), pick("_rough"), pick("_disp")
+    return pick("_diff") or pick("_col"), pick("_rough"), pick("_disp")
 
 def grafite(path):
     """Versao grafite do metal verde (mantem arranhoes e ferrugem). Salva junto das texturas."""
@@ -130,6 +130,8 @@ TABELA = {
     "Portao_Ferro":             ("metal_pintado", 1.0, "#2a2d31", grafite, .15),
     "Poste_Metal":              ("metal_pintado", 1.0, "#3b3d40", grafite, .15),
     "Transformador":            ("metal_pintado", 1.0, "#7e8488", grafite, .15),
+    "Couro_Caramelo":           ("couro", .6, None, None, .5),
+    "Tronco_Palmeira":          ("casca_arvore", 1.2, "#6b5b4a", None, .9),
 }
 feitos = []
 for nome, (pasta, tile, tint, rec, relevo) in TABELA.items():

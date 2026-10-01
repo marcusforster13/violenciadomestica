@@ -59,9 +59,11 @@ else:
         say("backup: %s" % os.path.basename(destino))
 
     for arq, caminho, mtime, info in pendentes:
-        alvo = bpy.data.objects.get(info["substitui"])
-        if alvo:
-            apagar_hierarquia(alvo)
+        nomes = info["substitui"] if isinstance(info["substitui"], list) else [info["substitui"]]
+        for nome in nomes:                          # aceita um nome ou uma lista de nomes
+            alvo = bpy.data.objects.get(nome)
+            if alvo:
+                apagar_hierarquia(alvo)
         antes = set(bpy.data.objects)
         mats_antes = set(bpy.data.materials)
         bpy.ops.import_scene.gltf(filepath=caminho)

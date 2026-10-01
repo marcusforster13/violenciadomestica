@@ -58,7 +58,7 @@ def maps(pasta):
     d = os.path.join(TEX, pasta)
     fs = sorted(f for f in os.listdir(d) if not f.startswith("metal_grafite"))
     pick = lambda k: next((os.path.join(d, f) for f in fs if k in f.lower()), None)
-    return pick("_diff"), pick("_rough"), pick("_nor_gl")
+    return pick("_diff") or pick("_col"), pick("_rough"), pick("_nor_gl")
 
 def para_png8(path, nome):
     """EXR/JPG de dados (rugosidade, normal) -> PNG 8 bits Non-Color, que o three.js le."""
@@ -162,6 +162,8 @@ PBR = {
     "Portao_Ferro":             ("metal_pintado", 1.0, 1.0, "#2a2d31", grafite),
     "Poste_Metal":              ("metal_pintado", 1.0, 1.0, "#3b3d40", grafite),
     "Transformador":            ("metal_pintado", 1.0, 1.0, "#7e8488", grafite),
+    "Couro_Caramelo":           ("couro", .6, 1.0, None, None),
+    "Tronco_Palmeira":          ("casca_arvore", 1.2, 1.0, "#6b5b4a", None),
 }
 n_pbr = 0
 for nome, (pasta, tile, antigo, tint, rec) in PBR.items():
