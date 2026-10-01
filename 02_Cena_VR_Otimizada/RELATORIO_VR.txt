@@ -24,7 +24,7 @@ Etapas:
   - Grama instanciada removida de 8 gramados; subdivisao=1, remesh 0.16 m, decimate 35% na folhagem.
   - Modificadores aplicados em 1879 objetos; textos e fios convertidos em malha.
   - Bake de 4 materiais procedurais em texturas de imagem.
-  - 22 materiais com texturas CC0 convertidos para UV + PNG (cor, rugosidade, normal).
+  - 30 materiais com texturas CC0 convertidos para UV + PNG (cor, rugosidade, normal).
   - UVs em caixa (escala real em metros) aplicadas em todas as malhas.
   - Grama: 6381 tufos em cartoes cruzados com alfa (25524 tris) no lugar de ~15 milhoes de tris.
   - Colisao: 1224 caixas orientadas preparadas.

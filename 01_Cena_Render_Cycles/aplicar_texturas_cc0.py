@@ -48,6 +48,19 @@ def grafite(path):
         bpy.data.images.remove(src); bpy.data.images.remove(dst)
     return out
 
+def neutro(path):
+    """Tecido em tom neutro e claro (sem cor), para tingir com a cor de cada estofado."""
+    out = os.path.join(os.path.dirname(path), "tecido_neutro_cor.png")
+    if not os.path.exists(out):
+        src = bpy.data.images.load(path)
+        w, h = src.size; px = np.empty(w * h * 4, np.float32); src.pixels.foreach_get(px)
+        px = px.reshape(-1, 4); g = (px[:, :3] @ np.array([.3, .59, .11]))[:, None]
+        px[:, :3] = np.clip(g / max(g.mean(), 1e-3) * .78, 0, 1)
+        dst = bpy.data.images.new("_tmp_neutro", w, h, alpha=False)
+        dst.pixels.foreach_set(px.ravel()); dst.filepath_raw = out; dst.file_format = "PNG"; dst.save()
+        bpy.data.images.remove(src); bpy.data.images.remove(dst)
+    return out
+
 def carregar(path, dados):
     img = bpy.data.images.load(path, check_existing=True)
     try:
@@ -106,7 +119,7 @@ def pbr_caixa(mat, pasta, tile, tint=None, recolor=None, relevo=.35):
     mat["cc0_pasta"] = pasta
     mat["cc0_tile"] = float(tile)
     mat["cc0_tint"] = list(alvo)
-    mat["cc0_recolor"] = "grafite" if recolor else ""
+    mat["cc0_recolor"] = recolor.__name__ if recolor else ""
 
 # nome do material -> (pasta, tile em metros, cor alvo, recolor, forca do relevo)
 TABELA = {
@@ -132,7 +145,14 @@ TABELA = {
     "Transformador":            ("metal_pintado", 1.0, "#7e8488", grafite, .15),
     "Couro_Caramelo":           ("couro", .6, None, None, .5),
     "Tronco_Palmeira":          ("casca_arvore", 1.2, "#6b5b4a", None, .9),
+    "Tecido_Verde":             ("tecido", .35, "#50604f", neutro, .3),
+    "Tecido_Areia":             ("tecido", .35, "#c9b58c", neutro, .3),
 }
+# estofados e cortinas das casas vizinhas (cores sorteadas na criacao da cena)
+for _m in list(bpy.data.materials):
+    if _m.name.endswith(("_Tecido_Sofa", "_Cortina")) and _m.name not in TABELA:
+        _c = tuple(round(min(1, max(0, x)) ** (1 / 2.2) * 255) for x in _m.diffuse_color[:3])
+        TABELA[_m.name] = ("tecido", .35 if _m.name.endswith("Sofa") else .5, "#%02x%02x%02x" % _c, neutro, .25)
 feitos = []
 for nome, (pasta, tile, tint, rec, relevo) in TABELA.items():
     m = bpy.data.materials.get(nome)

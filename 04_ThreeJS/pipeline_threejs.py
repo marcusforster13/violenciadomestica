@@ -94,11 +94,16 @@ def media_linear(img):
     m = px.reshape(-1, 4)[::7, :3].mean(0)
     return lin(tuple(m)) if img.colorspace_settings.name == "sRGB" else tuple(m)
 
-def aplicar_pbr(mat, pasta, tile, tile_antigo=1.0, tint=None, recolor=None, metal=0.0):
+def neutro(path):
+    """Usa a versao neutra do tecido gerada pela cena principal (aplicar_texturas_cc0.py)."""
+    p = os.path.join(os.path.dirname(path), "tecido_neutro_cor.png")
+    return p if os.path.exists(p) else path
+
+def aplicar_pbr(mat, pasta, tile, tile_antigo=1.0, tint=None, recolor=None, metal=0.0, alvo_lin=None):
     diff, rough, nor = maps(pasta)
     if recolor:
         diff = recolor(diff)
-    alvo = lin(hx(tint)) if tint else tuple(mat.diffuse_color[:3])
+    alvo = tuple(alvo_lin) if alvo_lin else (lin(hx(tint)) if tint else tuple(mat.diffuse_color[:3]))
     nt = mat.node_tree
     out = next(n for n in nt.nodes if n.type == "OUTPUT_MATERIAL")
     b = next((n for n in nt.nodes if n.type == "BSDF_PRINCIPLED"), None) or nt.nodes.new("ShaderNodeBsdfPrincipled")
@@ -172,6 +177,17 @@ for nome, (pasta, tile, antigo, tint, rec) in PBR.items():
         if "cc0_tile" in m:            # a versao VR ja fez a UV no tamanho do tile CC0
             antigo = float(m["cc0_tile"])
         aplicar_pbr(m, pasta, tile, antigo, tint, rec); n_pbr += 1
+# qualquer outro material marcado como CC0 na cena principal (ex.: tecidos dos estofados e cortinas)
+RECOLOR = {"grafite": grafite, "neutro": neutro}
+for m in bpy.data.materials:
+    if m.name in PBR or "cc0_pasta" not in m or not m.node_tree:
+        continue
+    pasta = m["cc0_pasta"]
+    if not os.path.isdir(os.path.join(TEX, pasta)):
+        continue
+    t = float(m.get("cc0_tile", 1.0))
+    aplicar_pbr(m, pasta, t, t, recolor=RECOLOR.get(m.get("cc0_recolor", "")), alvo_lin=m.get("cc0_tint"))
+    n_pbr += 1
 say("%d materiais trocados por PBR com texturas CC0" % n_pbr)
 
 # ------------------------------------------------------------------ 2. lightmaps (bake do Cycles)
