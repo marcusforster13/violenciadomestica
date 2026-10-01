@@ -21,10 +21,10 @@
 
 | Nome do arquivo | O que é | Buscar por (inglês) | Onde toca |
 |---|---|---|---|
-| `amb_rua_noite` | Ambiente noturno de bairro: grilos, cidade ao longe | *night ambience suburb crickets loop* | Rua, sempre |
+| ✅ `amb_rua_noite` | Ambiente noturno de bairro: grilos, cidade ao longe | *night ambience suburb crickets loop* | Rua, sempre (abafado dentro da casa) |
 | `amb_casa_interior` | Silêncio de casa com zumbido baixo | *room tone house night* | Dentro da casa |
 | `tv_abafada` | TV ligada, vozes abafadas | *tv murmur muffled* / *television background* | Sala (sai da TV) |
-| `geladeira_zumbido` | Motor da geladeira | *refrigerator hum loop* | Cozinha |
+| ✅ `geladeira_zumbido` | Motor da geladeira | *refrigerator hum loop* | Cozinha (sai da geladeira) |
 | `radio_chiado` | Chiado e bip do rádio policial (sem falas reais) | *police radio static beep* / *walkie talkie beep* | Rádio da guarnição |
 | `radio_bip` | Bip curto de transmissão (PTT) | *radio push to talk beep* | Ao usar o rádio |
 | `motor_viatura` | Carro parado em marcha lenta | *car engine idle loop* | Viatura |

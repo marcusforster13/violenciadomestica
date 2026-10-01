@@ -309,6 +309,15 @@ if os.path.isdir(cen_src):
         if f.endswith(".json"):
             shutil.copy2(os.path.join(cen_src, f), os.path.join(WEB, "treinamento", f))
     say("cenarios de treinamento copiados para web/treinamento/")
+aud_src = os.path.normpath(os.path.join(BASE, "..", "06_Audio", "brutos"))
+if os.path.isdir(aud_src):
+    aud_dst = os.path.join(WEB, "audio"); os.makedirs(aud_dst, exist_ok=True)
+    sons = sorted(f for f in os.listdir(aud_src) if f.lower().endswith((".mp3", ".ogg", ".wav")))
+    for f in sons:
+        shutil.copy2(os.path.join(aud_src, f), os.path.join(aud_dst, f))
+    with open(os.path.join(aud_dst, "manifest.json"), "w", encoding="utf-8") as fh:
+        json.dump(sons, fh, ensure_ascii=False)
+    say("%d sons copiados para web/audio/ (%s)" % (len(sons), ", ".join(sons)))
 cfg = {"gerado_em": time.strftime("%Y-%m-%d %H:%M"), "qualidade": "rapida" if RAPIDO else ("alta" if ALTA else "padrao"),
        "lightmaps": lm_json, "lightmap_ganho": round(math.pi, 5), "exposicao": 1.0,
        "env": env_arq, "env_intensidade": .35, "cameras": cams, "giroflex": giro}

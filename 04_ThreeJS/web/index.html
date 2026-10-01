@@ -46,7 +46,7 @@
     <dt>W A S D</dt><dd>andar · Shift corre · setas giram</dd>
     <dt>Clique</dt><dd>abrir um vestígio</dd>
     <dt>F · G · H · L</dt><dd>lanterna · giroflex · marcadores · luz pré-calculada</dd>
-    <dt>I · C · N</dt><dd>inverter o olhar · alternar céu · colisão liga/desliga</dd>
+    <dt>I · C · N · M</dt><dd>inverter o olhar · alternar céu · colisão · som liga/desliga</dd>
     <dt>VR</dt><dd>gatilho teleporta / usa · grip liga a lanterna · Y ou B abre o menu do treinamento · analógicos andam e giram</dd>
   </dl>
   <label>Exposição <input id="exp" type="range" min="0.2" max="3" step="0.05" value="1"></label>
@@ -431,8 +431,14 @@ renderer.setAnimationLoop(() => {
   ceu.position.copy(V1); ceu.material.uniforms.uTempo.value = t;
   hotspots.children.forEach((g, i) => { g.lookAt(V1); g.userData.ring.scale.setScalar(1 + .18 * Math.sin(t * 3 + i)); });
   window.__trein?.quadro();
+  window.__som?.quadro(dt);
   renderer.render(scene, camera);
 });
+
+/* ---------- sons (ambiente, posicionais, eventos) ---------- */
+import('./audio.js').then(m => m.iniciarAudio({ scene, camera, renderer })).catch(e => console.warn('Áudio não carregou:', e));
+let somMudo = false;
+addEventListener('keydown', e => { if (e.code === 'KeyM' && window.__som) { somMudo = !somMudo; window.__som.mudo(somMudo); } });
 
 /* ---------- motor do treinamento (fase 2) ---------- */
 import('./treinamento.js').then(m => m.iniciar({

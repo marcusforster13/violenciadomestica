@@ -141,6 +141,9 @@ export async function iniciar(ctx) {
   /* som simples (batida na porta, obturador da camera) */
   let AC = null;
   function som(tipo) {
+    const arq = { porta: 'batida_porta', foto: 'obturador', fita: 'fita_zebrada', algemas: 'algemas', radio: 'radio_bip' }[tipo];
+    if (arq && window.__som?.tocar(arq)) return;           // usa o arquivo de 06_Audio se existir
+    if (tipo === 'fita' || tipo === 'algemas' || tipo === 'radio') return;
     try {
       AC = AC || new AudioContext();
       const n = AC.createBufferSource(), b = AC.createBuffer(1, AC.sampleRate * .25, AC.sampleRate), d = b.getChannelData(0);
@@ -241,6 +244,7 @@ export async function iniciar(ctx) {
     for (const p of [a, b]) { const c = new THREE.Mesh(new THREE.ConeGeometry(.12, .95, 12), new THREE.MeshStandardMaterial({ color: 0xff6a00, roughness: .6 })); c.position.set(p.x, p.y + .475, p.z); scene.add(c); }
     S.fitas.push({ a: a.toArray(), b: b.toArray() });
     const dentro = p => p.x > -6 && p.x < 6 && p.z > -4 && p.z < 4;
+    som('fita');
     if (S.fitas.filter(f => dentro(new THREE.Vector3(...f.a)) || dentro(new THREE.Vector3(...f.b))).length >= 2) registrar('isolar_local');
   }
 
@@ -275,6 +279,7 @@ export async function iniciar(ctx) {
       solicitar_pericia: ['Guarnição', 'COPOM, solicito perícia no local. Local isolado.'], pedir_apoio: ['Guarnição', 'COPOM, solicito apoio de outra guarnição.'],
       caracteristicas_agressor: ['Guarnição', 'COPOM, autor evadiu-se: homem, cerca de 35 anos, camiseta cinza.']
     }[id];
+    som('radio'); window.__som?.tocar('radio_chiado');
     if (fala) falar(fala[0], fala[1], 'm');
     if (id === 'radio_chegada' && S.entrou) return;    // so vale antes de entrar
     if (id === 'caracteristicas_agressor' && S.variacao.agressor !== 'fugiu') return;
@@ -354,7 +359,7 @@ export async function iniciar(ctx) {
       ['Resistência à prisão', true], ['Fundado receio de fuga', true], ['Perigo à integridade da vítima ou da guarnição', true], ['Por precaução, sem motivo específico', false]
     ].map(([m, ok]) => ({
       label: m, acao: () => {
-        dialogo.esconder(); S.algemado = true;
+        dialogo.esconder(); S.algemado = true; som('algemas');
         if (ok) registrar('algemas_justificadas', m); else penalidade(-4, 'Algemas sem justificativa', 'Uso de algemas exige justificativa por escrito (STF SV 11).');
         legenda('Guarnição', 'Algemado. Motivo registrado: ' + m, 3);
       }
@@ -483,6 +488,7 @@ export async function iniciar(ctx) {
       criancaAchada: false, vestReconhecidos: new Set(), vestFotografados: new Set(), placas: 0, fitas: [], fitaInicio: null, tempoFachada: 0, tempoDentro: 0, avisoAgressor: false });
     if (ctx.hotspots) ctx.hotspots.visible = false;      // modo avaliacao: sem marcadores
     criarNPCs();
+    if (S.variacao.crianca !== 'vizinha') window.__som?.iniciarTreino();   // choro baixo de onde a crianca esta
     rig.position.set(1.0, 0, 18.4); ctx.setYaw(0);
     const lin = CEN.chamada_190.legenda; let t = 0;
     lin.forEach(([q, txt]) => { setTimeout(() => falar('Ligação 190 · ' + q, txt, q === 'Atendente' ? 'm' : 'f'), t); t += Math.max(2600, txt.length * 70); });
@@ -552,7 +558,7 @@ export async function iniciar(ctx) {
     if (dentroCasa && !S.entrou) { S.entrou = true; if (!S.identificado) registrar('entrada_sem_identificacao'); }
     if (V.z > 13.8 && V2.z < -.6) { S.tempoFachada += dt; if (S.tempoFachada > 3) registrar('observar_fachada'); }
     if (dentroCasa && ctx.lanternaLigada()) registrar('uso_lanterna');
-    if (npcs.crianca && !S.criancaAchada && V.distanceTo(npcs.crianca.position.clone().setY(V.y)) < 3) { S.criancaAchada = true; registrar('localizar_crianca'); falar('Criança', 'Moço… cadê a minha mãe?', 'c'); }
+    if (npcs.crianca && !S.criancaAchada && V.distanceTo(npcs.crianca.position.clone().setY(V.y)) < 3) { S.criancaAchada = true; registrar('localizar_crianca'); window.__som?.pararChoro(); falar('Criança', 'Moço… cadê a minha mãe?', 'c'); }
     if (dentroCasa) S.tempoDentro += dt;
     const ag = npcs.agressor;
     if (ag && !S.separado && !S.algemado && S.variacao.agressor !== 'escondido') {
