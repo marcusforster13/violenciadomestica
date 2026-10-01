@@ -184,6 +184,12 @@ export async function iniciar(ctx) {
     const gl = new GLTFLoader();
     return Promise.all(Object.entries(man).map(([papel, info]) => gl.loadAsync(info.arquivo).then(g => { modelos[papel] = g; }).catch(() => { })));
   }).catch(() => { });
+  // modo exploracao (antes de iniciar o treinamento): personagens ja aparecem na cena, sem faca
+  modelosProntos.then(() => {
+    if (S.ativo || !Object.keys(modelos).length) return;
+    S.variacao = { agressor: 'calmo', crianca: 'quarto', vizinho: 'presente', faca: 'nenhuma' };
+    criarNPCs();
+  });
   function personagem(papel, nome, cor, altura, calca) {
     const base = modelos[papel];
     if (!base) return boneco(nome, cor, altura, calca);
@@ -612,7 +618,7 @@ export async function iniciar(ctx) {
   function quadro() {
     const agora = performance.now(), dt = (agora - ultimo) / 1000; ultimo = agora;
     if (agora > legAte) { leg.visible = false; const hl = document.getElementById('legendaHTML'); if (hl && !hl.hidden) hl.hidden = true; }
-    if (!S.ativo) return;
+    if (!S.ativo) { for (const n of Object.values(npcs)) n.userData.mixer?.update(dt); return; }
     camera.getWorldPosition(V); camera.getWorldDirection(V2);
     const dentroCasa = V.x > -6 && V.x < 6 && V.z > -4 && V.z < 4;
     if (dentroCasa && !S.entrou) { S.entrou = true; if (!S.identificado) registrar('entrada_sem_identificacao'); }
