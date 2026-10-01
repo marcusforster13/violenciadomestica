@@ -355,11 +355,12 @@ const cmf = new XRControllerModelFactory(), tmpM = new THREE.Matrix4(), controle
 for (const i of [0, 1]) {
   const c = renderer.xr.getController(i);
   const linha = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(0, 0, -1)]), new THREE.LineBasicMaterial({ color: 0xf0a340 }));
-  linha.scale.z = 6; c.add(linha);
+  linha.scale.z = 6; c.add(linha); c.userData.linha = linha;
   c.addEventListener('selectstart', () => {
     mirar(c);
     window.__som?.desbloquear();                     // gatilho do Quest tambem libera o audio
     if (window.__trein?.gatilho(ray, c)) return;
+    if (window.__trein?.painelAberto()) return;      // menu aberto: gatilho fora dos botoes nao teleporta
     const h = hotspots.visible ? ray.intersectObjects(hitMeshes, false) : [];
     if (h.length) return showPanel(h[0].object.userData.index);
     if (panel.visible) { panel.visible = false; return; }
@@ -372,7 +373,9 @@ for (const i of [0, 1]) {
   rig.add(c); controles.push(c);
   const grip = renderer.xr.getControllerGrip(i); grip.add(cmf.createControllerModel(grip)); rig.add(grip);
 }
-function mirar(c) { tmpM.identity().extractRotation(c.matrixWorld); ray.ray.origin.setFromMatrixPosition(c.matrixWorld); ray.ray.direction.set(0, 0, -1).applyMatrix4(tmpM); }
+function mirar(c) { mirarEm(ray, c); }
+function mirarEm(r, c) { tmpM.identity().extractRotation(c.matrixWorld); r.ray.origin.setFromMatrixPosition(c.matrixWorld); r.ray.direction.set(0, 0, -1).applyMatrix4(tmpM); return r; }
+const raiosVR = [new THREE.Raycaster(), new THREE.Raycaster()];
 function alvoTeleporte(c) {
   mirar(c); const h = ray.intersectObjects(alvosCol, false)[0];
   if (!h || !h.face) return null;
@@ -398,7 +401,11 @@ function vrMove(dt) {
       if (Math.abs(x) < .3) snapOk = true;
     }
   }
-  const p = controles[1] && alvoTeleporte(controles[1]);
+  // raio de cada controle nos menus 3D: realca o botao, mostra o ponto e encurta a linha ate o painel
+  const hs = window.__trein?.apontar ? window.__trein.apontar(controles.map((c, i) => mirarEm(raiosVR[i], c))) : [];
+  controles.forEach((c, i) => { if (c.userData.linha) c.userData.linha.scale.z = hs[i] ? hs[i].distance : 6; });
+  const menuAberto = window.__trein?.painelAberto?.();
+  const p = !menuAberto && controles[1] && alvoTeleporte(controles[1]);
   reticulo.visible = !!p; if (p) reticulo.position.copy(p).y += .02;
 }
 renderer.xr.addEventListener('sessionend', () => { camera.position.set(0, 1.6, 0); reticulo.visible = false; });

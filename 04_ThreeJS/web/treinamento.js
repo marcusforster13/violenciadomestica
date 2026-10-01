@@ -70,6 +70,16 @@ export async function iniciar(ctx) {
       this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
         new THREE.MeshBasicMaterial({ transparent: true, depthTest: false, toneMapped: false, fog: false }));
       this.mesh.renderOrder = 1000; this.mesh.visible = false; scene.add(this.mesh); paineis.push(this);
+      // realce do botao apontado pelo controle (no VR a linha do controle some atras do painel)
+      this.realce = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: 0xf0a340, transparent: true, opacity: .32, depthTest: false, toneMapped: false, fog: false }));
+      this.realce.renderOrder = 1001; this.realce.visible = false; this.mesh.add(this.realce);
+    }
+    apontar(ray) {                                   // devolve o ponto atingido e realca o botao embaixo do raio
+      if (!this.mesh.visible) return null;
+      const h = ray.intersectObject(this.mesh, false)[0]; if (!h) return null;
+      const py = (1 - h.uv.y) * this.H, b = this.botoes.find(b => py >= b.y0 && py <= b.y1);
+      if (b) { this.realce.position.set(0, .5 - (b.y0 + b.y1) / 2 / this.H, .001); this.realce.scale.set(1 - 2 * 56 / 1024, (b.y1 - b.y0) / this.H, 1); this.realce.visible = true; }
+      return h;
     }
     mostrar({ tag = '', titulo = '', texto = '', botoes = [], longe = 1.15 }) {
       const W = 1024, P = 56, cv = document.createElement('canvas'), g = cv.getContext('2d');
@@ -103,7 +113,7 @@ export async function iniciar(ctx) {
       this.mesh.lookAt(V.x, this.mesh.position.y, V.z); this.mesh.visible = true;
       return this;
     }
-    esconder() { this.mesh.visible = false; }
+    esconder() { this.mesh.visible = false; this.realce.visible = false; }
     clique(ray) {
       if (!this.mesh.visible) return false;
       const h = ray.intersectObject(this.mesh, false)[0]; if (!h) return false;
@@ -113,6 +123,17 @@ export async function iniciar(ctx) {
     }
   }
   const menu = new Painel(1.1), dialogo = new Painel(1.15);
+  const cursorVR = new THREE.Mesh(new THREE.CircleGeometry(.012, 20), new THREE.MeshBasicMaterial({ color: 0xffffff, depthTest: false, toneMapped: false, fog: false }));
+  cursorVR.renderOrder = 1003; cursorVR.visible = false; scene.add(cursorVR);
+  // chamado a cada quadro pelo index.html com o raio de cada controle; devolve o acerto de cada raio (ou null)
+  function apontar(raios) {
+    for (const p of paineis) p.realce.visible = false;
+    let ultimo = null;
+    const hs = raios.map(r => { let h = null; for (const p of paineis) h = p.apontar(r) || h; if (h) ultimo = h; return h; });
+    cursorVR.visible = !!ultimo;
+    if (ultimo) { cursorVR.position.copy(ultimo.point); cursorVR.quaternion.copy(ultimo.object.quaternion); cursorVR.translateZ(.002); }
+    return hs;
+  }
   const fecharPaineis = () => paineis.forEach(p => p.esconder());
 
   /* legenda presa a camera */
@@ -221,11 +242,11 @@ export async function iniciar(ctx) {
     const gl = new GLTFLoader();
     return Promise.all(Object.entries(man).map(([papel, info]) => gl.loadAsync(info.arquivo).then(g => { modelos[papel] = g; }).catch(() => { })));
   }).catch(() => { });
-  // modo exploracao (antes de iniciar o treinamento): personagens ja aparecem na cena, sem faca
+  // modo exploracao (antes de iniciar o treinamento): personagens, rastros e a faca do quintal ja aparecem na cena
   modelosProntos.then(() => {
     if (S.ativo || !Object.keys(modelos).length) return;
-    S.variacao = { agressor: 'escondido', crianca: 'quarto', vizinho: 'presente', faca: 'ausente', vitima: 'colabora' };
-    criarNPCs();
+    S.variacao = { agressor: 'escondido', crianca: 'quarto', vizinho: 'presente', faca: 'quintal', vitima: 'colabora', reacao: 'rende_se', fuga: 'nao' };
+    criarNPCs(); montarQuintal();
   });
   function personagem(papel, nome, cor, altura, calca) {
     const base = modelos[papel];
@@ -670,11 +691,14 @@ export async function iniciar(ctx) {
 
   /* ================= modo exploracao: clicar nos personagens antes de iniciar o treinamento ================= */
   function explorar(ray) {
+    const hv = ray.intersectObjects(vestHits.filter(h => h.userData.vest.externo), false)[0];
+    if (hv && hv.distance < 5) { legenda('Vestígio', hv.object.userData.vest.nome + ' — no treinamento: não tocar, marcar, fotografar e preservar.', 5); return true; }
     const hn = ray.intersectObjects(Object.values(npcs).map(n => n.userData.hit), false)[0];
     if (!hn || hn.distance > 5) return false;
     const n = hn.object.userData.npc;
     if (n === 'Vítima') relatoVitima();
-    else if (n === 'Agressor') dizer(npcs.agressor, 'Agressor', { texto: 'O que vocês tão fazendo aqui? Eu não fiz nada, ela que tá inventando.', gesto: 'falando' }, 'm');
+    else if (n === 'Agressor') dizer(npcs.agressor, 'Agressor', { texto: 'O que vocês tão fazendo aqui? Eu não fiz nada, ela que tá inventando.', gesto: 'falando' }, 'm')
+      .then(() => legenda('Modo exploração', 'Para abordar e prender o agressor, clique em "Iniciar treinamento" (no Quest: botão Y ou B).', 6));
     else if (n === 'Vizinho') dizer(npcs.vizinho, 'Vizinho', { texto: 'Eu ouvi gritaria e barulho de coisa quebrando. Já é a segunda vez esse mês.', gesto: 'falando' }, 'm');
     else if (n === 'Criança') dizer(npcs.crianca, 'Criança', { texto: 'Moço… cadê a minha mãe?' }, 'c');
     return true;
@@ -952,6 +976,7 @@ export async function iniciar(ctx) {
 
   window.__trein = {
     clique: ray => usar(ray),
+    apontar, painelAberto: () => paineis.some(p => p.mesh.visible),
     gatilho: (ray) => usar(ray),
     menu: () => S.ativo ? abrirFerramentas() : aviso(),
     quadro, estado: S, relatorio,
