@@ -37,6 +37,10 @@ Ao final, o policial deve ser capaz de:
 | Violência psicológica | **CP, art. 147-B** | Crime (ameaça, humilhação, controle, isolamento) |
 | Preservação do local | **CPP, art. 6º, I** | Não alterar o estado das coisas até a chegada dos peritos |
 | Cadeia de custódia | **CPP, arts. 158-A a 158-C** | Quem reconhece um vestígio **fica responsável por preservá-lo**; a **coleta é feita preferencialmente pelo perito oficial** |
+| Busca pessoal | **CPP, art. 244** | Independe de mandado no caso de prisão ou fundada suspeita de que a pessoa oculta arma ou objeto do crime |
+| Prisão em flagrante | **CPP, arts. 301 e 302** | Qualquer pessoa pode e a autoridade policial e seus agentes **devem** prender quem esteja em flagrante; inclui quem é perseguido ou encontrado logo depois do crime |
+| Direitos do preso | **CF, art. 5º, LXIII e LXIV** | Informar o direito de permanecer calado e à assistência da família e de advogado; direito de identificar os responsáveis pela prisão |
+| Uso da força e arma de fogo | **Lei 13.060/2014, art. 2º** | Priorizar instrumentos de menor potencial ofensivo; **não é legítimo** usar arma de fogo contra pessoa **desarmada em fuga** que não represente risco imediato |
 | Avaliação de risco | **Lei 14.149/2021 (FONAR)** | Formulário Nacional de Avaliação de Risco, aplicado preferencialmente pela Polícia Civil no registro; a PM levanta as informações iniciais |
 | Criança exposta | **ECA** | Proteção da criança e comunicação ao **Conselho Tutelar** |
 | Rede de apoio | — | **180** (Central de Atendimento à Mulher), **190** (PM), **192** (SAMU); no RJ, **Patrulha Maria da Penha** da PMERJ **[VALIDAR PMERJ: nome e fluxo atual]** |
@@ -93,6 +97,41 @@ O policial ouve a gravação da ligação recebida pelo COPOM **[VALIDAR PMERJ: 
 | Algemas **somente** se houver resistência / risco / fuga, com justificativa (SV 11) | 4 |
 | Verificar a casa e **localizar a criança** | 5 |
 | **Falha grave:** deixar vítima e agressor no mesmo ambiente sem controle | −15 |
+
+### Fase 3B — Busca no quintal e abordagem (variações "escondido" e "fugiu")
+
+A vítima conta que **ele saiu pelos fundos e está por perto**. Ele saiu pela varanda, contornou a casa pela direita e se escondeu agachado atrás de um arbusto no quintal lateral. No caminho deixou rastros:
+
+- pegadas de barro saindo da varanda;
+- marca de mão com sangue na parede lateral (ele machucou a mão no soco na parede);
+- na variação "faca no quintal", a faca descartada na grama.
+
+| Ação esperada | Pontos |
+|---|---|
+| Fazer a **busca no quintal com a lanterna** | 4 |
+| Pedir **apoio** pelo rádio antes de abordar | 2 |
+| **Localizar** o agressor escondido | 4 |
+| **Verbalizar** a abordagem: "Polícia Militar! Parado! Mãos na cabeça, devagar!" | 4 |
+| *(se ele foge)* Conter a fuga com **ordem verbal e acompanhamento, sem disparo** | 4 |
+| *(se ele volta para a casa)* **Colocar-se entre ele e a vítima** | 4 |
+| **Busca pessoal** no detido (CPP 244) | 3 |
+| Voz de prisão e **direitos do preso** (CF 5º, LXIII e LXIV) | 3 |
+| **Conduzir à viatura**, longe da vítima (pelo portão) | 2 |
+| *(faca no quintal)* **Preservar** a faca para a perícia: placa, foto, isolamento | 4 |
+| *(se ele fugiu)* Informar **fuga e características** pelo rádio | 3 |
+| **Erro:** abordar sem se identificar ou sem ordem clara | −3 |
+| **Erro:** pegar a faca sem luvas | −4 |
+| **Erro:** deixar o agressor fugir sem tentar contê-lo | −4 |
+| **Erro:** encerrar sem localizar o agressor escondido | −5 |
+| **Falha grave:** disparar contra pessoa desarmada em fuga (Lei 13.060/2014) | −20 |
+
+**Reação sorteada quando ele é encontrado:**
+
+| Reação | O que acontece | Conduta esperada |
+|---|---|---|
+| Rende-se | Fica agachado com as mãos na cabeça | Busca pessoal, algemas só com justificativa, voz de prisão e direitos, condução |
+| Foge | Corre para o muro dos fundos | Acompanhar com ordem verbal (ele para). Se o policial deixar ir, ele pula o muro: informar pelo rádio |
+| Volta para a casa | Vai na direção da varanda, onde está a vítima | Interpor-se e dar ordem; correr na frente para "avisar a vítima" deixa os dois juntos (falha grave) |
 
 ### Fase 4 — Atendimento à vítima
 
@@ -163,6 +202,9 @@ O policial ouve a gravação da ligação recebida pelo COPOM **[VALIDAR PMERJ: 
 | V10 | Mala feita às pressas | Perto da porta | Tentativa de saída (maior risco) | Registrar; considerar na avaliação de risco |
 | V11 | Garrafas vazias | Cozinha | Fator associado | Registrar (não justifica a agressão) |
 | V12 | *(variação)* Faca | Cozinha | Risco imediato | **Remover o risco** e registrar |
+| V13 | *(escondido/fugiu)* Pegadas de barro | Saindo da varanda para o quintal | Rota de saída do agressor | Fotografar; não pisar |
+| V14 | *(escondido/fugiu)* Marca de mão com sangue | Parede lateral externa | Mão do agressor ferida (soco na parede) | Fotografar; perícia (DNA) |
+| V15 | *(variação)* Faca descartada | Grama do quintal lateral | Instrumento descartado na fuga | **Não tocar**: placa, foto, isolar; perícia coleta |
 
 ---
 
@@ -207,8 +249,9 @@ O policial ouve a gravação da ligação recebida pelo COPOM **[VALIDAR PMERJ: 
 
 | Variação | Opções |
 |---|---|
-| Agressor | presente e calmo · presente e agressivo · escondido na varanda · fugiu (informar características pelo rádio) |
-| Faca | ausente · na pia · na mão do agressor |
+| Agressor | presente e calmo · presente e agressivo · escondido no quintal lateral · fugiu (informar características pelo rádio) |
+| Reação ao ser encontrado | rende-se · foge para o muro · volta para a casa |
+| Faca | ausente · na pia · na mão do agressor · descartada no quintal (só quando ele saiu da casa) |
 | Vítima | colabora · minimiza · se retrata |
 | Medida protetiva | não existe · vigente (→ descumprimento, art. 24-A) |
 | Criança | no quarto · escondida no corredor · na casa da vizinha |
@@ -230,6 +273,13 @@ O policial ouve a gravação da ligação recebida pelo COPOM **[VALIDAR PMERJ: 
 | Tablet | Anotações e checklist do registro | Menu |
 
 ---
+
+**Modos de jogo:**
+
+- **Treino:** lista de objetivos no canto da tela (no VR, no canto do campo de visão) e dicas do instrutor nos momentos-chave.
+- **Avaliação:** sem objetivos e sem dicas; só o relatório no final.
+
+O instrutor pode forçar uma variação pela URL, por exemplo `?v=agressor:escondido,reacao:foge,faca:quintal`.
 
 ## 9. O que registrar (relatório automático)
 
@@ -254,6 +304,8 @@ O policial ouve a gravação da ligação recebida pelo COPOM **[VALIDAR PMERJ: 
 7. Nome e fluxo atual da Patrulha Maria da Penha da PMERJ
 8. Pesos da pontuação e critério de aprovação
 9. Falas e comportamento dos personagens (realismo e sensibilidade)
+10. Técnica de busca em área externa à noite e de abordagem de suspeito escondido (cobertura, distância, verbalização)
+11. Conduta esperada diante de fuga a pé (acompanhar, cercar, irradiar) e critério de uso de algemas após a fuga
 
 ---
 

@@ -19,7 +19,7 @@ O arquivo de cada papel fica em `PAPEIS`, no início de `converter_personagens.p
 | Papel | Modelo | Animações (nome no site → arquivo Rocketbox) |
 |---|---|---|
 | vítima | Female_Adult_08 | parada → f_idle_nervous_01 · falando → f_gestic_talk_sad_01 · estressada → f_gestic_talk_femalestressed_01 · ofegante → f_idle_breathe_01 |
-| agressor | Male_Adult_01 | parada → m_idle_angry_01 · falando → m_gestic_talk_neutral_01 · nervoso → m_idle_nervous_01 |
+| agressor | Male_Adult_01 | parada → m_idle_angry_01 · falando → m_gestic_talk_neutral_01 · nervoso → m_idle_nervous_01 · escondido → m_crouch_idle · rendido → m_crouch_idle + pose "mãos na cabeça" (feita pelo conversor) · correndo → m_run_fast_01 · andando → m_walk_fast_01 (as duas da pasta `all_animations_max_motextr_xy`, fixadas no lugar; o site move o personagem) |
 | criança | Female_Child_01 | parada → f_crouch_idle (agachada) · ofegante → f_idle_breathe_01 |
 | vizinho | Male_Adult_14 | parada → m_idle_neutral_01 · falando → m_gestic_talk_neutral_01 |
 

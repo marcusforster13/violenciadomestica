@@ -43,6 +43,25 @@
     ], "falhas_graves": [
       { "id": "vitima_com_agressor", "texto": "Deixar vítima e agressor juntos sem controle", "pontos": -15 }
     ]},
+    { "id": "F3B", "nome": "Busca no quintal e abordagem", "acoes": [
+      { "id": "buscar_quintal", "texto": "Fazer a busca no quintal com a lanterna", "pontos": 4, "condicao": "variacao.agressor == 'escondido' || variacao.agressor == 'fugiu'" },
+      { "id": "apoio_antes_abordagem", "texto": "Pedir apoio antes de abordar o suspeito", "pontos": 2, "condicao": "variacao.agressor == 'escondido'" },
+      { "id": "localizar_agressor", "texto": "Localizar o agressor escondido", "pontos": 4, "condicao": "variacao.agressor == 'escondido'" },
+      { "id": "verbalizacao", "texto": "Verbalizar a abordagem: identificar-se e dar ordens claras", "pontos": 4, "condicao": "variacao.agressor == 'escondido'", "base": "Lei 13.060/2014 (uso diferenciado da força)" },
+      { "id": "conter_fuga", "texto": "Conter a fuga com ordem verbal e acompanhamento, sem disparo", "pontos": 4, "condicao": "variacao.agressor == 'escondido' && variacao.reacao == 'foge'", "base": "Lei 13.060/2014, art. 2º, parágrafo único, I" },
+      { "id": "proteger_casa", "texto": "Impedir o retorno do agressor para perto da vítima", "pontos": 4, "condicao": "variacao.agressor == 'escondido' && variacao.reacao == 'volta_casa'" },
+      { "id": "busca_pessoal", "texto": "Busca pessoal no detido", "pontos": 3, "condicao": "variacao.agressor != 'fugiu' && variacao.fuga != 'sim'", "base": "CPP art. 244" },
+      { "id": "informar_direitos_preso", "texto": "Informar ao preso os seus direitos", "pontos": 3, "condicao": "variacao.agressor != 'fugiu' && variacao.fuga != 'sim'", "base": "CF art. 5º, LXIII e LXIV" },
+      { "id": "conduzir_viatura", "texto": "Conduzir o preso à viatura, longe da vítima", "pontos": 2, "condicao": "variacao.agressor != 'fugiu' && variacao.fuga != 'sim'" },
+      { "id": "preservar_faca_quintal", "texto": "Preservar a faca descartada para a perícia", "pontos": 4, "condicao": "variacao.faca == 'quintal'", "base": "CPP arts. 158-A, §2º e 158-C" },
+      { "id": "informar_fuga_radio", "texto": "Informar pelo rádio a fuga e as características do agressor", "pontos": 3, "condicao": "variacao.agressor == 'fugiu' || variacao.fuga == 'sim'" }
+    ], "erros": [
+      { "id": "abordagem_sem_verbalizar", "texto": "Abordar sem se identificar ou sem ordem clara", "pontos": -3 },
+      { "id": "faca_sem_luva", "texto": "Pegar a faca sem luvas", "pontos": -4 },
+      { "id": "perdeu_agressor", "texto": "Deixar o agressor fugir sem tentar contê-lo", "pontos": -4 }
+    ], "falhas_graves": [
+      { "id": "disparo_fuga", "texto": "Disparar contra pessoa desarmada em fuga", "pontos": -20, "base": "Lei 13.060/2014, art. 2º, parágrafo único, I" }
+    ]},
     { "id": "F4", "nome": "Atendimento à vítima", "acoes": [
       { "id": "acionar_samu", "texto": "Acionar SAMU (192) com lesão visível", "pontos": 6, "base": "LMP art. 11, II" },
       { "id": "linguagem_acolhedora", "texto": "Linguagem acolhedora, sem julgamento", "pontos": 5, "base": "LMP art. 10-A" },
@@ -54,7 +73,7 @@
     ]},
     { "id": "F5", "nome": "Preservação dos vestígios", "acoes": [
       { "id": "isolar_local", "texto": "Isolar sala e jantar", "pontos": 5, "base": "CPP art. 6º, I" },
-      { "id": "reconhecer_vestigios", "texto": "Reconhecer vestígios", "pontos_por_item": 1, "max": 10, "base": "CPP art. 158-A, §2º" },
+      { "id": "reconhecer_vestigios", "texto": "Reconhecer vestígios", "pontos_por_item": 1, "max": 12, "base": "CPP art. 158-A, §2º" },
       { "id": "fotografar_vestigios", "texto": "Fotografar vestígios com placa, sem mover", "pontos": 5 },
       { "id": "qualificar_testemunha", "texto": "Identificar e qualificar a testemunha", "pontos": 3 },
       { "id": "solicitar_pericia", "texto": "Solicitar perícia pelo rádio", "pontos": 3, "base": "CPP art. 158-C" }
@@ -91,19 +110,23 @@
     { "id": "V09", "nome": "Ursinho no corredor", "pos": [-5.45, 0.3, 3.05], "objeto_blender": "V_Ursinho" },
     { "id": "V10", "nome": "Mala feita às pressas", "pos": [-4.6, 0.7, 3.3], "objeto_blender": "V_Mala" },
     { "id": "V11", "nome": "Garrafas vazias", "pos": [4.7, 1.3, -3.55], "objeto_blender": "V_Garrafa_1" },
-    { "id": "V12", "nome": "Faca", "pos": [4.2, 0.95, -3.6], "objeto_blender": null, "condicao": "variacao.faca != 'ausente'", "risco": true }
+    { "id": "V12", "nome": "Faca", "pos": [4.2, 0.95, -3.6], "objeto_blender": null, "condicao": "variacao.faca != 'ausente' && variacao.faca != 'quintal'", "risco": true },
+    { "id": "V13", "nome": "Pegadas de barro saindo da varanda", "pos": [6.3, 0.05, 5.4], "externo": "pegadas", "condicao": "variacao.agressor == 'escondido' || variacao.agressor == 'fugiu'" },
+    { "id": "V14", "nome": "Marca de mão com sangue na parede lateral", "pos": [6.24, 1.15, 1.6], "externo": "mao_sangue", "condicao": "variacao.agressor == 'escondido' || variacao.agressor == 'fugiu'" },
+    { "id": "V15", "nome": "Faca descartada na grama", "pos": [9.3, 0.16, -0.2], "externo": "faca", "condicao": "variacao.faca == 'quintal'" }
   ],
 
   "personagens": {
     "vitima":   { "idade": 30, "estados": ["colabora", "minimiza", "retrata"], "lesoes": ["lábio", "braço"] },
-    "agressor": { "idade": 35, "estados": ["calmo_manipulador", "agressivo", "escondido", "fugiu"] },
+    "agressor": { "idade": 35, "estados": ["calmo_manipulador", "agressivo", "escondido", "fugiu"], "reacoes_quando_achado": ["rende_se", "foge", "volta_casa"] },
     "crianca":  { "idade": 6,  "estados": ["quarto", "corredor", "vizinha"] },
     "vizinho":  { "estados": ["presente", "ausente"], "informacao": "Ouviu gritos e vidro quebrando; diz que já aconteceu antes." }
   },
 
   "variacoes": {
     "agressor": ["calmo_manipulador", "agressivo", "escondido", "fugiu"],
-    "faca": ["ausente", "pia", "na_mao"],
+    "faca": ["ausente", "pia", "na_mao", "quintal"],
+    "reacao": ["rende_se", "foge", "volta_casa"],
     "vitima": ["colabora", "minimiza", "retrata"],
     "medida_protetiva": ["inexistente", "vigente"],
     "crianca": ["quarto", "corredor", "vizinha"],
@@ -146,12 +169,102 @@
     ]
   },
 
+  "abordagem": {
+    "_nota": "Busca no quintal (fase F3B). O agressor escondido reage conforme variacao.reacao depois da ordem do policial.",
+    "inicio": [
+      {
+        "fala": "Polícia Militar! Parado! Mãos na cabeça, devagar!",
+        "acao": "verbalizacao"
+      },
+      {
+        "fala": "Ô, você aí… sai daí e vem cá.",
+        "erro": "abordagem_sem_verbalizar",
+        "feedback": "Identifique-se e dê ordens claras e curtas: o suspeito precisa saber que é a polícia e o que fazer."
+      },
+      {
+        "fala": "(Avançar em silêncio para surpreender)",
+        "erro": "abordagem_sem_verbalizar",
+        "feedback": "Aproximar sem se identificar aumenta o risco de reação e de uso desnecessário da força."
+      }
+    ],
+    "reacao_fala": {
+      "rende_se": "Tá bom, tá bom! Não atira! Eu não fiz nada…",
+      "foge": "Vou nada!",
+      "volta_casa": "Ela chamou a polícia pra mim? Eu vou lá falar com ela!"
+    },
+    "fuga": [
+      {
+        "fala": "Acompanhar e ordenar: \"Parado! Polícia! Mãos na cabeça!\"",
+        "acao": "conter_fuga",
+        "resultado": "rende"
+      },
+      {
+        "fala": "Disparar a arma para impedir a fuga",
+        "falha": "disparo_fuga",
+        "feedback": "Não é legítimo o uso de arma de fogo contra pessoa desarmada em fuga (Lei 13.060/2014, art. 2º, parágrafo único, I).",
+        "resultado": "rende"
+      },
+      {
+        "fala": "Deixar ir e informar pelo rádio",
+        "erro": "perdeu_agressor",
+        "feedback": "Ele estava sozinho e desarmado: era possível acompanhar com ordem verbal. Informe a fuga e as características pelo rádio.",
+        "resultado": "foge"
+      }
+    ],
+    "retorno": [
+      {
+        "fala": "Colocar-se entre ele e a casa: \"Parado! Não se aproxime dela!\"",
+        "acao": "proteger_casa",
+        "resultado": "rende"
+      },
+      {
+        "fala": "Correr na frente para avisar a vítima",
+        "falha": "vitima_com_agressor",
+        "feedback": "A prioridade é impedir o contato do agressor com a vítima, não chegar primeiro até ela.",
+        "resultado": "rende_na_porta"
+      }
+    ],
+    "prisao": [
+      {
+        "fala": "Busca pessoal (CPP art. 244)",
+        "acao": "busca_pessoal",
+        "resposta": "Nada com ele. A mão direita está machucada: nós dos dedos sangrando (soco na parede)."
+      },
+      {
+        "fala": "Voz de prisão em flagrante e direitos: permanecer calado, assistência da família e de advogado",
+        "acao": "informar_direitos_preso",
+        "tambem": "flagrante",
+        "resposta": "Isso é um absurdo… eu quero ligar pro meu irmão."
+      },
+      {
+        "fala": "Conduzir à viatura",
+        "acao": "conduzir_viatura"
+      }
+    ],
+    "faca_quintal": [
+      {
+        "fala": "Não tocar: marcar com placa, fotografar e preservar para a perícia",
+        "acao": "preservar_faca_quintal"
+      },
+      {
+        "fala": "Recolher com luvas, embalar e lacrar (cadeia de custódia)",
+        "precisa_luvas": true,
+        "feedback": "Só recolha se houver risco de perda ou contaminação. Aqui o local pode ser isolado: o ideal é a perícia coletar (CPP art. 158-C)."
+      },
+      {
+        "fala": "Pegar com a mão e levar para mostrar à vítima",
+        "erro": "tocar_vestigio",
+        "feedback": "Contamina digitais e DNA e quebra a cadeia de custódia (CPP art. 158-A)."
+      }
+    ]
+  },
+
   "ferramentas": ["lanterna", "radio", "camera", "placas", "fita", "luvas", "algemas", "tablet"],
   "radio": [
     { "id": "radio_chegada", "texto": "Guarnição no local" },
     { "id": "acionar_samu", "texto": "Solicitar SAMU (192)" },
     { "id": "solicitar_pericia", "texto": "Solicitar perícia" },
     { "id": "pedir_apoio", "texto": "Solicitar apoio" },
-    { "id": "caracteristicas_agressor", "texto": "Informar características do agressor (se fugiu)" }
+    { "id": "caracteristicas_agressor", "texto": "Informar fuga e características do agressor" }
   ]
 }

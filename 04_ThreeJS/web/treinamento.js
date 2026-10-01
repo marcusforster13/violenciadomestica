@@ -23,7 +23,8 @@ export async function iniciar(ctx) {
     ferramenta: 'mao', luvas: false, identificado: false, socorroOuvido: false, entrou: false,
     contatoVitima: false, separado: false, algemado: false, desistenciaResolvida: false, criancaAchada: false,
     vestReconhecidos: new Set(), vestFotografados: new Set(), placas: 0, fitas: [], fitaInicio: null,
-    tempoFachada: 0, tempoDentro: 0, avisoAgressor: false, faca: null
+    tempoFachada: 0, tempoDentro: 0, avisoAgressor: false, faca: null,
+    modo: 'avaliacao', apoio: false, agressorAchado: false, rendido: false, abordando: false, quintal: []
   };
   const acoes = {};
   CEN.fases.forEach(f => {
@@ -31,12 +32,13 @@ export async function iniciar(ctx) {
     (f.erros || []).forEach(a => acoes[a.id] = { ...a, fase: f.id, tipo: 'erro' });
     (f.falhas_graves || []).forEach(a => acoes[a.id] = { ...a, fase: f.id, tipo: 'grave' });
   });
-  const cond = c => {
-    if (!c) return true;
+  const cond1 = c => {
     const m = c.match(/variacao\.(\w+)\s*(==|!=)\s*'([^']*)'/);
     if (!m) return true;
     return m[2] === '==' ? S.variacao[m[1]] === m[3] : S.variacao[m[1]] !== m[3];
   };
+  // "a == 'x' && b != 'y' || c == 'z'"  (&& tem precedencia sobre ||)
+  const cond = c => !c || c.split('||').some(ou => ou.split('&&').every(cond1));
   const tempo = () => ((S.fim || performance.now()) - S.inicio) / 1000;
   const fmt = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
@@ -303,7 +305,7 @@ export async function iniciar(ctx) {
   /* vestigios: esferas invisiveis nas posicoes do cenario */
   const vestHits = [];
   for (const vv of CEN.vestigios) {
-    if (vv.id === 'V12') continue;    // a faca e um objeto proprio
+    if (vv.id === 'V12' || vv.externo) continue;    // a faca e um objeto proprio; externos: montarQuintal()
     const h = new THREE.Mesh(new THREE.SphereGeometry(.4, 10, 8), new THREE.MeshBasicMaterial({ visible: false }));
     h.position.fromArray(vv.pos); h.userData.vest = vv; scene.add(h); vestHits.push(h);
   }
@@ -367,12 +369,16 @@ export async function iniciar(ctx) {
     const fala = {
       radio_chegada: ['Guarnição', 'COPOM, guarnição no local da ocorrência.'], acionar_samu: ['Guarnição', 'COPOM, solicito SAMU no local: vítima com lesões no rosto e no braço.'],
       solicitar_pericia: ['Guarnição', 'COPOM, solicito perícia no local. Local isolado.'], pedir_apoio: ['Guarnição', 'COPOM, solicito apoio de outra guarnição.'],
-      caracteristicas_agressor: ['Guarnição', 'COPOM, autor evadiu-se: homem, cerca de 35 anos, camiseta cinza.']
+      caracteristicas_agressor: ['Guarnição', 'COPOM, autor evadiu-se pelos fundos: homem, cerca de 35 anos, camisa polo listrada, bermuda bege, mão direita machucada.']
     }[id];
+    if (id === 'pedir_apoio') S.apoio = true;
     som('radio'); window.__som?.tocar('radio_chiado');
     if (fala) falar(fala[0], fala[1], 'm');
     if (id === 'radio_chegada' && S.entrou) return;    // so vale antes de entrar
-    if (id === 'caracteristicas_agressor' && S.variacao.agressor !== 'fugiu') return;
+    if (id === 'caracteristicas_agressor') {
+      if (S.variacao.agressor === 'fugiu' || S.variacao.fuga === 'sim') registrar('informar_fuga_radio');
+      return setTimeout(() => legenda('COPOM', 'Copiado. Viaturas da área informadas.', 2.5), 1800);
+    }
     registrar(id);
     setTimeout(() => legenda('COPOM', 'Copiado. Prossiga.', 2.5), 1800);
   }
@@ -443,7 +449,10 @@ export async function iniciar(ctx) {
         else falar('Agressor', 'Você não manda na minha casa!', 'm');
       }
     }));
-    ops.push({ label: 'O senhor está preso em flagrante por lesão corporal contra a mulher.', acao: () => { registrar('flagrante'); dialogo.esconder(); falar('Agressor', 'Isso é um absurdo…', 'm'); } });
+    ops.push({ label: 'O senhor está preso em flagrante por lesão corporal contra a mulher.', acao: () => {
+      registrar('flagrante'); dialogo.esconder(); falar('Agressor', 'Isso é um absurdo…', 'm');
+      S.rendido = true; dica('Clique nele de novo para a busca pessoal, os direitos e a condução à viatura.');
+    } });
     if (S.variacao.medida_protetiva === 'vigente') ops.push({ label: 'Há medida protetiva contra o senhor e ela foi descumprida.', acao: () => { registrar('descumprimento_mpu'); dialogo.esconder(); } });
     falarDialogo('Agressor', ops, S.variacao.agressor === 'agressivo' ? 'O agressor está alterado' : 'O agressor tenta minimizar');
     falar('Agressor', S.variacao.agressor === 'agressivo' ? 'Sai da minha casa! Isso não é assunto de polícia!' : 'Foi só uma briga de casal, pode ir embora.', 'm');
@@ -495,6 +504,7 @@ export async function iniciar(ctx) {
     const hn = ray.intersectObjects(npcHits, false)[0];
     if (hn && hn.distance < 4) {
       const n = hn.object.userData.npc;
+      if (n === 'Agressor' && (S.variacao.agressor === 'escondido' || S.rendido)) return abordagemClique(), true;
       if (S.ferramenta === 'algemas' && n === 'Agressor') return algemar(), true;
       ({ 'Vítima': conversarVitima, 'Agressor': conversarAgressor, 'Vizinho': conversarVizinho, 'Criança': conversarCrianca })[n]?.();
       return true;
@@ -521,7 +531,7 @@ export async function iniciar(ctx) {
       const vv = hv.object.userData.vest;
       if (S.ferramenta === 'camera') { foto(vv); return true; }
       if (S.ferramenta === 'placa') { placa(hv.object.position.clone().setY(hv.point.y < .3 ? 0 : hv.object.position.y - .35)); reconhecer(vv); return true; }
-      if (S.ferramenta === 'mao') { tocar(vv); return true; }
+      if (S.ferramenta === 'mao') { vv.id === 'V15' ? facaQuintal(vv, hv.object) : tocar(vv); return true; }
     }
     // chao: placa ou fita
     if (S.ferramenta === 'placa' || S.ferramenta === 'fita') {
@@ -561,7 +571,14 @@ export async function iniciar(ctx) {
   /* ================= fluxo ================= */
   function sortear() {
     const forc = Object.fromEntries((new URLSearchParams(location.search).get('v') || '').split(',').filter(Boolean).map(p => p.split(':')));
+    S.variacao = {};
     for (const [k, ops] of Object.entries(CEN.variacoes)) S.variacao[k] = forc[k] && ops.includes(forc[k]) ? forc[k] : ops[Math.floor(Math.random() * ops.length)];
+    const v = S.variacao, fora = v.agressor === 'escondido' || v.agressor === 'fugiu';
+    if (!forc.faca) {
+      if (fora && v.faca === 'na_mao') v.faca = 'quintal';            // ele largou a faca ao fugir
+      if (!fora && v.faca === 'quintal') v.faca = 'pia';
+    }
+    v.fuga = 'nao';
   }
   function aviso() {
     fecharPaineis();
@@ -571,8 +588,9 @@ export async function iniciar(ctx) {
         'Computador: clique para usar a ferramenta e falar com as pessoas · T ferramentas · R rádio · K checklist.\n' +
         'Quest: gatilho usa/clica · botão Y ou B abre as ferramentas · grip liga a lanterna.',
       botoes: [
-        { label: 'Começar (com voz sintética)', acao: () => { S.voz = true; comecar(); } },
-        { label: 'Começar (só legendas)', acao: () => { S.voz = false; comecar(); } },
+        { label: 'Modo treino (objetivos e dicas na tela)', acao: () => { S.modo = 'treino'; comecar(); } },
+        { label: 'Modo avaliação (sem dicas)', acao: () => { S.modo = 'avaliacao'; comecar(); } },
+        { label: S.voz === false ? 'Voz sintética: desligada (só legendas)' : 'Voz sintética: ligada', acao: () => { S.voz = S.voz === false; aviso(); } },
         { label: 'Cancelar', acao: () => menu.esconder() }
       ]
     });
@@ -591,20 +609,24 @@ export async function iniciar(ctx) {
     sortear();
     Object.assign(S, { ativo: true, inicio: performance.now(), fim: 0, feitos: new Map(), erros: [], graves: [], log: [], ferramenta: 'mao', luvas: false,
       identificado: false, socorroOuvido: false, entrou: false, contatoVitima: false, separado: false, algemado: false, desistenciaResolvida: false,
-      criancaAchada: false, vestReconhecidos: new Set(), vestFotografados: new Set(), placas: 0, fitas: [], fitaInicio: null, tempoFachada: 0, tempoDentro: 0, avisoAgressor: false });
-    if (ctx.hotspots) ctx.hotspots.visible = false;      // modo avaliacao: sem marcadores
+      criancaAchada: false, vestReconhecidos: new Set(), vestFotografados: new Set(), placas: 0, fitas: [], fitaInicio: null, tempoFachada: 0, tempoDentro: 0, avisoAgressor: false,
+      apoio: false, agressorAchado: false, rendido: false, abordando: false });
+    if (ctx.hotspots) ctx.hotspots.visible = false;      // sem marcadores (no modo treino os objetivos guiam)
     criarNPCs();
+    montarQuintal();
     if (S.variacao.crianca !== 'vizinha') window.__som?.iniciarTreino();   // choro baixo de onde a crianca esta
     rig.position.set(1.0, 0, 18.4); ctx.setYaw(0);
     const lin = CEN.chamada_190.legenda; let t = 0;
     lin.forEach(([q, txt]) => { setTimeout(() => falar('Ligação 190 · ' + q, txt, q === 'Atendente' ? 'm' : 'f'), t); t += Math.max(2600, txt.length * 70); });
     setTimeout(() => falar('Rádio · COPOM', CEN.chamada_190.despacho, 'm'), t + 400);
+    if (S.modo === 'treino') setTimeout(() => dica('Os objetivos aparecem no canto da tela. Comece informando a chegada pelo rádio (R ou menu).'), t + 4000);
     status();
   }
   function encerrar() {
     if (!S.ativo) return;
     if (!S.feitos.has('acionar_samu')) registrar('sem_socorro', 'vítima com lesão visível (lábio e braço)');
     if (S.contatoVitima && !S.erros.some(e => /Repetir perguntas/.test(e.texto))) registrar('sem_repeticao');   // credito por NAO repetir
+    if (S.variacao.agressor === 'escondido' && !S.agressorAchado) S.erros.push({ id: 'agressor_nao_achado', texto: 'Agressor escondido no quintal não foi localizado', pontos: -5, feedback: 'A vítima indicou que ele estava por perto: faça a busca nos fundos com a lanterna.', t: tempo() });
     S.fim = performance.now(); S.ativo = false; fecharPaineis(); status();
     const rel = relatorio(); mostrarRelatorio(rel);
   }
@@ -622,7 +644,7 @@ export async function iniciar(ctx) {
     const desc = S.erros.reduce((s, e) => s + e.pontos, 0) + S.graves.reduce((s, e) => s + e.pontos, 0);
     const nota = Math.max(0, Math.round((obtidos + desc) / possiveis * 100));
     const aprovado = nota >= CEN.aprovacao.pontos_minimos && !(CEN.aprovacao.sem_falha_grave && S.graves.length);
-    return { cenario: CEN.id, data: new Date().toISOString(), tempo: fmt(tempo()), variacao: S.variacao, nota, aprovado, obtidos, descontos: desc, possiveis,
+    return { cenario: CEN.id, data: new Date().toISOString(), tempo: fmt(tempo()), modo: S.modo, variacao: S.variacao, nota, aprovado, obtidos, descontos: desc, possiveis,
       fases, erros: S.erros, falhas_graves: S.graves, fotos: [...S.vestFotografados], vestigios_reconhecidos: [...S.vestReconhecidos], placas: S.placas, fitas: S.fitas.length, linha_do_tempo: S.log };
   }
   function mostrarRelatorio(r) {
@@ -658,11 +680,223 @@ export async function iniciar(ctx) {
     return true;
   }
 
+  /* ================= missao do quintal: rastros, faca descartada, abordagem do agressor escondido ================= */
+  function decal(desenhar, w, h, larg, alt) {
+    const cv = document.createElement('canvas'); cv.width = w; cv.height = h; desenhar(cv.getContext('2d'), w, h);
+    const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
+    return new THREE.Mesh(new THREE.PlaneGeometry(larg, alt), new THREE.MeshStandardMaterial({ map: t, transparent: true, alphaTest: .05,
+      depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, roughness: .85 }));
+  }
+  const pegada = (g, w, h) => {             // sola de tenis com barro
+    g.fillStyle = 'rgba(58,40,24,.85)';
+    g.beginPath(); g.ellipse(w / 2, h * .32, w * .36, h * .27, 0, 0, 7); g.fill();
+    g.beginPath(); g.ellipse(w / 2, h * .78, w * .28, h * .17, 0, 0, 7); g.fill();
+    g.globalCompositeOperation = 'destination-out'; g.fillStyle = 'rgba(0,0,0,.55)';
+    for (let y = h * .1; y < h * .95; y += h * .07) g.fillRect(w * .2, y, w * .6, h * .022);
+    g.globalCompositeOperation = 'source-over';
+  };
+  const maoSangue = (g, w, h) => {          // mao apoiada na parede, arrastada para baixo
+    g.fillStyle = 'rgba(92,8,8,.88)';
+    g.beginPath(); g.ellipse(w * .5, h * .55, w * .2, h * .16, 0, 0, 7); g.fill();
+    [[.3, .32, .05, .14, -.35], [.42, .24, .05, .17, -.12], [.55, .23, .05, .17, .08], [.67, .29, .045, .14, .3], [.74, .5, .045, .1, .9]]
+      .forEach(([x, y, rx, ry, a]) => { g.beginPath(); g.ellipse(w * x, h * y, w * rx, h * ry, a, 0, 7); g.fill(); });
+    g.fillStyle = 'rgba(92,8,8,.55)';
+    for (let i = 0; i < 5; i++) g.fillRect(w * (.36 + i * .06), h * .65, w * .025, h * (.15 + Math.random() * .2));
+  };
+  function montarQuintal() {
+    for (const o of S.quintal) { scene.remove(o); const i = vestHits.indexOf(o); if (i >= 0) vestHits.splice(i, 1); }
+    S.quintal = [];
+    for (const vv of CEN.vestigios) {
+      if (!vv.externo || !cond(vv.condicao)) continue;
+      const [x, y, z] = vv.pos;
+      if (vv.externo === 'pegadas') {          // da beira da varanda em direcao ao quintal lateral
+        for (let i = 0; i < 7; i++) {
+          const m = decal(pegada, 64, 160, .11, .28), lado = i % 2 ? .09 : -.09;
+          m.rotation.x = -Math.PI / 2; m.rotation.z = -Math.PI / 2 + .35;
+          m.position.set(x - 1.4 + i * .42, .006, z + .5 - i * .15 + lado); scene.add(m); S.quintal.push(m);
+        }
+      } else if (vv.externo === 'mao_sangue') {
+        const m = decal(maoSangue, 128, 160, .2, .25); m.rotation.y = Math.PI / 2; m.position.set(6.212, y, z); scene.add(m); S.quintal.push(m);
+      } else if (vv.externo === 'faca') {
+        const f = faca(); f.remove(f.userData.hit); f.position.set(x, y, z); f.rotation.y = 2.2; scene.add(f); S.quintal.push(f); vv._obj = f;
+      }
+      const h = new THREE.Mesh(new THREE.SphereGeometry(.45, 10, 8), new THREE.MeshBasicMaterial({ visible: false }));
+      h.position.set(x, Math.max(y, .3), z); h.userData.vest = vv; scene.add(h); vestHits.push(h); S.quintal.push(h);
+    }
+  }
+  function dica(texto) { if (S.modo === 'treino' && S.ativo) legenda('Dica do instrutor', texto, 6); }
+  function opcoesJSON(lista, aoEscolher) {
+    return lista.map(op => ({ label: op.fala, acao: () => {
+      dialogo.esconder();
+      if (op.acao) registrar(op.acao);
+      if (op.tambem) registrar(op.tambem);
+      if (op.erro) registrar(op.erro);
+      if (op.falha) registrar(op.falha);
+      if (op.feedback && S.modo === 'treino') setTimeout(() => legenda('Instrutor', op.feedback, 7), 2500);
+      aoEscolher?.(op);
+    } }));
+  }
+  function descobrirAgressor() {
+    if (S.agressorAchado) return;
+    S.agressorAchado = true; registrar('localizar_agressor');
+    if (S.apoio) registrar('apoio_antes_abordagem');
+    const ag = npcs.agressor; if (!ag) return;
+    ag.userData.semVirar = false;
+    dica('Ele está agachado atrás do arbusto. Mantenha distância, identifique-se e dê ordens claras.');
+    abrirAbordagem();
+  }
+  function abrirAbordagem() {
+    S.abordando = true;
+    falarDialogo('Abordagem', opcoesJSON(CEN.abordagem.inicio, () => reagir()), 'Suspeito escondido no quintal');
+  }
+  function abordagemClique() {
+    if (S.rendido && !npcs.agressor.userData.destino) return S.ferramenta === 'algemas' ? algemar() : abrirPrisao();
+    if (!S.agressorAchado) return descobrirAgressor();
+    if (!S.abordando && !S.rendido && !npcs.agressor.userData.destino) abrirAbordagem();
+  }
+  function reagir() {
+    const ag = npcs.agressor, r = S.variacao.reacao, fala = CEN.abordagem.reacao_fala[r];
+    S.abordando = false;
+    dizer(ag, 'Agressor', { texto: fala }, 'm');
+    if (r === 'rende_se') return render(false);
+    if (r === 'foge') {
+      animar(ag, 'correndo', 1e6); ag.userData.vel = 4.2;
+      ag.userData.rota = [new THREE.Vector3(13.6, 0, -6.5), new THREE.Vector3(15.2, 0, -10.8)];
+      ag.userData.aoChegar = () => {                          // chegou ao muro: espera a decisao do policial
+        if (S.rendido) return;
+        animar(ag, 'nervoso', 1e6); ag.userData.noMuro = true;
+        if (ag.userData.decisao === 'foge') pularMuro();
+      };
+      setTimeout(() => falarDialogo('Fuga', opcoesJSON(CEN.abordagem.fuga, op => {
+        if (op.resultado === 'rende') { ag.userData.rota = []; ag.userData.destino = null; render(); }
+        else { ag.userData.decisao = 'foge'; if (ag.userData.noMuro) pularMuro(); }
+      }), 'Ele está correndo para o muro dos fundos!'), 700);
+    } else if (r === 'volta_casa') {
+      animar(ag, 'andando', 1e6); ag.userData.vel = 1.9;
+      ag.userData.rota = [new THREE.Vector3(8.3, 0, 3.4), new THREE.Vector3(6.9, 0, 5.4)];
+      ag.userData.aoChegar = () => { if (!S.rendido) render(); };
+      setTimeout(() => falarDialogo('Risco à vítima', opcoesJSON(CEN.abordagem.retorno, op => {
+        if (op.resultado === 'rende') { ag.userData.rota = []; ag.userData.destino = null; render(); }
+      }), 'Ele está voltando para a casa, onde está a vítima!'), 700);
+    }
+  }
+  function render(falarDeNovo = true) {
+    const ag = npcs.agressor; S.rendido = true;
+    ag.userData.destino = null; ag.userData.rota = [];
+    animar(ag, ag.userData.acoes?.rendido ? 'rendido' : 'nervoso', 1e6);
+    if (falarDeNovo) setTimeout(() => dizer(ag, 'Agressor', { texto: 'Tá bom! Tô parado… não atira!' }, 'm'), 600);
+    dica('Ele se rendeu: clique nele para a busca pessoal e a voz de prisão. Algemas só com justificativa (STF SV 11).');
+  }
+  function pularMuro() {
+    const ag = npcs.agressor, ini = ag.position.clone(), t0 = performance.now();
+    S.variacao.fuga = 'sim'; ag.userData.semVirar = true;
+    const passo = () => {
+      const k = Math.min(1, (performance.now() - t0) / 1300);
+      ag.position.set(ini.x, Math.sin(k * Math.PI) * 1.4 + k * .3, ini.z - k * 1.4);
+      if (k < 1) requestAnimationFrame(passo); else ag.visible = false;
+    };
+    passo();
+    legenda('Guarnição', 'O suspeito pulou o muro dos fundos e fugiu.', 4);
+    dica('Informe pelo rádio a fuga e as características do agressor (R → "Informar fuga e características").');
+  }
+  function abrirPrisao() {
+    const ops = opcoesJSON(CEN.abordagem.prisao, op => {
+      if (op.resposta) setTimeout(() => legenda(op.acao === 'busca_pessoal' ? 'Busca pessoal' : 'Agressor', op.resposta, 5), 300);
+      if (op.acao === 'conduzir_viatura') conduzir();
+    });
+    if (!S.algemado) ops.splice(1, 0, { label: 'Algemar (justificar o motivo)', acao: () => { dialogo.esconder(); algemar(); } });
+    falarDialogo('Prisão', ops, 'Procedimento com o detido');
+  }
+  function conduzir() {
+    const ag = npcs.agressor; S.separado = true; registrar('separar_partes');
+    animar(ag, 'andando', 1e6); ag.userData.vel = 1.3; ag.userData.semVirar = true;
+    const p = ag.position, dentro = Math.abs(p.x) < 6.2 && Math.abs(p.z) < 4.3;
+    ag.userData.rota = [...(dentro ? [new THREE.Vector3(p.x * .3, 0, 2.6), new THREE.Vector3(0, 0, 5.6)] : [new THREE.Vector3(8.6, 0, 7.6)]),   // de dentro: pela porta da frente
+      new THREE.Vector3(1.0, 0, 12.4), new THREE.Vector3(1.0, 0, 14.6), new THREE.Vector3(3.0, 0, 16.4)];   // pelo portao
+    ag.userData.aoChegar = () => { animar(ag, 'parada', 1e6); ag.rotation.y = Math.PI / 2; };
+    legenda('Guarnição', 'Conduzindo o preso até a viatura.', 3);
+  }
+  function moverNPC(n, dt) {
+    const u = n.userData;
+    if (!u.destino && u.rota?.length) u.destino = u.rota.shift();
+    if (!u.destino) return;
+    V2.copy(u.destino).sub(n.position); V2.y = 0;
+    const L = V2.length();
+    if (L < .12) { u.destino = null; if (!u.rota?.length) { const cb = u.aoChegar; u.aoChegar = null; cb?.(); } return; }
+    n.position.addScaledVector(V2.normalize(), Math.min(L, (u.vel || 1.4) * dt));
+    const alvo = Math.atan2(V2.x, V2.z); let d = alvo - n.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d));
+    n.rotation.y += d * Math.min(1, dt * 8);
+    camera.getWorldDirection(V2);                         // V2 volta a ser a direcao do olhar (usada no quadro)
+  }
+  function facaQuintal(vv, hit) {
+    falarDialogo('Vestígio', opcoesJSON(CEN.abordagem.faca_quintal, op => {
+      reconhecer(vv);
+      if (op.precisa_luvas || op.erro) {                     // recolhida: sai do lugar
+        if (op.precisa_luvas && !S.luvas) registrar('faca_sem_luva');
+        if (vv._obj) scene.remove(vv._obj);
+        legenda('Guarnição', op.precisa_luvas ? 'Faca recolhida' + (S.luvas ? ', embalada e lacrada.' : ' sem luvas.') : 'Faca recolhida com a mão.', 3);
+      }
+    }), vv.nome);
+  }
+
+  /* ================= objetivos (modo treino) ================= */
+  function objetivos() {
+    const f = id => S.feitos.has(id), v = S.variacao, L = [];
+    if (!S.entrou && !f('radio_chegada')) L.push('Informe a chegada pelo rádio');
+    if (!f('identificar_se') && !S.entrou) L.push('Bata na porta e identifique-se');
+    else if (S.socorroOuvido && !f('entrada_legitima')) L.push('Pedido de socorro: entre na casa');
+    if (S.entrou) {
+      if (!S.contatoVitima) L.push('Fale com a vítima');
+      if (!f('acionar_samu')) L.push('Acione o SAMU pelo rádio');
+      if (v.crianca !== 'vizinha' && !S.criancaAchada) L.push('Localize a criança');
+      if (v.agressor === 'escondido' || v.agressor === 'fugiu') {
+        if (!f('buscar_quintal')) L.push('Ele saiu da casa: faça a busca no quintal com a lanterna');
+        else if (v.agressor === 'escondido' && !S.agressorAchado) L.push('Procure o agressor no quintal lateral');
+      } else if (!S.separado) L.push('Separe o agressor da vítima');
+      if (S.rendido && !f('busca_pessoal')) L.push('Faça a busca pessoal no detido');
+      if (S.rendido && !f('informar_direitos_preso')) L.push('Dê voz de prisão e informe os direitos');
+      if (S.rendido && !f('conduzir_viatura')) L.push('Conduza o preso à viatura');
+      if ((v.agressor === 'fugiu' || v.fuga === 'sim') && !f('informar_fuga_radio')) L.push('Informe a fuga e as características pelo rádio');
+      if (v.faca === 'quintal' && !f('preservar_faca_quintal') && S.vestReconhecidos.has('V15') === false && f('buscar_quintal')) L.push('Procure armas ou objetos descartados no quintal');
+      if (S.vestReconhecidos.size < 6) L.push(`Reconheça e fotografe os vestígios (${S.vestReconhecidos.size}/6)`);
+      if (!f('isolar_local')) L.push('Isole a sala e o jantar com a fita');
+      if (!f('solicitar_pericia')) L.push('Solicite a perícia pelo rádio');
+      if (!f('informar_direitos')) L.push('Informe à vítima os direitos e os serviços');
+      if (!f('conducao_deam')) L.push('Combine a condução à DEAM');
+    }
+    if (!L.length) L.push('Tudo feito: encerre a ocorrência (menu → Encerrar)');
+    return L.slice(0, 4);
+  }
+  const ocv = document.createElement('canvas'); ocv.width = 640; ocv.height = 300;
+  const otex = new THREE.CanvasTexture(ocv); otex.colorSpace = THREE.SRGBColorSpace;
+  const objVR = new THREE.Mesh(new THREE.PlaneGeometry(.42, .42 * 300 / 640), new THREE.MeshBasicMaterial({ map: otex, transparent: true, depthTest: false, toneMapped: false, fog: false }));
+  objVR.position.set(-.32, .2, -.9); objVR.renderOrder = 1002; objVR.visible = false; camera.add(objVR);
+  const objHTML = document.createElement('div'); objHTML.id = 'objetivosHTML'; objHTML.hidden = true;
+  Object.assign(objHTML.style, { position: 'fixed', right: '16px', top: '16px', maxWidth: 'min(340px, calc(100vw - 32px))', zIndex: 6,
+    background: 'rgba(11,14,22,.88)', color: '#efe9df', border: '1px solid rgba(240,163,64,.5)', borderRadius: '6px', padding: '10px 14px',
+    font: '13px/1.45 "Segoe UI", system-ui, sans-serif', pointerEvents: 'none' });
+  document.body.appendChild(objHTML);
+  let ultimoObj = '';
+  function mostrarObjetivos() {
+    const on = S.ativo && S.modo === 'treino', L = on ? objetivos() : [], chave = on + L.join('|') + renderer.xr.isPresenting;
+    if (chave === ultimoObj) return; ultimoObj = chave;
+    objHTML.hidden = !on || renderer.xr.isPresenting; objVR.visible = on && renderer.xr.isPresenting;
+    if (!on) return;
+    objHTML.innerHTML = '<b style="color:#f0a340;font:600 11px Consolas,monospace;letter-spacing:.08em">OBJETIVOS</b><br>' + L.map(t => '▸ ' + t).join('<br>');
+    const g = ocv.getContext('2d'); g.clearRect(0, 0, 640, 300);
+    g.fillStyle = 'rgba(11,14,22,.85)'; g.beginPath(); g.roundRect(0, 0, 640, 300, 16); g.fill();
+    g.fillStyle = '#f0a340'; g.font = '600 22px Consolas, monospace'; g.fillText('OBJETIVOS', 22, 38);
+    g.fillStyle = '#efe9df'; g.font = '400 25px Segoe UI, sans-serif';
+    let y = 80; for (const t of L) { let l = '▸ ', first = true; for (const w of t.split(' ')) { const tt = l + w + ' '; if (g.measureText(tt).width > 600 && l.trim()) { g.fillText(l, 22, y); y += 30; l = '  '; first = false; } else l = tt; } g.fillText(l, 22, y); y += 38; if (y > 290) break; }
+    otex.needsUpdate = true;
+  }
+
   /* ================= status (computador) ================= */
   function status() {
     const el = document.getElementById('statusTrein'); if (!el) return;
     el.hidden = !S.ativo;
-    el.innerHTML = `<b>Ocorrência em andamento</b> · ${fmt(tempo())}<br>Ferramenta: ${FERR[S.ferramenta]} · Luvas: ${S.luvas ? 'sim' : 'não'} · Vestígios: ${S.vestReconhecidos.size}`;
+    el.innerHTML = `<b>Ocorrência em andamento</b> · ${fmt(tempo())}${S.modo === 'treino' ? ' · modo treino' : ''}<br>Ferramenta: ${FERR[S.ferramenta]} · Luvas: ${S.luvas ? 'sim' : 'não'} · Vestígios: ${S.vestReconhecidos.size}`;
+    mostrarObjetivos();
   }
 
   /* ================= verificacoes automaticas por quadro ================= */
@@ -675,7 +909,8 @@ export async function iniciar(ctx) {
       n.userData.rotulo.visible = V.distanceTo(n.position) < 7;
       n.userData.mixer?.update(dt);
       // vira o rosto para o policial quando ele chega perto (modelo do Rocketbox olha para +Z)
-      if (n.userData.real && n !== npcs.crianca && V.distanceTo(n.position) < 3.5) {
+      moverNPC(n, dt);
+      if (n.userData.real && n !== npcs.crianca && !n.userData.destino && !n.userData.semVirar && V.distanceTo(n.position) < 3.5) {
         const alvo = Math.atan2(V.x - n.position.x, V.z - n.position.z);
         let d = alvo - n.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d));
         n.rotation.y += d * Math.min(1, dt * 2.5);
@@ -688,6 +923,14 @@ export async function iniciar(ctx) {
     if (dentroCasa && ctx.lanternaLigada()) registrar('uso_lanterna');
     if (npcs.crianca && !S.criancaAchada && V.distanceTo(npcs.crianca.position.clone().setY(V.y)) < 3) { S.criancaAchada = true; registrar('localizar_crianca'); window.__som?.pararChoro(); falar('Criança', 'Moço… cadê a minha mãe?', 'c'); }
     if (dentroCasa) S.tempoDentro += dt;
+    // busca no quintal lateral/fundos com a lanterna
+    if (V.x > 6.5 && V.x < 16.8 && V.z < 4.2 && V.z > -11.3 && ctx.lanternaLigada()) registrar('buscar_quintal');
+    const esc = npcs.agressor;
+    if (esc && S.variacao.agressor === 'escondido' && !S.agressorAchado) {
+      const d = V.distanceTo(esc.position.clone().setY(.6));
+      const olhando = V2.dot(esc.position.clone().setY(.6).sub(V).normalize()) > .93;
+      if (d < 4 || (d < 10 && olhando && ctx.lanternaLigada())) descobrirAgressor();
+    }
     const ag = npcs.agressor;
     if (ag && !S.separado && !S.algemado && S.variacao.agressor !== 'escondido') {
       if (S.tempoDentro > 90 && !S.avisoAgressor) { S.avisoAgressor = true; falar('Agressor', 'Fala alguma coisa pra eles e eu te pego depois!', 'm'); }
@@ -714,7 +957,7 @@ export async function iniciar(ctx) {
     quadro, estado: S, relatorio,
     // acesso para testes automatizados e para o instrutor
     _t: { comecar, radio, conversarVitima, conversarAgressor, algemar, conversarVizinho, interagirPorta, foto, reconhecer, fita, tocar, encerrar,
-      botoes: () => (dialogo.mesh.visible ? dialogo : menu).botoes, npcs, vest: CEN.vestigios }
+      botoes: () => (dialogo.mesh.visible ? dialogo : menu).botoes, npcs, vest: CEN.vestigios, descobrirAgressor, abordagemClique, objetivos, facaQuintal }
   };
   return window.__trein;
 }

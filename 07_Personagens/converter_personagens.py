@@ -22,7 +22,9 @@ PAPEIS = {
                                      "estressada": "f_gestic_talk_femalestressed_01", "nervosa": "f_gestic_talk_nervous_01",
                                      "ofegante": "f_idle_breathe_01"}),
     "agressor": ("Male_Adult_01",   {"parada": "m_idle_angry_01", "falando": "m_gestic_talk_neutral_01",
-                                     "nervoso": "m_idle_nervous_01", "escondido": "m_crouch_idle"}),
+                                     "nervoso": "m_idle_nervous_01", "escondido": "m_crouch_idle",
+                                     "rendido": "m_crouch_idle+maos_na_cabeca", "correndo": "m_run_fast_01",
+                                     "andando": "m_walk_fast_01"}),
     "crianca":  ("Female_Child_01", {"parada": "f_crouch_idle", "ofegante": "f_idle_breathe_01"}),
     "vizinho":  ("Male_Adult_14",   {"parada": "m_idle_neutral_01", "falando": "m_gestic_talk_neutral_01"}),
 }
@@ -58,7 +60,37 @@ def repouso_mundo(esq):
     """Orientacao de cada osso no espaco do mundo, na pose de repouso (T-pose) do personagem."""
     return {sufixo(b.name): rot(esq.matrix_world @ b.matrix_local) for b in esq.data.bones}
 
-def redirecionar(src, arm, rest_ref, ini, fim, fator, passo=2):
+def maos_na_cabeca(arm, desejado, f, tgt_inv):
+    """Pose de rendicao: bracos abertos e maos sobre a cabeca (o Rocketbox nao tem essa animacao).
+    Reorienta braco e antebraco no espaco do esqueleto; maos e dedos seguem o antebraco."""
+    from mathutils import Matrix, Vector
+    osso = {sufixo(b.name): b for b in arm.data.bones}
+    cima = (tgt_inv.to_3x3() @ Vector((0, 0, 1))).normalized()
+    cl_l, cl_r = desejado[osso["L Clavicle"].name].translation, desejado[osso["R Clavicle"].name].translation
+    lado_r = (cl_r - cl_l).normalized()
+    cabeca = desejado[osso["Head"].name].translation
+    def mira(b, filho, M_pai, alvo_dir):
+        # rotacao minima que leva a direcao atual do osso (ate o filho) para alvo_dir, mantendo a torcao
+        M_old = desejado[b.name]
+        pos = (M_pai @ (b.parent.matrix_local.inverted() @ b.matrix_local)).translation
+        d_local = (b.matrix_local.inverted() @ filho.matrix_local).translation
+        atual = (M_old.to_3x3() @ d_local).normalized()
+        q = atual.rotation_difference(alvo_dir.normalized()) @ M_old.to_quaternion()
+        M = Matrix.Translation(pos) @ q.to_matrix().to_4x4()
+        desejado[b.name] = M
+        base = M_pai @ b.parent.matrix_local.inverted() @ b.matrix_local
+        pb = arm.pose.bones[b.name]
+        pb.rotation_quaternion = (base.inverted() @ M).to_quaternion()
+        pb.keyframe_insert("rotation_quaternion", frame=f)
+        return M, d_local.length
+    for lado, sgn in (("L", -1), ("R", 1)):
+        ua, fa, hd = osso[lado + " UpperArm"], osso[lado + " Forearm"], osso[lado + " Hand"]
+        M_ua, l_ua = mira(ua, fa, desejado[ua.parent.name], lado_r * sgn * .85 + cima * .5)
+        cotovelo = (M_ua @ (ua.matrix_local.inverted() @ fa.matrix_local)).translation
+        topo = cabeca + cima * l_ua * .45 + lado_r * sgn * l_ua * .12
+        mira(fa, hd, M_ua, topo - cotovelo)
+
+def redirecionar(src, arm, rest_ref, ini, fim, fator, passo=2, pose=None, no_lugar=False):
     """Passa a animacao do esqueleto src para arm. Os FBX de animacao do Rocketbox vem com a pose do 1o quadro
     gravada como repouso, entao a rotacao de cada osso e comparada com a T-pose de um personagem adulto
     (rest_ref) no espaco do mundo e aplicada sobre a T-pose deste personagem (funciona tambem nas criancas,
@@ -75,6 +107,7 @@ def redirecionar(src, arm, rest_ref, ini, fim, fator, passo=2):
     rest_tgt = repouso_mundo(arm)
     acao = bpy.data.actions.new('retarget'); arm.animation_data.action = acao
     cena = bpy.context.scene
+    xy0 = None                                    # no_lugar: corrida/caminhada sem sair do lugar (o site move o personagem)
     for f in range(int(ini), int(fim) + 1, passo):
         cena.frame_set(f)
         desejado = {}
@@ -89,6 +122,8 @@ def redirecionar(src, arm, rest_ref, ini, fim, fator, passo=2):
                 pos = (desejado[b.parent.name] @ (b.parent.matrix_local.inverted() @ b.matrix_local)).translation
             elif ns:   # pelve: posicao do adulto proporcional a altura do personagem
                 w = (src.matrix_world @ src.pose.bones[ns].matrix).translation
+                if no_lugar:
+                    xy0 = xy0 or (w.x, w.y); w = Vector((xy0[0], xy0[1], w.z))
                 pos = tgt_inv @ (w * fator)
             else:
                 pos = b.matrix_local.translation
@@ -100,6 +135,8 @@ def redirecionar(src, arm, rest_ref, ini, fim, fator, passo=2):
             pb.keyframe_insert('rotation_quaternion', frame=f)
             if not b.parent:
                 pb.location = basis.translation; pb.keyframe_insert('location', frame=f)
+        if pose == "maos_na_cabeca":
+            maos_na_cabeca(arm, desejado, f, tgt_inv)
     arm.animation_data.action = None
     return acao
 
@@ -165,7 +202,7 @@ manifesto = {}
 for papel, (pasta, anims) in PAPEIS.items():
     fbx = os.path.join(RB, pasta, pasta + ".fbx")
     saida = os.path.join(WEB, papel + ".glb")
-    fontes = [fbx] + [os.path.join(RB, "Animacoes", a + ".fbx") for a in anims.values()]
+    fontes = [fbx] + [os.path.join(RB, "Animacoes", a.split("+")[0] + ".fbx") for a in anims.values()] + [os.path.abspath(__file__)]
     if not os.path.exists(fbx):
         say("AVISO: %s nao encontrado (baixe pelo LEIA-ME)" % fbx); continue
     if os.path.exists(saida) and (os.environ.get("SO", papel) != papel or not FORCAR and os.path.getmtime(saida) > max(os.path.getmtime(f) for f in fontes if os.path.exists(f))):   # SO=crianca: so esse papel
@@ -193,6 +230,7 @@ for papel, (pasta, anims) in PAPEIS.items():
         for o in novos: bpy.data.objects.remove(o, do_unlink=True)
     arm.animation_data_create()
     for nome, a in anims.items():
+        a, _, pose = a.partition("+")                       # "arquivo+pose" = animacao com pose ajustada
         caminho = os.path.join(RB, 'Animacoes', a + '.fbx')
         if not os.path.exists(caminho):
             say('AVISO: animacao %s nao encontrada' % a); continue
@@ -205,7 +243,7 @@ for papel, (pasta, anims) in PAPEIS.items():
         if acao:
             ini, fim = acao.frame_range[0], min(acao.frame_range[1], acao.frame_range[0] + 450)   # ate 15 s (loop)
             arm.location, arm.rotation_euler = base_loc, base_rot
-            assada = redirecionar(src, arm, rest_ref, ini, fim, fator)
+            assada = redirecionar(src, arm, rest_ref, ini, fim, fator, pose=pose or None, no_lugar=a.startswith(('m_run', 'm_walk', 'f_run', 'f_walk')))
             assada.name = nome; assada.use_fake_user = True
             tr = arm.animation_data.nla_tracks.new(); tr.name = nome
             st = tr.strips.new(nome, int(ini), assada); tr.mute = True
