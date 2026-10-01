@@ -38,7 +38,7 @@
     <dt>W A S D</dt><dd>andar · Shift corre · setas giram</dd>
     <dt>Clique</dt><dd>abrir um vestígio</dd>
     <dt>F · G · H · L</dt><dd>lanterna · giroflex · marcadores · luz pré-calculada</dd>
-    <dt>I · C</dt><dd>inverter o olhar · alternar céu</dd>
+    <dt>I · C · N</dt><dd>inverter o olhar · alternar céu · colisão liga/desliga</dd>
     <dt>VR</dt><dd>gatilho teleporta ou abre vestígio · grip liga a lanterna · analógicos andam e giram</dd>
   </dl>
   <label>Exposição <input id="exp" type="range" min="0.2" max="3" step="0.05" value="1"></label>
@@ -164,6 +164,47 @@ gltf.scene.traverse(o => {
   if (estatico) { o.geometry.computeBoundsTree(); colisores.push(o); }
 });
 scene.add(gltf.scene);
+
+/* ---------- colisao: malha simplificada (uma caixa por parede/movel/carro), invisivel ---------- */
+let alvosCol = colisores, colisaoAtiva = true;
+try {
+  const col = await new GLTFLoader().loadAsync('colisao.glb');
+  col.scene.updateMatrixWorld(true);
+  const ms = []; col.scene.traverse(o => { if (o.isMesh) { o.geometry.computeBoundsTree(); ms.push(o); } });
+  if (ms.length) alvosCol = ms;
+} catch (e) { console.warn('colisao.glb nao encontrado; usando a geometria da cena para colisao'); }
+const rayC = new THREE.Raycaster(); rayC.firstHitOnly = true;
+const BAIXO = new THREE.Vector3(0, -1, 0), RAIO = 0.3, ALTURAS = [0.45, 1.2];
+const _o = new THREE.Vector3(), _d = new THREE.Vector3(), _n = new THREE.Vector3(), _m = new THREE.Vector3();
+function mover(dx, dz) {
+  if (!colisaoAtiva) { rig.position.x += dx; rig.position.z += dz; return; }
+  camera.getWorldPosition(V1);
+  _m.set(dx, 0, dz);
+  for (let it = 0; it < 2 && _m.lengthSq() > 1e-10; it++) {
+    _d.copy(_m).normalize(); let hit = null;
+    for (const h of ALTURAS) {
+      _o.set(V1.x, rig.position.y + h, V1.z); rayC.set(_o, _d); rayC.far = _m.length() + RAIO;
+      const r = rayC.intersectObjects(alvosCol, false)[0];
+      if (r && r.face && (!hit || r.distance < hit.distance)) hit = r;
+    }
+    if (!hit) break;
+    const livre = Math.max(0, hit.distance - RAIO);
+    rig.position.addScaledVector(_d, livre); V1.addScaledVector(_d, livre);
+    _m.addScaledVector(_d, -livre);
+    _n.copy(hit.face.normal).transformDirection(hit.object.matrixWorld); _n.y = 0;
+    if (_n.lengthSq() < 1e-6) { _m.set(0, 0, 0); break; }
+    _n.normalize(); _m.addScaledVector(_n, -_m.dot(_n));          // desliza ao longo da parede
+  }
+  rig.position.x += _m.x; rig.position.z += _m.z;
+  seguirChao();
+}
+function seguirChao() {
+  camera.getWorldPosition(V1);
+  _o.set(V1.x, rig.position.y + 1.0, V1.z); rayC.set(_o, BAIXO); rayC.far = 4;
+  const r = rayC.intersectObjects(alvosCol, false)[0];
+  if (r && r.point.y - rig.position.y < 0.45) rig.position.y += (r.point.y - rig.position.y) * 0.35;   // degraus ate 45 cm
+}
+window.__casa = { rig, camera, mover, get colisao() { return colisaoAtiva; }, get alvos() { return alvosCol.length; } };   // diagnostico
 $('loading').remove();
 
 /* ---------- luzes dinamicas: giroflex e lanterna ---------- */
@@ -269,6 +310,7 @@ addEventListener('keydown', e => {
   if (e.code === 'KeyL') lmMats.forEach(m => m.lightMapIntensity = m.lightMapIntensity ? 0 : m.userData.lmBase * +$('lmg').value);
   if (e.code === 'KeyI') inverterOlhar = -inverterOlhar;
   if (e.code === 'KeyC') alternarCeu();
+  if (e.code === 'KeyN') colisaoAtiva = !colisaoAtiva;
   if (e.code === 'Escape') panel.visible = false;
   const n = +e.key; if (n >= 1 && n <= 9) irPara(Object.keys(CFG.cameras)[n - 1]);
 });
@@ -290,8 +332,7 @@ function desktopMove(dt) {
   if (keys.has('KeyD')) s++; if (keys.has('KeyA')) s--;
   if (keys.has('ArrowLeft')) yaw += 1.6 * dt; if (keys.has('ArrowRight')) yaw -= 1.6 * dt;
   const v = (keys.has('ShiftLeft') || keys.has('ShiftRight') ? 8 : 4) * dt;   // anda 4 m/s, corre 8 m/s
-  rig.position.x += (-Math.sin(yaw) * f + Math.cos(yaw) * s) * v;
-  rig.position.z += (-Math.cos(yaw) * f - Math.sin(yaw) * s) * v;
+  if (f || s) mover((-Math.sin(yaw) * f + Math.cos(yaw) * s) * v, (-Math.cos(yaw) * f - Math.sin(yaw) * s) * v);
 }
 
 /* ---------- controles VR: teleporte, vestigios, lanterna ---------- */
@@ -317,7 +358,7 @@ for (const i of [0, 1]) {
 }
 function mirar(c) { tmpM.identity().extractRotation(c.matrixWorld); ray.ray.origin.setFromMatrixPosition(c.matrixWorld); ray.ray.direction.set(0, 0, -1).applyMatrix4(tmpM); }
 function alvoTeleporte(c) {
-  mirar(c); const h = ray.intersectObjects(colisores, false)[0];
+  mirar(c); const h = ray.intersectObjects(alvosCol, false)[0];
   if (!h || !h.face) return null;
   const n = h.face.normal.clone().transformDirection(h.object.matrixWorld);
   return n.y > 0.7 && h.distance < 20 ? h.point : null;
@@ -330,7 +371,7 @@ function vrMove(dt) {
     const x = gp.axes[2] ?? gp.axes[0] ?? 0, y = gp.axes[3] ?? gp.axes[1] ?? 0;
     if (src.handedness === 'left' && Math.hypot(x, y) > .15) {
       viewer().getWorldDirection(V2); V2.y = 0; V2.normalize();
-      rig.position.x += (V2.x * -y - V2.z * x) * 2.5 * dt; rig.position.z += (V2.z * -y + V2.x * x) * 2.5 * dt;
+      mover((V2.x * -y - V2.z * x) * 2.5 * dt, (V2.z * -y + V2.x * x) * 2.5 * dt);
     } else if (src.handedness === 'right') {
       if (Math.abs(x) > .6 && snapOk) { snapOk = false; const a = x > 0 ? -Math.PI / 6 : Math.PI / 6; viewer().getWorldPosition(V1);
         rig.position.sub(V1).applyAxisAngle(UP, a).add(V1); rig.rotation.y += a; yaw += a; }

@@ -10,11 +10,18 @@ $ErrorActionPreference = "Stop"
 $B = "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe"
 $D = $PSScriptRoot
 
+Write-Host "0/2  Integrando modelos novos (01_Cena_Render_Cycles\modelos) na cena principal..."
+Push-Location "$D\01_Cena_Render_Cycles"
+& $B -b "casa_em_silencio.blend" --python "integrar_modelos.py" 2>&1 | Select-String -Pattern '^\[MODELOS\]' | ForEach-Object { $_.Line }
+& $B -b "casa_em_silencio.blend" --python "melhorias_modelagem.py" 2>&1 | Select-String -Pattern '^\[MODELAGEM\]' | ForEach-Object { $_.Line }
+& $B -b "casa_em_silencio.blend" --python "adicionar_cameras_lpr.py" 2>&1 | Select-String -Pattern '^\[LPR\]' | ForEach-Object { $_.Line }
+Pop-Location
+
 Write-Host "1/2  Gerando versao VR (Unity/Unreal)..."
 Push-Location "$D\02_Cena_VR_Otimizada"
 & $B -b "$D\01_Cena_Render_Cycles\casa_em_silencio.blend" --python "otimizar_para_vr.py" *> vr_log.txt
 Pop-Location
-Select-String -Path "$D\02_Cena_VR_Otimizada\vr_log.txt" -Pattern '^\[VR\] TOTAL' | ForEach-Object { $_.Line }
+Select-String -Path "$D\02_Cena_VR_Otimizada\vr_log.txt" -Pattern '^\[VR\] (TOTAL|Colisao)' | ForEach-Object { $_.Line }
 
 Write-Host "2/2  Gerando versao three.js (bake de lightmaps)..."
 Push-Location "$D\04_ThreeJS"

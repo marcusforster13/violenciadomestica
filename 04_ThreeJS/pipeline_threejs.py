@@ -173,7 +173,7 @@ for nome, (pasta, tile, antigo, tint, rec) in PBR.items():
 say("%d materiais trocados por PBR com texturas CC0" % n_pbr)
 
 # ------------------------------------------------------------------ 2. lightmaps (bake do Cycles)
-SEM_LIGHTMAP = {"07c_Grama_Vegetacao", "09_Luzes_Cameras"}
+SEM_LIGHTMAP = {"07c_Grama_Vegetacao", "09_Luzes_Cameras", "99_Colisao"}
 # niveis:  rapido (teste, ~2 min) | padrao (~5 min) | alta (~30-60 min)
 ALTA = "alta" in ARGS
 RES = {"07_Rua_Condominio": 2048, "07b_Casas_Vizinhas": 2048, "01_Estrutura": 1024,
@@ -279,6 +279,11 @@ bpy.ops.export_scene.gltf(filepath=os.path.join(WEB, "cena.glb"), export_format=
                           export_draco_mesh_compression_enable=True, export_draco_mesh_compression_level=6,
                           export_draco_texcoord_quantization=14, export_image_format="AUTO",
                           use_renderable=True)
+import shutil
+col_src = os.path.normpath(os.path.join(BASE, "..", "02_Cena_VR_Otimizada", "colisao.glb"))
+if os.path.exists(col_src):
+    shutil.copy2(col_src, os.path.join(WEB, "colisao.glb"))
+    say("colisao.glb copiado para web/")
 cfg = {"gerado_em": time.strftime("%Y-%m-%d %H:%M"), "qualidade": "rapida" if RAPIDO else ("alta" if ALTA else "padrao"),
        "lightmaps": lm_json, "lightmap_ganho": round(math.pi, 5), "exposicao": 1.0,
        "env": env_arq, "env_intensidade": .35, "cameras": cams, "giroflex": giro}

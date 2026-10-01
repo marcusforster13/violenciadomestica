@@ -372,6 +372,27 @@ for nm in lawns:
     bm.to_mesh(me); bm.free()
 say("Grama: %d tufos em cartoes cruzados com alfa (%d tris) no lugar de ~15 milhoes de tris." % (total_cards, total_cards * 4))
 
+# ------------------------------------------------------------------ 6b. malha de colisao simplificada
+# Uma caixa orientada (OBB) por objeto relevante: paredes, pisos, moveis, carros, postes, troncos.
+# Sai como objeto "Colisao" (colecao 99_Colisao, fora do render) e em colisao.fbx / colisao.glb.
+COL_FORA = {"07c_Grama_Vegetacao", "09_Luzes_Cameras"}
+COL_PULAR = ("Fio_", "Cabo_", "Ramal_", "Travessia_", "Forro_Ripado", "_Folhas", "Galhos", "Grama_Cartao",
+             "Giroflex_Lente", "Adesivo", "Placa_Texto", "Numero_", "Faixa_Central", "LED", "Cortina")
+caixas = []
+for ob in scene.objects:
+    if ob.type != "MESH" or not ob.users_collection:
+        continue
+    cn = ob.users_collection[0].name
+    if cn in COL_FORA and "Tronco" not in ob.name:
+        continue
+    if any(p in ob.name for p in COL_PULAR):
+        continue
+    dims = ob.dimensions
+    if max(dims) < .25:                 # objetos pequenos nao bloqueiam a passagem
+        continue
+    caixas.append([ob.matrix_world @ Vector(c) for c in ob.bound_box])
+say("Colisao: %d caixas orientadas preparadas." % len(caixas))
+
 # ------------------------------------------------------------------ 7. juntar geometria estatica por colecao
 INTERATIVO_COL = {"08_Vestigios", "10_Viatura_PMERJ", "09_Luzes_Cameras"}
 INTERATIVO_PAI = ("Porta_Quarto_Dobradica", "Portao_Folha", "Viatura_PMERJ", "V_")
@@ -441,6 +462,37 @@ try:
 except Exception as e:
     say("Falha no FBX: %s" % e)
 
+# malha de colisao (depois das exportacoes principais, para nao entrar nelas)
+if caixas:
+    bmc = bmesh.new()
+    FACES = ((0, 1, 2, 3), (4, 7, 6, 5), (0, 4, 5, 1), (1, 5, 6, 2), (2, 6, 7, 3), (3, 7, 4, 0))
+    for cs in caixas:
+        vs = [bmc.verts.new(c) for c in cs]
+        for f in FACES:
+            try:
+                bmc.faces.new([vs[i] for i in f])
+            except ValueError:
+                pass
+    bmesh.ops.recalc_face_normals(bmc, faces=bmc.faces)
+    mec = bpy.data.meshes.new("Colisao"); bmc.to_mesh(mec); bmc.free()
+    colc = bpy.data.collections.get("99_Colisao") or bpy.data.collections.new("99_Colisao")
+    if colc.name not in scene.collection.children:
+        scene.collection.children.link(colc)
+    obc = bpy.data.objects.new("Colisao", mec); colc.objects.link(obc)
+    obc.display_type = "WIRE"; obc.hide_render = True
+    for o in scene.objects:
+        o.select_set(False)
+    obc.select_set(True); bpy.context.view_layer.objects.active = obc
+    try:
+        bpy.ops.export_scene.gltf(filepath=os.path.join(OUT, "colisao.glb"), export_format="GLB", use_selection=True,
+                                  export_materials="NONE", export_texcoords=False)
+        bpy.ops.export_scene.fbx(filepath=os.path.join(OUT, "colisao.fbx"), use_selection=True, object_types={"MESH"},
+                                 apply_scale_options="FBX_SCALE_ALL")
+        say("Colisao: %d caixas, %d tris -> colisao.glb / colisao.fbx" % (len(caixas), len(caixas) * 12))
+    except Exception as e:
+        say("Falha ao exportar colisao: %s" % e)
+    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "casa_em_silencio_VR.blend"))
+
 with open(os.path.join(OUT, "RELATORIO_VR.txt"), "w", encoding="utf-8") as f:
     f.write("A CASA EM SILENCIO - VERSAO VR OTIMIZADA\n\n")
     f.write("ANTES (cena de render): ~920.000 tris de geometria + ~15.000.000 tris de grama instanciada\n")
@@ -458,7 +510,10 @@ Proximos passos no motor (Unity/Unreal):
     giroflex (vermelho/azul), farois da viatura, TV e a lanterna do policial.
   - O giroflex esta animado apenas no Blender (Cycles); recriar o pisca no motor
     com um script alternando as luzes e a emissao das lentes.
-  - Colisao: mesh collider simplificado para paredes/pisos; box colliders nos moveis.
+  - Colisao: use colisao.fbx (uma caixa por parede/piso/movel/carro).
+      Unity: arraste colisao.fbx para a cena, adicione Mesh Collider e desligue o Mesh Renderer.
+      Unreal: importe colisao.fbx e em Collision Complexity escolha "Use Complex Collision As Simple",
+              deixe o ator invisivel (Hidden in Game).
   - Objetos interativos ja estao separados: colecoes 08_Vestigios e 10_Viatura_PMERJ,
     porta do quarto (Porta_Quarto_Dobradica) e folhas do portao (Portao_Folha_*).
   - Neblina: usar a fog do motor no lugar do volume do Blender.
