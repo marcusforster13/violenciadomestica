@@ -46,7 +46,7 @@ celular num ambiente silencioso), um arquivo por fala. Enquanto isso, o visualiz
 
 ### Relato da vítima (já ligado no site: é só gravar e salvar com o nome certo)
 
-Salve em `06_Audio\brutos\` com **exatamente** estes nomes (mp3). Rode o `atualizar_tudo.ps1` ou copie para
+Salve em `06_Audio\brutos\` com **exatamente** estes nomes (mp3 ou wav). Rode o `atualizar_tudo.ps1` ou copie para
 `04_ThreeJS\web\audio\` e acrescente o nome em `audio\manifest.json`. A fala que tiver arquivo toca com a voz
 gravada saindo da personagem; a que não tiver continua com a voz sintética e legenda.
 Dica de gravação: voz baixa, cansada, com pausas — ela acabou de ser agredida. Não precisa ser "atuação" exagerada.
