@@ -358,6 +358,7 @@ for (const i of [0, 1]) {
   linha.scale.z = 6; c.add(linha);
   c.addEventListener('selectstart', () => {
     mirar(c);
+    window.__som?.desbloquear();                     // gatilho do Quest tambem libera o audio
     if (window.__trein?.gatilho(ray, c)) return;
     const h = hotspots.visible ? ray.intersectObjects(hitMeshes, false) : [];
     if (h.length) return showPanel(h[0].object.userData.index);
@@ -367,7 +368,7 @@ for (const i of [0, 1]) {
   });
   c.addEventListener('connected', e => { c.userData.mao = e.data.handedness; });
   // grip (qualquer mao) = lanterna, sempre. O menu do treinamento fica nos botoes Y/B (ver vrMove).
-  c.addEventListener('squeezestart', () => setLanterna(!lantOn, c));
+  c.addEventListener('squeezestart', () => { window.__som?.desbloquear(); setLanterna(!lantOn, c); });
   rig.add(c); controles.push(c);
   const grip = renderer.xr.getControllerGrip(i); grip.add(cmf.createControllerModel(grip)); rig.add(grip);
 }
