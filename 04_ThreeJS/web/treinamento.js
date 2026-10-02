@@ -795,7 +795,7 @@ export async function iniciar(ctx) {
     Object.assign(S, { ativo: true, inicio: performance.now(), fim: 0, feitos: new Map(), erros: [], graves: [], log: [], ferramenta: 'mao', luvas: false,
       identificado: false, socorroOuvido: false, entrou: false, contatoVitima: false, separado: false, algemado: false, desistenciaResolvida: false,
       criancaAchada: false, vestReconhecidos: new Set(), vestFotografados: new Set(), placas: 0, fitas: [], fitaInicio: null, tempoFachada: 0, tempoDentro: 0, avisoAgressor: false,
-      apoio: false, agressorAchado: false, rendido: false, abordando: false, historia: false, capitulo: null, placasVest: new Set() });
+      apoio: false, agressorAchado: false, rendido: false, abordando: false, historia: false, capitulo: null, placasVest: new Set(), avisoFotos: false });
     if (ctx.hotspots) ctx.hotspots.visible = false;      // sem marcadores (no modo treino os objetivos guiam)
     criarNPCs();
     montarQuintal();
@@ -871,7 +871,7 @@ export async function iniciar(ctx) {
   /* ================= modo historia: a partir da exploracao, sem voltar para a rua; capitulos guiados ================= */
   const CAPITULOS = {
     abordagem: { titulo: 'Capítulo 1 · Abordagem', texto: 'Ele estava escondido atrás do arbusto. Identifique-se, dê ordens claras e conduza a prisão: busca pessoal, algemas só com justificativa, voz de prisão e direitos, e leve-o até a viatura.' },
-    preservacao: { titulo: 'Capítulo 2 · Preservação do local', texto: 'O agressor está na viatura. Agora preserve o local do crime para a perícia: reconheça e fotografe os vestígios com placa numerada (dentro da casa e no quintal), isole a sala e o jantar com a fita zebrada e solicite a perícia pelo rádio. Use luvas e não mova nada.\n\nFerramentas: botão Y ou B (ou T no computador).' },
+    preservacao: { titulo: 'Capítulo 2 · Preservação do local', texto: 'O agressor está preso na viatura. IMPORTANTE: agora fotografe os vestígios com placa numerada antes de qualquer outra coisa — a perícia depende disso.\n\nComo fazer: aponte para o vestígio, aperte o gatilho e escolha "Fotografar com placa numerada". São pelo menos 6, dentro da casa (sala e jantar) e no quintal (pegadas, marca de mão, faca). Depois isole a sala e o jantar com a fita zebrada e solicite a perícia pelo rádio. Use luvas e não mova nada.' },
     vitima: { titulo: 'Capítulo 3 · Atendimento à vítima', texto: 'Local preservado. Agora cuide da vítima: acione o SAMU pelo rádio, informe os direitos e serviços (medida protetiva, DEAM, Defensoria, 180), proteja a criança e combine a condução à DEAM.' },
     fim: { titulo: 'Ocorrência concluída', texto: 'Você concluiu as etapas principais. Veja o relatório com o que foi feito, os erros e a base legal de cada item.' }
   };
@@ -882,6 +882,24 @@ export async function iniciar(ctx) {
       botoes: id === 'fim' ? [{ label: 'Ver relatório', acao: encerrar }, { label: 'Continuar na cena', acao: () => menu.esconder() }]
                            : [{ label: 'Entendi', acao: () => menu.esconder() }] });
     S.log.push({ t: +tempo().toFixed(1), id: 'capitulo', extra: id });
+  }
+  let ultimoLembrete = 0;
+  function avisoPreservacao() {
+    if (!S.ativo || S.avisoFotos) return;
+    S.avisoFotos = true; ultimoLembrete = performance.now();
+    falar('Rádio · COPOM', 'Guarnição, perícia a caminho. Preservem o local e fotografem os vestígios com placa até a chegada.', 'm');
+    setTimeout(() => {
+      if (S.historia) return capitulo('preservacao');
+      fecharPaineis();
+      menu.mostrar({ tag: 'Próximo passo', titulo: 'Fotografe os vestígios', longe: 1.3, texto: CAPITULOS.preservacao.texto,
+        botoes: [{ label: 'Entendi', acao: () => menu.esconder() }] });
+    }, 4500);
+  }
+  function lembrarFotos() {                               // lembrete enquanto faltarem fotos (a cada ~70 s)
+    if (!S.ativo || !S.avisoFotos || S.vestFotografados.size >= 6) return;
+    if (performance.now() - ultimoLembrete < 70000 || menu.mesh.visible || dialogo.mesh.visible) return;
+    ultimoLembrete = performance.now();
+    legenda('Lembrete', `Fotografe os vestígios com placa: ${S.vestFotografados.size} de 6. Aponte para o vestígio e aperte o gatilho.`, 6);
   }
   function avancarHistoria() {                            // chamado pelo status (1x por segundo)
     if (!S.historia || !S.ativo) return;
@@ -898,7 +916,7 @@ export async function iniciar(ctx) {
     Object.assign(S, { ativo: true, historia: true, modo: 'treino', inicio: performance.now(), fim: 0, feitos: new Map(), erros: [], graves: [], log: [],
       ferramenta: 'mao', luvas: false, entrou: true, identificado: true, contatoVitima: true, separado: false, algemado: false, rendido: false,
       abordando: false, agressorAchado: false, criancaAchada: false, vestReconhecidos: new Set(), vestFotografados: new Set(), placas: 0, fitas: [],
-      fitaInicio: null, desistenciaResolvida: false, apoio: false, capitulo: 'abordagem', placasVest: new Set() });
+      fitaInicio: null, desistenciaResolvida: false, apoio: false, capitulo: 'abordagem', placasVest: new Set(), avisoFotos: false });
     status();
     descobrirAgressor();
   }
@@ -1030,7 +1048,7 @@ export async function iniciar(ctx) {
       } else if (t < 1.9) { ag.position.set(ini.x, TOPO, MURO_Z); ag.rotation.x = 0; }   // 4) equilibra em cima do muro
       else if (t < 2.45) {                                     // 5) pula para o outro lado
         const k = (t - 1.9) / .55; ag.position.set(ini.x, TOPO + .25 * Math.sin(k * Math.PI) - TOPO * k * k, MURO_Z - 1.1 * k);
-      } else { ag.visible = false; if (S.historia) setTimeout(() => capitulo('preservacao'), 9000); return; }
+      } else { ag.visible = false; setTimeout(avisoPreservacao, 9000); return; }
       requestAnimationFrame(passo);
     };
     passo();
@@ -1051,7 +1069,7 @@ export async function iniciar(ctx) {
     const p = ag.position, dentro = Math.abs(p.x) < 6.2 && Math.abs(p.z) < 4.3;
     ag.userData.rota = [...(dentro ? [new THREE.Vector3(p.x * .3, 0, 2.6), new THREE.Vector3(0, 0, 5.6)] : [new THREE.Vector3(8.6, 0, 7.6)]),   // de dentro: pela porta da frente
       new THREE.Vector3(1.0, 0, 12.4), new THREE.Vector3(1.0, 0, 14.6), new THREE.Vector3(3.0, 0, 16.4)];   // pelo portao
-    ag.userData.aoChegar = () => { animar(ag, 'parada', 1e6); ag.rotation.y = Math.PI / 2; ag.userData.semVirar = true; if (S.historia) setTimeout(() => capitulo('preservacao'), 1500); };
+    ag.userData.aoChegar = () => { animar(ag, 'parada', 1e6); ag.rotation.y = Math.PI / 2; ag.userData.semVirar = true; setTimeout(avisoPreservacao, 1500); };
     legenda('Guarnição', 'Conduzindo o preso até a viatura.', 3);
   }
   function moverNPC(n, dt) {
@@ -1158,7 +1176,7 @@ export async function iniciar(ctx) {
     const el = document.getElementById('statusTrein'); if (!el) return;
     el.hidden = !S.ativo;
     el.innerHTML = `<b>Ocorrência em andamento</b> · ${fmt(tempo())}${S.modo === 'treino' ? ' · modo treino' : ''}<br>Ferramenta: ${FERR[S.ferramenta]} · Luvas: ${S.luvas ? 'sim' : 'não'} · Vestígios: ${S.vestReconhecidos.size}`;
-    mostrarObjetivos(); avancarHistoria();
+    mostrarObjetivos(); avancarHistoria(); lembrarFotos();
   }
 
   /* ================= verificacoes automaticas por quadro ================= */

@@ -364,6 +364,7 @@ for (const i of [0, 1]) {
     const h = hotspots.visible ? ray.intersectObjects(hitMeshes, false) : [];
     if (h.length) return showPanel(h[0].object.userData.index);
     if (panel.visible) { panel.visible = false; return; }
+    if (c.userData.mao === 'left') return;          // mao esquerda: so interage (o teleporte fica no gatilho direito)
     const p = alvoTeleporte(c);
     if (p) { camera.getWorldPosition(V1); rig.position.x += p.x - V1.x; rig.position.z += p.z - V1.z; rig.position.y = p.y; }
   });
