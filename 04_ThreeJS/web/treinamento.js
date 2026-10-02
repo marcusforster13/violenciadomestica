@@ -519,7 +519,7 @@ export async function iniciar(ctx) {
   /* ================= dialogos ================= */
   function falarDialogo(quem, opcoes, titulo) {
     fecharPaineis();
-    dialogo.mostrar({ tag: quem, titulo, botoes: [...opcoes, { label: 'Encerrar conversa', acao: () => dialogo.esconder() }] });
+    dialogo.mostrar({ tag: quem, titulo, botoes: [...opcoes, { label: quem === 'Vestígio' ? 'Fechar' : 'Encerrar conversa', acao: () => dialogo.esconder() }] });
   }
   const dlg = id => CEN.dialogos[id];
   function aplicarEfeito(op) {
@@ -689,9 +689,9 @@ export async function iniciar(ctx) {
     const hv = ray.intersectObjects(vestHits, false)[0];
     if (hv && hv.distance < 4) {
       const vv = hv.object.userData.vest;
-      if (S.ferramenta === 'camera') { foto(vv); return true; }
-      if (S.ferramenta === 'placa') { placa(hv.object.position.clone().setY(hv.point.y < .3 ? 0 : hv.object.position.y - .35)); reconhecer(vv); return true; }
-      if (S.ferramenta === 'mao') { vv.id === 'V15' ? facaQuintal(vv, hv.object) : tocar(vv); return true; }
+      if (S.ferramenta === 'camera') { fotografarVestigio(vv, hv); return true; }
+      if (S.ferramenta === 'placa') { marcarVestigio(vv, hv); reconhecer(vv); return true; }
+      if (S.ferramenta === 'mao') { vv.id === 'V15' ? facaQuintal(vv, hv) : tocar(vv, hv); return true; }
     }
     // chao: placa ou fita
     if (S.ferramenta === 'placa' || S.ferramenta === 'fita') {
@@ -719,8 +719,33 @@ export async function iniciar(ctx) {
     S.log.push({ t: +tempo().toFixed(1), id: 'foto', extra: vv.id });
     if (S.vestFotografados.size >= 6) registrar('fotografar_vestigios');
   }
-  function tocar(vv) {
+  // placa numerada ao lado do vestigio (uma por vestigio) e foto com a placa no quadro
+  function marcarVestigio(vv, hit) {
+    S.placasVest = S.placasVest || new Set();
+    if (S.placasVest.has(vv.id)) return;
+    S.placasVest.add(vv.id);
+    const o = hit?.object || vestHits.find(h => h.userData.vest === vv);
+    const base = o ? o.position.clone() : new THREE.Vector3(...vv.pos);
+    camera.getWorldPosition(V); V.y = base.y;
+    const dir = V.clone().sub(base).setY(0).normalize();     // para o lado do policial, sem cobrir o objeto
+    // vestigio no chao (cadeira, cacos, mala): placa no chao ao lado.
+    // em cima de algo (copo na mesa, faca/garrafas na bancada): placa na mesma superficie, bem perto.
+    // na parede ou em pe (buraco de soco, desenho na geladeira): placa no chao embaixo.
+    if (base.y >= .75) {
+      const origem = base.clone().addScaledVector(dir, .14); origem.y = base.y + .12;
+      const sup = new THREE.Raycaster(origem, new THREE.Vector3(0, -1, 0), 0, 3).intersectObjects(ctx.colisao(), false)[0];
+      if (sup && sup.point.y > base.y - .45) { placa(origem.setY(sup.point.y)); return; }
+    }
+    placa(base.clone().addScaledVector(dir, .4).setY(0));
+  }
+  function fotografarVestigio(vv, hit) {
+    marcarVestigio(vv, hit); foto(vv);
+    legenda('Câmera', `${vv.id} · ${vv.nome} — fotografado com placa (${S.vestFotografados.size} ${S.vestFotografados.size === 1 ? 'foto' : 'fotos'})`, 2.5);
+  }
+  function tocar(vv, hit) {
     falarDialogo('Vestígio', [
+      { label: 'Fotografar com placa numerada (sem tocar)', acao: () => { dialogo.esconder(); fotografarVestigio(vv, hit); } },
+      { label: 'Só marcar com placa numerada', acao: () => { dialogo.esconder(); marcarVestigio(vv, hit); reconhecer(vv); } },
       { label: 'Apenas observar e descrever (não tocar)', acao: () => { dialogo.esconder(); reconhecer(vv); } },
       { label: 'Mover com a mão para ver melhor', acao: () => { dialogo.esconder(); registrar('tocar_vestigio', vv.id); } },
       { label: 'Recolher e arrumar o objeto', acao: () => { dialogo.esconder(); registrar('alterar_local', vv.id); } }
@@ -770,7 +795,7 @@ export async function iniciar(ctx) {
     Object.assign(S, { ativo: true, inicio: performance.now(), fim: 0, feitos: new Map(), erros: [], graves: [], log: [], ferramenta: 'mao', luvas: false,
       identificado: false, socorroOuvido: false, entrou: false, contatoVitima: false, separado: false, algemado: false, desistenciaResolvida: false,
       criancaAchada: false, vestReconhecidos: new Set(), vestFotografados: new Set(), placas: 0, fitas: [], fitaInicio: null, tempoFachada: 0, tempoDentro: 0, avisoAgressor: false,
-      apoio: false, agressorAchado: false, rendido: false, abordando: false, historia: false, capitulo: null });
+      apoio: false, agressorAchado: false, rendido: false, abordando: false, historia: false, capitulo: null, placasVest: new Set() });
     if (ctx.hotspots) ctx.hotspots.visible = false;      // sem marcadores (no modo treino os objetivos guiam)
     criarNPCs();
     montarQuintal();
@@ -873,7 +898,7 @@ export async function iniciar(ctx) {
     Object.assign(S, { ativo: true, historia: true, modo: 'treino', inicio: performance.now(), fim: 0, feitos: new Map(), erros: [], graves: [], log: [],
       ferramenta: 'mao', luvas: false, entrou: true, identificado: true, contatoVitima: true, separado: false, algemado: false, rendido: false,
       abordando: false, agressorAchado: false, criancaAchada: false, vestReconhecidos: new Set(), vestFotografados: new Set(), placas: 0, fitas: [],
-      fitaInicio: null, desistenciaResolvida: false, apoio: false, capitulo: 'abordagem' });
+      fitaInicio: null, desistenciaResolvida: false, apoio: false, capitulo: 'abordagem', placasVest: new Set() });
     status();
     descobrirAgressor();
   }
@@ -1044,6 +1069,7 @@ export async function iniciar(ctx) {
   function facaQuintal(vv, hit) {
     falarDialogo('Vestígio', opcoesJSON(CEN.abordagem.faca_quintal, op => {
       reconhecer(vv);
+      if (op.acao === 'preservar_faca_quintal') fotografarVestigio(vv, hit);
       if (op.precisa_luvas || op.erro) {                     // recolhida: sai do lugar
         if (op.precisa_luvas && !S.luvas) registrar('faca_sem_luva');
         if (vv._obj) scene.remove(vv._obj);
