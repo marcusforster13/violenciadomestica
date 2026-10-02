@@ -120,7 +120,7 @@
     "vitima":   { "idade": 30, "estados": ["colabora", "minimiza", "retrata"], "lesoes": ["lábio", "braço"] },
     "agressor": { "idade": 35, "estados": ["calmo_manipulador", "agressivo", "escondido", "fugiu"], "reacoes_quando_achado": ["rende_se", "foge", "volta_casa"] },
     "crianca":  { "idade": 6,  "estados": ["quarto", "corredor", "vizinha"] },
-    "vizinho":  { "estados": ["presente", "ausente"], "informacao": "Ouviu gritos e vidro quebrando; diz que já aconteceu antes." }
+    "vizinho":  { "estados": ["presente", "ausente"], "informacao": "Ouviu gritos e vidro quebrando; diz que já aconteceu antes.", "fala": "Eu ouvi gritaria e barulho de vidro quebrando. Não é a primeira vez, já aconteceu outras vezes. Meu nome é Carlos, moro no 150." }
   },
 
   "variacoes": {

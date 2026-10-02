@@ -533,7 +533,7 @@ export async function iniciar(ctx) {
     falarDialogo('Vizinho', [{
       label: 'Boa noite. O senhor viu ou ouviu algo? Pode me passar nome e documento?', acao: () => {
         registrar('qualificar_testemunha'); dialogo.esconder();
-        falar('Vizinho', CEN.personagens.vizinho.informacao + ' Meu nome é Carlos, moro no 150.', 'm');
+        falar('Vizinho', CEN.personagens.vizinho.fala, 'm'); animar(npcs.vizinho, 'falando', 7);
       }
     }], 'Testemunha');
   }
