@@ -1,0 +1,23 @@
+﻿A CASA EM SILÊNCIO — FALAS: VIZINHO
+============================================================
+
+Homem adulto, preocupado, falando com o policial na calçada. Tom de quem quer ajudar sem se envolver demais.
+
+Como gravar:
+- Um arquivo por fala, com o nome indicado (.wav ou .mp3).
+- Salvar em 06_Audio\brutos\ (ou mandar para o Claude).
+- Falar exatamente o texto (é por ele que o site encontra a gravação).
+- ~0,5 s de silêncio no começo e no fim. O tempo é só referência.
+
+------------------------------------------------------------
+
+[ ]  1.  "Eu ouvi gritaria e barulho de vidro quebrando. Não é a primeira vez, já aconteceu outras vezes. Meu nome é Carlos, moro no 150."
+      Quando: Testemunha: quando o policial pede o relato e o documento
+      Tempo: 10–14 s     Arquivo: fala_vizinho_01
+
+[ ]  2.  "Eu ouvi gritaria e barulho de coisa quebrando. Já é a segunda vez esse mês."
+      Quando: Modo exploração (antes de iniciar o treinamento)
+      Tempo: 7–9 s     Arquivo: fala_vizinho_02
+
+------------------------------------------------------------
+Total: 2 falas ([x] = já gravada).

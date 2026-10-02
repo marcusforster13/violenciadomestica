@@ -1,0 +1,27 @@
+﻿A CASA EM SILÊNCIO — FALAS: COPOM (RÁDIO)
+============================================================
+
+Operador de rádio: frases curtas, tom neutro. Pode gravar perto do microfone com um pouco de "rádio" na voz.
+
+Como gravar:
+- Um arquivo por fala, com o nome indicado (.wav ou .mp3).
+- Salvar em 06_Audio\brutos\ (ou mandar para o Claude).
+- Falar exatamente o texto (é por ele que o site encontra a gravação).
+- ~0,5 s de silêncio no começo e no fim. O tempo é só referência.
+
+------------------------------------------------------------
+
+[ ]  1.  "Ocorrência de violência doméstica. Rua das Amendoeiras, 147. Vítima ferida, agressor no local, criança de 6 anos na residência, possível faca."
+      Quando: Despacho da ocorrência pelo rádio
+      Tempo: 9–12 s     Arquivo: fala_copom_01
+
+[ ]  2.  "Copiado. Prossiga."
+      Quando: Resposta quando o policial chama pelo rádio
+      Tempo: 1–2 s     Arquivo: fala_copom_02
+
+[ ]  3.  "Copiado. Viaturas da área informadas."
+      Quando: Resposta ao informe de fuga
+      Tempo: 2–3 s     Arquivo: fala_copom_03
+
+------------------------------------------------------------
+Total: 3 falas ([x] = já gravada).

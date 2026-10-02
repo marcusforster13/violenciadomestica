@@ -72,3 +72,24 @@ doc = f'''<!doctype html>
 '''
 open(os.path.join(AQUI, 'ROTEIRO_VOZES.html'), 'w', encoding='utf8').write(doc)
 print('[VOZES] %d falas, %d gravadas -> ROTEIRO_VOZES.html' % (total, feitas))
+
+# um .txt por personagem, para imprimir (FALAS_VITIMA.txt, FALAS_AGRESSOR.txt, ...)
+ARQ_TXT = {'Vítima': 'VITIMA', 'Agressor': 'AGRESSOR', 'Criança': 'CRIANCA', 'Vizinho': 'VIZINHO',
+           'Atendente do 190': 'ATENDENTE_190', 'COPOM (rádio)': 'COPOM'}
+for p in ORDEM:
+    grupo = [f for f in falas if f['personagem'] == p]
+    if not grupo: continue
+    L = ['A CASA EM SILÊNCIO — FALAS: ' + p.upper(), '=' * 60, '']
+    L += [DICAS.get(p, ''), '',
+          'Como gravar:',
+          '- Um arquivo por fala, com o nome indicado (.wav ou .mp3).',
+          r'- Salvar em 06_Audio\brutos\ (ou mandar para o Claude).',
+          '- Falar exatamente o texto (é por ele que o site encontra a gravação).',
+          '- ~0,5 s de silêncio no começo e no fim. O tempo é só referência.', '', '-' * 60]
+    for i, f in enumerate(grupo, 1):
+        marca = '[x]' if f['arquivo'] in gravados else '[ ]'
+        L += ['', '%s %2d.  "%s"' % (marca, i, f['texto']), '      Quando: ' + f['quando'],
+              '      Tempo: %s     Arquivo: %s' % (seg(f['texto']), f['arquivo'])]
+    L += ['', '-' * 60, 'Total: %d falas ([x] = já gravada).' % len(grupo), '']
+    open(os.path.join(AQUI, 'FALAS_%s.txt' % ARQ_TXT[p]), 'w', encoding='utf-8-sig').write('\r\n'.join(L))
+print('[VOZES] FALAS_<PERSONAGEM>.txt gerados para imprimir')

@@ -1,0 +1,35 @@
+﻿A CASA EM SILÊNCIO — FALAS: ATENDENTE DO 190
+============================================================
+
+Atendente da central: voz calma, firme e objetiva.
+
+Como gravar:
+- Um arquivo por fala, com o nome indicado (.wav ou .mp3).
+- Salvar em 06_Audio\brutos\ (ou mandar para o Claude).
+- Falar exatamente o texto (é por ele que o site encontra a gravação).
+- ~0,5 s de silêncio no começo e no fim. O tempo é só referência.
+
+------------------------------------------------------------
+
+[ ]  1.  "Polícia Militar, qual a sua emergência?"
+      Quando: Ligação para o 190 (início do treinamento)
+      Tempo: 3–4 s     Arquivo: fala_atendente_190_01
+
+[ ]  2.  "A senhora está ferida?"
+      Quando: Ligação para o 190 (início do treinamento)
+      Tempo: 2–2 s     Arquivo: fala_atendente_190_02
+
+[ ]  3.  "Qual o endereço?"
+      Quando: Ligação para o 190 (início do treinamento)
+      Tempo: 1–2 s     Arquivo: fala_atendente_190_03
+
+[ ]  4.  "Tem mais alguém na casa?"
+      Quando: Ligação para o 190 (início do treinamento)
+      Tempo: 2–3 s     Arquivo: fala_atendente_190_04
+
+[ ]  5.  "Ele está armado?"
+      Quando: Ligação para o 190 (início do treinamento)
+      Tempo: 1–2 s     Arquivo: fala_atendente_190_05
+
+------------------------------------------------------------
+Total: 5 falas ([x] = já gravada).

@@ -1,0 +1,23 @@
+﻿A CASA EM SILÊNCIO — FALAS: CRIANÇA
+============================================================
+
+Menina de 6 anos, assustada, voz baixa. Grave com uma criança só com autorização dos responsáveis; uma adulta imitando voz infantil também funciona.
+
+Como gravar:
+- Um arquivo por fala, com o nome indicado (.wav ou .mp3).
+- Salvar em 06_Audio\brutos\ (ou mandar para o Claude).
+- Falar exatamente o texto (é por ele que o site encontra a gravação).
+- ~0,5 s de silêncio no começo e no fim. O tempo é só referência.
+
+------------------------------------------------------------
+
+[ ]  1.  "Moço… cadê a minha mãe?"
+      Quando: Quando o policial encontra a criança
+      Tempo: 3–4 s     Arquivo: fala_crianca_01
+
+[ ]  2.  "O papai gritou muito… a mamãe tá machucada?"
+      Quando: Quando o policial fala com calma com ela
+      Tempo: 4–6 s     Arquivo: fala_crianca_02
+
+------------------------------------------------------------
+Total: 2 falas ([x] = já gravada).
