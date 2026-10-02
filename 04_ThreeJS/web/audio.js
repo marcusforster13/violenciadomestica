@@ -121,19 +121,25 @@ export async function iniciarAudio({ scene, camera, renderer }) {
   const api = {
     tem: n => !!buffers[n],
     duracao: n => buffers[n]?.duration || 0,           // segundos (falas gravadas)
-    tocar(n, pos) {                                   // eventos do treinamento; retorna false se o arquivo nao existe
+    // eventos do treinamento; retorna false se o arquivo nao existe. Com analisar=true devolve um medidor de volume
+    // da fala (0 a 1, antes da atenuacao por distancia) para mexer a boca do personagem
+    tocar(n, pos, analisar = false) {
       if (!buffers[n]) return false;
       ligar();
       const d = DEF[n] || { vol: n.startsWith('fala_') ? 1 : .7 };
       if (mudo) return true;
+      let a;
       if (pos) {
-        const a = new THREE.PositionalAudio(listener); a.setBuffer(buffers[n]); a.setRefDistance(1.2); a.setVolume(vol(n, d.vol));
+        a = new THREE.PositionalAudio(listener); a.setBuffer(buffers[n]); a.setRefDistance(1.2); a.setVolume(vol(n, d.vol));
         const o = new THREE.Object3D(); o.position.copy(pos); o.add(a); scene.add(o); a.play();
         a.onEnded = () => { a.isPlaying = false; scene.remove(o); };
       } else {
-        const a = new THREE.Audio(listener); a.setBuffer(buffers[n]); a.setVolume(vol(n, d.vol)); a.play();
+        a = new THREE.Audio(listener); a.setBuffer(buffers[n]); a.setVolume(vol(n, d.vol)); a.play();
       }
-      return true;
+      if (!analisar || !a.source) return true;
+      const an = listener.context.createAnalyser(); an.fftSize = 512; a.source.connect(an);
+      const buf = new Uint8Array(an.fftSize), g = ganho[n] || 1;
+      return () => { an.getByteTimeDomainData(buf); let s = 0; for (const x of buf) { const v = (x - 128) / 128; s += v * v; } return Math.min(1, Math.sqrt(s / buf.length) * g * 4); };
     },
     iniciarTreino() { if (buffers.choro_crianca_baixo && !posicionais.some(p => p.n === 'choro_crianca_baixo')) { ligar(); posicional('choro_crianca_baixo', DEF.choro_crianca_baixo); } },
     pararChoro() { const p = posicionais.find(p => p.n === 'choro_crianca_baixo'); if (p) { p.a.stop(); scene.remove(p.o); posicionais.splice(posicionais.indexOf(p), 1); } },

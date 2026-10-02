@@ -153,9 +153,13 @@ export async function iniciar(ctx) {
     const hl = document.getElementById('legendaHTML'); if (hl && !vr) { hl.innerHTML = `<b>${quem}:</b> ${texto}`; hl.hidden = false; }
   }
   function falar(quem, texto, voz = 'f') {
-    legenda(quem, texto, Math.max(3, texto.length / 14));
-    return vozSintetica(texto, voz);
+    const seg = Math.max(3, texto.length / 14);
+    legenda(quem, texto, seg);
+    const npc = npcPorNome(quem), p = vozSintetica(texto, voz);
+    if (npc) { const f = { sintetica: true, ate: performance.now() + (p ? seg + 6 : seg * .8) * 1000 }; npc.userData.fala = f; p?.then(() => { if (npc.userData.fala === f) npc.userData.fala = null; }); }
+    return p;
   }
+  const npcPorNome = quem => ({ 'Vítima': npcs.vitima, 'Agressor': npcs.agressor, 'Vizinho': npcs.vizinho, 'Criança': npcs.crianca })[String(quem).split(' ')[0]];
   // voz do navegador (pt-BR). Retorna uma promessa que termina quando a fala acaba (ou null sem voz)
   function vozSintetica(texto, voz = 'f') {
     if (S.voz === false || !('speechSynthesis' in window)) return null;
@@ -181,9 +185,17 @@ export async function iniciar(ctx) {
     const seg = gravado ? som.duracao(audio) : Math.max(2.5, texto.length / 13);
     legenda(quem, texto, seg + .6);
     if (npc && gesto) animar(npc, gesto, seg + 1.5);
-    if (gravado) { som.tocar(audio, npc ? npc.position.clone().setY(1.55) : null); await espera(seg * 1000 + 350); return; }
+    if (gravado) {
+      const med = som.tocar(audio, npc ? npc.position.clone().setY(1.55) : null, true);
+      const f = npc && { medidor: typeof med === 'function' ? med : null, sintetica: typeof med !== 'function', ate: performance.now() + seg * 1000 };
+      if (npc) npc.userData.fala = f;
+      await espera(seg * 1000 + 350); if (npc?.userData.fala === f) npc.userData.fala = null; return;
+    }
     const p = vozSintetica(texto, voz);
+    const f = npc && { sintetica: true, ate: performance.now() + (p ? seg + 6 : seg) * 1000 };
+    if (npc) npc.userData.fala = f;
     await (p ? Promise.race([p, espera(seg * 1000 + 6000)]) : espera(seg * 1000));
+    if (npc?.userData.fala === f) npc.userData.fala = null;
     await espera(350);
   }
   let narrando = false;
@@ -269,8 +281,34 @@ export async function iniciar(ctx) {
     const rotulo = new THREE.Sprite(new THREE.SpriteMaterial({ map: et, depthTest: true, transparent: true, fog: false }));
     rotulo.scale.set(.5, .125, 1); rotulo.position.y = alt + .25; g.add(rotulo);
     const mao = m.getObjectByName('Bip01_R_Hand') || m.getObjectByName('Bip01 R Hand');
-    g.userData = { hit, rotulo, nome, mixer, acoes, atual: parada, modelo: m, bracoD: mao || g, real: true };
+    g.userData = { hit, rotulo, nome, mixer, acoes, atual: parada, modelo: m, bracoD: mao || g, real: true, rosto: montarRosto(m) };
     return g;
+  }
+  /* rosto: boca acompanha o volume da fala e as palpebras piscam (ossos faciais do esqueleto adulto) */
+  function montarRosto(m) {
+    const jaw = m.getObjectByName('Bip01_MJaw');
+    if (!jaw) return null;                                   // crianca (Bip02) tem eixos diferentes: fica sem
+    const palp = [['Bip01_REyeBlinkTop', -1.25], ['Bip01_LEyeBlinkTop', -1.25], ['Bip01_REyeBlinkBottom', .35], ['Bip01_LEyeBlinkBottom', .35]]
+      .map(([n, k]) => { const b = m.getObjectByName(n); return b && { b, base: b.position.clone(), k }; }).filter(Boolean);
+    return { jaw, jawBase: jaw.quaternion.clone(), escrito: null, boca: 0, palp, piscaIni: 0, proxPisca: performance.now() + 1000 + Math.random() * 3000 };
+  }
+  const QZ = new THREE.Quaternion(), EIXO_Z = new THREE.Vector3(0, 0, 1);
+  function animarRosto(n, dt, agora) {
+    const r = n.userData.rosto; if (!r) return;
+    let alvo = 0; const f = n.userData.fala;
+    if (f) {
+      if (agora > f.ate) n.userData.fala = null;
+      else if (f.medidor) alvo = Math.pow(Math.min(1, Math.max(0, f.medidor() - .06) / .75), .8);   // silencio ~0,04; fala 0,3 a 0,8
+      else if (f.sintetica) alvo = Math.max(0, .3 + .45 * Math.sin(agora * .019) * Math.sin(agora * .0063 + 1.7));   // ritmo de silabas
+    }
+    r.boca += (alvo - r.boca) * Math.min(1, dt * (alvo > r.boca ? 28 : 14));
+    const q = r.jaw.quaternion;
+    if (r.escrito && q.equals(r.escrito)) q.copy(r.jawBase);   // a animacao nao mexeu na mandibula neste quadro
+    q.multiply(QZ.setFromAxisAngle(EIXO_Z, r.boca * .17)); r.escrito = q.clone();     // ate ~10 graus de abertura
+    // piscar: ~150 ms fechando e abrindo, a cada 2,5 a 6,5 s
+    if (agora > r.proxPisca) { r.piscaIni = agora; r.proxPisca = agora + 2500 + Math.random() * 4000; }
+    const t = (agora - r.piscaIni) / 75, k = t < 1 ? t : t < 2 ? 2 - t : 0;
+    for (const p of r.palp) { p.b.position.copy(p.base); p.b.position.x += p.k * k; }
   }
   function animar(npc, nome, segundos = 6) {
     const u = npc?.userData; if (!u?.real || !u.acoes[nome]) return;
@@ -932,8 +970,9 @@ export async function iniciar(ctx) {
     for (const n of Object.values(npcs)) {
       n.userData.rotulo.visible = V.distanceTo(n.position) < 7;
       n.userData.mixer?.update(dt);
-      // vira o rosto para o policial quando ele chega perto (modelo do Rocketbox olha para +Z)
+      animarRosto(n, dt, agora);
       moverNPC(n, dt);
+      // vira o corpo para o policial quando ele chega perto (o modelo olha para +Z)
       if (n.userData.real && n !== npcs.crianca && !n.userData.destino && !n.userData.semVirar && V.distanceTo(n.position) < 3.5) {
         const alvo = Math.atan2(V.x - n.position.x, V.z - n.position.z);
         let d = alvo - n.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d));
