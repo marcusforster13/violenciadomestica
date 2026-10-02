@@ -37,7 +37,7 @@
     ]},
     { "id": "F3", "nome": "Controle da cena", "acoes": [
       { "id": "separar_partes", "texto": "Separar agressor e vítima", "pontos": 6, "base": "LMP art. 10-A" },
-      { "id": "neutralizar_faca", "texto": "Neutralizar o risco da faca e registrar", "pontos": 4, "condicao": "variacao.faca != 'ausente'" },
+      { "id": "neutralizar_faca", "texto": "Neutralizar o risco da faca e registrar", "pontos": 4, "condicao": "variacao.faca != 'ausente' && variacao.faca != 'quintal'" },
       { "id": "algemas_justificadas", "texto": "Algemas somente com justificativa", "pontos": 4, "base": "STF SV 11" },
       { "id": "localizar_crianca", "texto": "Localizar a criança", "pontos": 5 }
     ], "falhas_graves": [

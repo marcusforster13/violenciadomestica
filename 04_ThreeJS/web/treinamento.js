@@ -272,11 +272,11 @@ export async function iniciar(ctx) {
     return Promise.all(Object.entries(man).map(([papel, info]) => gl.loadAsync(info.arquivo).then(g => { modelos[papel] = g; }).catch(() => { })));
   }).catch(() => { });
   // modo exploracao (antes de iniciar o treinamento): personagens, rastros e a faca do quintal ja aparecem na cena
-  modelosProntos.then(() => {
-    if (S.ativo || !Object.keys(modelos).length) return;
+  function cenaExploracao() {
     S.variacao = { agressor: 'escondido', crianca: 'quarto', vizinho: 'presente', faca: 'quintal', vitima: 'colabora', reacao: 'rende_se', fuga: 'nao' };
     criarNPCs(); montarQuintal();
-  });
+  }
+  modelosProntos.then(() => { if (!S.ativo && Object.keys(modelos).length) cenaExploracao(); });
   function personagem(papel, nome, cor, altura, calca) {
     const base = modelos[papel];
     if (!base) return boneco(nome, cor, altura, calca);
@@ -386,7 +386,7 @@ export async function iniciar(ctx) {
   }
   const npcs = {};
   function criarNPCs() {
-    Object.values(npcs).forEach(n => scene.remove(n)); for (const k in npcs) delete npcs[k];
+    Object.values(npcs).forEach(n => { scene.remove(n); if (n.userData.algemas) scene.remove(n.userData.algemas.g); }); for (const k in npcs) delete npcs[k];
     S.agressorPendente = null;
     const v = personagem('vitima', 'Vítima', 0x9b2d3a, 1.64, 0x3a3f55); v.position.set(-3.1, 0, 0.7); v.rotation.y = 2.4;
     if (!v.userData.real) {
@@ -770,7 +770,7 @@ export async function iniciar(ctx) {
     Object.assign(S, { ativo: true, inicio: performance.now(), fim: 0, feitos: new Map(), erros: [], graves: [], log: [], ferramenta: 'mao', luvas: false,
       identificado: false, socorroOuvido: false, entrou: false, contatoVitima: false, separado: false, algemado: false, desistenciaResolvida: false,
       criancaAchada: false, vestReconhecidos: new Set(), vestFotografados: new Set(), placas: 0, fitas: [], fitaInicio: null, tempoFachada: 0, tempoDentro: 0, avisoAgressor: false,
-      apoio: false, agressorAchado: false, rendido: false, abordando: false });
+      apoio: false, agressorAchado: false, rendido: false, abordando: false, historia: false, capitulo: null });
     if (ctx.hotspots) ctx.hotspots.visible = false;      // sem marcadores (no modo treino os objetivos guiam)
     criarNPCs();
     montarQuintal();
@@ -793,6 +793,7 @@ export async function iniciar(ctx) {
   function relatorio() {
     let possiveis = 0, obtidos = 0; const fases = [];
     for (const f of CEN.fases) {
+      if (S.historia && (f.id === 'F1' || f.id === 'F2')) continue;     // modo historia comeca na abordagem
       let fp = 0, fo = 0; const itens = [];
       for (const a of f.acoes || []) {
         if (!cond(a.condicao)) continue;
@@ -804,7 +805,7 @@ export async function iniciar(ctx) {
     const desc = S.erros.reduce((s, e) => s + e.pontos, 0) + S.graves.reduce((s, e) => s + e.pontos, 0);
     const nota = Math.max(0, Math.round((obtidos + desc) / possiveis * 100));
     const aprovado = nota >= CEN.aprovacao.pontos_minimos && !(CEN.aprovacao.sem_falha_grave && S.graves.length);
-    return { cenario: CEN.id, data: new Date().toISOString(), tempo: fmt(tempo()), modo: S.modo, variacao: S.variacao, nota, aprovado, obtidos, descontos: desc, possiveis,
+    return { cenario: CEN.id, data: new Date().toISOString(), tempo: fmt(tempo()), modo: S.historia ? 'historia' : S.modo, variacao: S.variacao, nota, aprovado, obtidos, descontos: desc, possiveis,
       fases, erros: S.erros, falhas_graves: S.graves, fotos: [...S.vestFotografados], vestigios_reconhecidos: [...S.vestReconhecidos], placas: S.placas, fitas: S.fitas.length, linha_do_tempo: S.log };
   }
   function mostrarRelatorio(r) {
@@ -836,11 +837,45 @@ export async function iniciar(ctx) {
     if (!hn || hn.distance > 5) return false;
     const n = hn.object.userData.npc;
     if (n === 'Vítima') relatoVitima();
-    else if (n === 'Agressor') dizer(npcs.agressor, 'Agressor', { texto: 'O que vocês tão fazendo aqui? Eu não fiz nada, ela que tá inventando.', gesto: 'falando' }, 'm')
-      .then(() => legenda('Modo exploração', 'Para abordar e prender o agressor, clique em "Iniciar treinamento" (no Quest: botão Y ou B).', 6));
+    else if (n === 'Agressor') modoHistoria();
     else if (n === 'Vizinho') dizer(npcs.vizinho, 'Vizinho', { texto: 'Eu ouvi gritaria e barulho de coisa quebrando. Já é a segunda vez esse mês.', gesto: 'falando' }, 'm');
     else if (n === 'Criança') dizer(npcs.crianca, 'Criança', { texto: 'Moço… cadê a minha mãe?' }, 'c');
     return true;
+  }
+
+  /* ================= modo historia: a partir da exploracao, sem voltar para a rua; capitulos guiados ================= */
+  const CAPITULOS = {
+    abordagem: { titulo: 'Capítulo 1 · Abordagem', texto: 'Ele estava escondido atrás do arbusto. Identifique-se, dê ordens claras e conduza a prisão: busca pessoal, algemas só com justificativa, voz de prisão e direitos, e leve-o até a viatura.' },
+    preservacao: { titulo: 'Capítulo 2 · Preservação do local', texto: 'O agressor está na viatura. Agora preserve o local do crime para a perícia: reconheça e fotografe os vestígios com placa numerada (dentro da casa e no quintal), isole a sala e o jantar com a fita zebrada e solicite a perícia pelo rádio. Use luvas e não mova nada.\n\nFerramentas: botão Y ou B (ou T no computador).' },
+    vitima: { titulo: 'Capítulo 3 · Atendimento à vítima', texto: 'Local preservado. Agora cuide da vítima: acione o SAMU pelo rádio, informe os direitos e serviços (medida protetiva, DEAM, Defensoria, 180), proteja a criança e combine a condução à DEAM.' },
+    fim: { titulo: 'Ocorrência concluída', texto: 'Você concluiu as etapas principais. Veja o relatório com o que foi feito, os erros e a base legal de cada item.' }
+  };
+  function capitulo(id) {
+    S.capitulo = id; const c = CAPITULOS[id];
+    fecharPaineis();
+    menu.mostrar({ tag: 'Modo história', titulo: c.titulo, texto: c.texto, longe: 1.3,
+      botoes: id === 'fim' ? [{ label: 'Ver relatório', acao: encerrar }, { label: 'Continuar na cena', acao: () => menu.esconder() }]
+                           : [{ label: 'Entendi', acao: () => menu.esconder() }] });
+    S.log.push({ t: +tempo().toFixed(1), id: 'capitulo', extra: id });
+  }
+  function avancarHistoria() {                            // chamado pelo status (1x por segundo)
+    if (!S.historia || !S.ativo) return;
+    const f = id => S.feitos.has(id);
+    if (S.capitulo === 'preservacao' && S.vestReconhecidos.size >= 6 && f('isolar_local') && f('solicitar_pericia')) capitulo('vitima');
+    else if (S.capitulo === 'vitima' && f('acionar_samu') && f('informar_direitos') && f('conducao_deam')) capitulo('fim');
+  }
+  function modoHistoria() {
+    const ag = npcs.agressor; if (!ag || S.ativo) return;
+    const forc = (new URLSearchParams(location.search).get('v') || '').match(/reacao:(\w+)/);
+    const ops = CEN.variacoes.reacao;
+    S.variacao.reacao = forc && ops.includes(forc[1]) ? forc[1] : ops[Math.floor(Math.random() * ops.length)];
+    S.variacao.fuga = 'nao';
+    Object.assign(S, { ativo: true, historia: true, modo: 'treino', inicio: performance.now(), fim: 0, feitos: new Map(), erros: [], graves: [], log: [],
+      ferramenta: 'mao', luvas: false, entrou: true, identificado: true, contatoVitima: true, separado: false, algemado: false, rendido: false,
+      abordando: false, agressorAchado: false, criancaAchada: false, vestReconhecidos: new Set(), vestFotografados: new Set(), placas: 0, fitas: [],
+      fitaInicio: null, desistenciaResolvida: false, apoio: false, capitulo: 'abordagem' });
+    status();
+    descobrirAgressor();
   }
 
   /* ================= missao do quintal: rastros, faca descartada, abordagem do agressor escondido ================= */
@@ -887,7 +922,7 @@ export async function iniciar(ctx) {
       h.position.set(x, Math.max(y, .3), z); h.userData.vest = vv; scene.add(h); vestHits.push(h); S.quintal.push(h);
     }
   }
-  function dica(texto) { if (S.modo === 'treino' && S.ativo) legenda('Dica do instrutor', texto, 6); }
+  function dica(texto) { if (S.modo !== 'avaliacao' && S.ativo) legenda('Dica do instrutor', texto, 6); }
   function opcoesJSON(lista, aoEscolher) {
     return lista.map(op => ({ label: op.fala, acao: () => {
       dialogo.esconder();
@@ -970,7 +1005,7 @@ export async function iniciar(ctx) {
       } else if (t < 1.9) { ag.position.set(ini.x, TOPO, MURO_Z); ag.rotation.x = 0; }   // 4) equilibra em cima do muro
       else if (t < 2.45) {                                     // 5) pula para o outro lado
         const k = (t - 1.9) / .55; ag.position.set(ini.x, TOPO + .25 * Math.sin(k * Math.PI) - TOPO * k * k, MURO_Z - 1.1 * k);
-      } else { ag.visible = false; return; }
+      } else { ag.visible = false; if (S.historia) setTimeout(() => capitulo('preservacao'), 9000); return; }
       requestAnimationFrame(passo);
     };
     passo();
@@ -991,7 +1026,7 @@ export async function iniciar(ctx) {
     const p = ag.position, dentro = Math.abs(p.x) < 6.2 && Math.abs(p.z) < 4.3;
     ag.userData.rota = [...(dentro ? [new THREE.Vector3(p.x * .3, 0, 2.6), new THREE.Vector3(0, 0, 5.6)] : [new THREE.Vector3(8.6, 0, 7.6)]),   // de dentro: pela porta da frente
       new THREE.Vector3(1.0, 0, 12.4), new THREE.Vector3(1.0, 0, 14.6), new THREE.Vector3(3.0, 0, 16.4)];   // pelo portao
-    ag.userData.aoChegar = () => { animar(ag, 'parada', 1e6); ag.rotation.y = Math.PI / 2; ag.userData.semVirar = true; };
+    ag.userData.aoChegar = () => { animar(ag, 'parada', 1e6); ag.rotation.y = Math.PI / 2; ag.userData.semVirar = true; if (S.historia) setTimeout(() => capitulo('preservacao'), 1500); };
     legenda('Guarnição', 'Conduzindo o preso até a viatura.', 3);
   }
   function moverNPC(n, dt) {
@@ -1018,7 +1053,30 @@ export async function iniciar(ctx) {
   }
 
   /* ================= objetivos (modo treino) ================= */
+  function objetivosHistoria() {                          // objetivos do capitulo atual do modo historia
+    const f = id => S.feitos.has(id), v = S.variacao, L = [], c = S.capitulo;
+    if (c === 'abordagem') {
+      if (!S.rendido && v.fuga !== 'sim') L.push('Aborde o agressor: identifique-se e dê ordens claras');
+      if (S.rendido && !f('busca_pessoal')) L.push('Faça a busca pessoal no detido');
+      if (S.rendido && !f('informar_direitos_preso')) L.push('Dê voz de prisão e informe os direitos');
+      if (S.rendido && !f('conduzir_viatura')) L.push('Conduza o preso à viatura');
+      if (v.fuga === 'sim' && !f('informar_fuga_radio')) L.push('Informe a fuga e as características pelo rádio');
+    } else if (c === 'preservacao') {
+      if (S.vestReconhecidos.size < 6) L.push(`Reconheça e fotografe os vestígios com placa (${S.vestReconhecidos.size}/6)`);
+      if (v.faca === 'quintal' && !f('preservar_faca_quintal')) L.push('Preserve a faca descartada no quintal');
+      if (!f('isolar_local')) L.push('Isole a sala e o jantar com a fita zebrada');
+      if (!f('solicitar_pericia')) L.push('Solicite a perícia pelo rádio');
+    } else if (c === 'vitima') {
+      if (!f('acionar_samu')) L.push('Acione o SAMU pelo rádio');
+      if (!f('informar_direitos')) L.push('Informe à vítima os direitos e os serviços');
+      if (v.crianca !== 'vizinha' && !f('proteger_crianca')) L.push('Proteja a criança (Conselho Tutelar)');
+      if (!f('conducao_deam')) L.push('Combine a condução à DEAM');
+    }
+    if (!L.length) L.push(c === 'fim' ? 'Concluído: veja o relatório (menu → Encerrar)' : 'Continue: o próximo capítulo já vai abrir');
+    return L.slice(0, 4);
+  }
   function objetivos() {
+    if (S.historia) return objetivosHistoria();
     const f = id => S.feitos.has(id), v = S.variacao, L = [];
     if (!S.entrou && !f('radio_chegada')) L.push('Informe a chegada pelo rádio');
     if (!f('identificar_se') && !S.entrou) L.push('Bata na porta e identifique-se');
@@ -1074,7 +1132,7 @@ export async function iniciar(ctx) {
     const el = document.getElementById('statusTrein'); if (!el) return;
     el.hidden = !S.ativo;
     el.innerHTML = `<b>Ocorrência em andamento</b> · ${fmt(tempo())}${S.modo === 'treino' ? ' · modo treino' : ''}<br>Ferramenta: ${FERR[S.ferramenta]} · Luvas: ${S.luvas ? 'sim' : 'não'} · Vestígios: ${S.vestReconhecidos.size}`;
-    mostrarObjetivos();
+    mostrarObjetivos(); avancarHistoria();
   }
 
   /* ================= verificacoes automaticas por quadro ================= */
@@ -1134,7 +1192,12 @@ export async function iniciar(ctx) {
     clique: ray => usar(ray),
     apontar, painelAberto: () => paineis.some(p => p.mesh.visible),
     gatilho: (ray) => usar(ray),
-    menu: () => S.ativo ? abrirFerramentas() : aviso(),
+    menu: () => {
+      if (S.ativo) return abrirFerramentas();
+      const ag = npcs.agressor;
+      if (ag && ag.visible && camera.getWorldPosition(V).distanceTo(ag.position) < 7) return modoHistoria();
+      aviso();
+    },
     quadro, estado: S, relatorio,
     // acesso para testes automatizados e para o instrutor
     _t: { comecar, radio, conversarVitima, conversarAgressor, algemar, conversarVizinho, interagirPorta, foto, reconhecer, fita, tocar, encerrar,
