@@ -144,6 +144,8 @@ TABELA = {
     "Poste_Metal":              ("metal_pintado", 1.0, "#3b3d40", grafite, .15),
     "Transformador":            ("metal_pintado", 1.0, "#7e8488", grafite, .15),
     "Couro_Caramelo":           ("couro", .6, None, None, .5),
+    "Mala_Vermelha":            ("couro", .35, None, None, .5),          # mala remodelada (malacerta.glb)
+    "Mala_Forro":               ("tecido", .25, "#2b2b30", neutro, .3),
     "Tronco_Palmeira":          ("casca_arvore", 1.2, "#6b5b4a", None, .9),
     "Tecido_Verde":             ("tecido", .35, "#50604f", neutro, .3),
     "Tecido_Areia":             ("tecido", .35, "#c9b58c", neutro, .3),

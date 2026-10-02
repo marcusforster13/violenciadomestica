@@ -1,3 +1,4 @@
 {
-  "livros3.glb": { "substitui": "Estante", "colecao": "02_Sala" }
+  "livros3.glb": { "substitui": "Estante", "colecao": "02_Sala" },
+  "malacerta.glb": { "substitui": ["V_Mala_Base", "V_Mala_Tampa_Dobradica", "V_Mala_Nova"], "colecao": "08_Vestigios" }
 }
