@@ -288,9 +288,10 @@ export async function iniciar(ctx) {
     for (const clip of base.animations) acoes[clip.name.replace(/\.\d+$/, '')] = mixer.clipAction(clip);
     const parada = acoes.parada || Object.values(acoes)[0];
     if (parada) { parada.play(); parada.time = Math.random() * parada.getClip().duration; }
-    const box = new THREE.Box3().setFromObject(m), alt = Math.max(box.max.y - box.min.y, altura * .6);
-    const hit = new THREE.Mesh(new THREE.CylinderGeometry(.38, .38, alt, 8), new THREE.MeshBasicMaterial({ visible: false }));
-    hit.position.y = alt / 2; hit.userData.npc = nome; g.add(hit);
+    // area de clique: cilindro do chao ao topo da cabeca (a altura acompanha a pose a cada quadro: em pe, agachado, escalando)
+    const alt = altura;
+    const hit = new THREE.Mesh(new THREE.CylinderGeometry(.42, .42, 1, 10), new THREE.MeshBasicMaterial({ visible: false }));
+    hit.scale.y = alt; hit.position.y = alt / 2; hit.userData.npc = nome; g.add(hit);
     const ecv = document.createElement('canvas'); ecv.width = 256; ecv.height = 64; const eg = ecv.getContext('2d');
     eg.fillStyle = 'rgba(5,7,12,.7)'; eg.beginPath(); eg.roundRect(0, 0, 256, 64, 14); eg.fill();
     eg.fillStyle = '#efe9df'; eg.font = '600 32px Segoe UI, sans-serif'; eg.textAlign = 'center'; eg.fillText(nome, 128, 44);
@@ -325,6 +326,13 @@ export async function iniciar(ctx) {
     return { cabeca, pescoco, olhoE, olhoD, ossos, frenteLocal, peso: 0 };
   }
   const OV1 = new THREE.Vector3(), OV2 = new THREE.Vector3(), OV3 = new THREE.Vector3(), OQ1 = new THREE.Quaternion(), OQ2 = new THREE.Quaternion(), OQ3 = new THREE.Quaternion(), OQ0 = new THREE.Quaternion();
+  const AH = new THREE.Vector3();
+  function ajustarAreaClique(n) {
+    const u = n.userData, cab = u.olhar?.cabeca; if (!cab || !u.hit) return;
+    cab.getWorldPosition(AH);
+    const h = Math.max(.6, AH.y - n.position.y + .2);    // ate o topo da cabeca
+    u.hit.scale.y = h; u.hit.position.y = h / 2;
+  }
   function girarNoMundo(osso, q, fracao, maxAng) {       // aplica parte de uma rotacao do mundo ao osso, com limite
     OQ3.copy(OQ0).slerp(q, fracao);
     const ang = 2 * Math.acos(Math.min(1, Math.abs(OQ3.w)));
@@ -1237,6 +1245,7 @@ export async function iniciar(ctx) {
       n.userData.mixer?.update(dt);
       animarRosto(n, dt, agora);
       olhar(n, dt, V);
+      ajustarAreaClique(n);
       atualizarAlgemas(n);
       moverNPC(n, dt);
       // vira o corpo para o policial quando ele chega perto (o modelo olha para +Z)
