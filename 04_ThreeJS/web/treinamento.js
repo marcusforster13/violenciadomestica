@@ -456,6 +456,48 @@ export async function iniciar(ctx) {
   const fitaTex = (() => { const cv = document.createElement('canvas'); cv.width = 256; cv.height = 32; const g = cv.getContext('2d');
     for (let i = 0; i < 8; i++) { g.fillStyle = i % 2 ? '#111' : '#f2c200'; g.beginPath(); g.moveTo(i * 32, 0); g.lineTo(i * 32 + 32, 0); g.lineTo(i * 32 + 16, 32); g.lineTo(i * 32 - 16, 32); g.fill(); }
     const t = new THREE.CanvasTexture(cv); t.wrapS = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; return t; })();
+  /* guia da fita: depois das fotos, mostra onde isolar a sala e o jantar (modo treino e historia) */
+  const LINHAS_FITA = [
+    { nome: 'divisa com a cozinha', a: [3.0, 0, -3.3], b: [3.0, 0, 3.7] },
+    { nome: 'entrada da casa', a: [-2.6, 0, 3.75], b: [3.0, 0, 3.7] },
+  ];
+  const guiaFita = { grupo: null, linhas: [] };
+  const matGuia = new THREE.MeshBasicMaterial({ color: 0xffc400, transparent: true, opacity: .45, depthWrite: false, fog: false });
+  function mostrarGuiaFita() {
+    if (guiaFita.grupo || S.modo === 'avaliacao') return;
+    const g = new THREE.Group(); scene.add(g); guiaFita.grupo = g; guiaFita.linhas = [];
+    for (const L of LINHAS_FITA) {
+      const a = new THREE.Vector3(...L.a), b = new THREE.Vector3(...L.b), objs = [];
+      for (const p of [a, b]) {
+        const cone = new THREE.Mesh(new THREE.ConeGeometry(.16, .7, 16, 1, true), matGuia); cone.position.copy(p).setY(.35); g.add(cone); objs.push(cone);
+        const anel = new THREE.Mesh(new THREE.RingGeometry(.22, .3, 24), matGuia); anel.rotation.x = -Math.PI / 2; anel.position.copy(p).setY(.01); g.add(anel); objs.push(anel);
+      }
+      const d = b.clone().sub(a), comp = d.length(), n = Math.floor(comp / .3);
+      for (let k = 0; k < n; k += 2) {                    // tracejado no chao
+        const tr = new THREE.Mesh(new THREE.PlaneGeometry(.18, .05), matGuia);
+        tr.rotation.set(-Math.PI / 2, 0, -Math.atan2(d.z, d.x)); tr.position.copy(a).addScaledVector(d, (k + .5) / n).setY(.012); g.add(tr); objs.push(tr);
+      }
+      guiaFita.linhas.push({ ...L, va: a, vb: b, objs, feita: false });
+    }
+    legenda('Isolamento', 'Agora isole a sala e o jantar: pegue a Fita (Y/B → Ferramentas → Fita) e ligue os cones amarelos marcados no chão.', 7);
+  }
+  function encaixeGuia(p) {                               // clique perto de um cone vale o ponto exato do cone
+    if (!guiaFita.grupo) return p;
+    let melhor = null, dist = .8;
+    for (const L of guiaFita.linhas) for (const q of [L.va, L.vb]) { const dd = Math.hypot(q.x - p.x, q.z - p.z); if (dd < dist) { dist = dd; melhor = q; } }
+    return melhor ? melhor.clone().setY(p.y) : p;
+  }
+  function conferirGuia(a, b) {
+    for (const L of guiaFita.linhas) {
+      if (L.feita) continue;
+      const ok = (a.distanceTo(L.va) < .3 && b.distanceTo(L.vb) < .3) || (a.distanceTo(L.vb) < .3 && b.distanceTo(L.va) < .3);
+      if (!ok) continue;
+      L.feita = true; L.objs.forEach(o => o.visible = false);
+      const falta = guiaFita.linhas.filter(x => !x.feita).length;
+      legenda('Isolamento', falta ? `Fita da ${L.nome} colocada. Falta ${falta} linha.` : 'Área isolada. Agora solicite a perícia pelo rádio.', 4);
+    }
+  }
+  function limparGuiaFita() { if (guiaFita.grupo) scene.remove(guiaFita.grupo); guiaFita.grupo = null; guiaFita.linhas = []; }
   function fita(a, b) {
     const d = b.clone().sub(a), L = Math.hypot(d.x, d.z); if (L < .3) return;
     const t = fitaTex.clone(); t.needsUpdate = true; t.repeat.set(L / .5, 1);
@@ -701,8 +743,11 @@ export async function iniciar(ctx) {
           placa(hc.point.clone());
           const perto = vestHits.find(h => Math.hypot(h.position.x - hc.point.x, h.position.z - hc.point.z) < 1.2);
           if (perto) reconhecer(perto.userData.vest);
-        } else if (!S.fitaInicio) { S.fitaInicio = hc.point.clone(); legenda('Fita', 'Primeiro ponto marcado. Clique no segundo ponto.', 2.5); }
-        else { fita(S.fitaInicio, hc.point.clone()); S.fitaInicio = null; }
+        } else {
+          const ponto = encaixeGuia(hc.point.clone());
+          if (!S.fitaInicio) { S.fitaInicio = ponto; legenda('Fita', 'Primeiro ponto marcado. Clique no segundo ponto.', 2.5); }
+          else { fita(S.fitaInicio, ponto); conferirGuia(S.fitaInicio, ponto); S.fitaInicio = null; }
+        }
         return true;
       }
     }
@@ -1177,6 +1222,8 @@ export async function iniciar(ctx) {
     el.hidden = !S.ativo;
     el.innerHTML = `<b>Ocorrência em andamento</b> · ${fmt(tempo())}${S.modo === 'treino' ? ' · modo treino' : ''}<br>Ferramenta: ${FERR[S.ferramenta]} · Luvas: ${S.luvas ? 'sim' : 'não'} · Vestígios: ${S.vestReconhecidos.size}`;
     mostrarObjetivos(); avancarHistoria(); lembrarFotos();
+    if (S.ativo && S.vestFotografados.size >= 6 && !S.feitos.has('isolar_local')) mostrarGuiaFita();
+    if (guiaFita.grupo && ((S.feitos.has('isolar_local') && guiaFita.linhas.every(l => l.feita)) || !S.ativo)) limparGuiaFita();
   }
 
   /* ================= verificacoes automaticas por quadro ================= */
@@ -1184,6 +1231,7 @@ export async function iniciar(ctx) {
   function quadro() {
     const agora = performance.now(), dt = (agora - ultimo) / 1000; ultimo = agora;
     if (agora > legAte) { leg.visible = false; const hl = document.getElementById('legendaHTML'); if (hl && !hl.hidden) hl.hidden = true; }
+    if (guiaFita.grupo) matGuia.opacity = .3 + .25 * Math.sin(agora / 300);      // cones guia pulsando
     camera.getWorldPosition(V); camera.getWorldDirection(V2);
     for (const n of Object.values(npcs)) {
       n.userData.mixer?.update(dt);
