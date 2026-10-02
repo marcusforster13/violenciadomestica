@@ -18,7 +18,11 @@
    "escondido",
    "rendido",
    "correndo",
-   "andando"
+   "andando",
+   "algemado",
+   "algemado_agachado",
+   "algemado_andando",
+   "escalando"
   ]
  },
  "crianca": {

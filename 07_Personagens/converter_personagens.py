@@ -24,7 +24,10 @@ PAPEIS = {
     "agressor": ("Male_Adult_01",   {"parada": "m_idle_angry_01", "falando": "m_gestic_talk_neutral_01",
                                      "nervoso": "m_idle_nervous_01", "escondido": "m_crouch_idle",
                                      "rendido": "m_crouch_idle+maos_na_cabeca", "correndo": "m_run_fast_01",
-                                     "andando": "m_walk_fast_01"}),
+                                     "andando": "m_walk_fast_01", "algemado": "m_idle_neutral_01+maos_nas_costas",
+                                     "algemado_agachado": "m_crouch_idle+maos_nas_costas",
+                                     "algemado_andando": "m_walk_fast_01+maos_nas_costas",
+                                     "escalando": "m_idle_neutral_01+bracos_para_cima"}),
     "crianca":  ("Female_Child_01", {"parada": "f_crouch_idle", "ofegante": "f_idle_breathe_01"}),
     "vizinho":  ("Male_Adult_14",   {"parada": "m_idle_neutral_01", "falando": "m_gestic_talk_neutral_01"}),
 }
@@ -60,8 +63,11 @@ def repouso_mundo(esq):
     """Orientacao de cada osso no espaco do mundo, na pose de repouso (T-pose) do personagem."""
     return {sufixo(b.name): rot(esq.matrix_world @ b.matrix_local) for b in esq.data.bones}
 
-def maos_na_cabeca(arm, desejado, f, tgt_inv):
-    """Pose de rendicao: bracos abertos e maos sobre a cabeca (o Rocketbox nao tem essa animacao).
+def pose_bracos(arm, desejado, f, tgt_inv, tipo):
+    """Poses de braco que o Rocketbox nao tem, aplicadas sobre a animacao base:
+      maos_na_cabeca   rendicao (bracos abertos, maos sobre a cabeca)
+      maos_nas_costas  algemado (bracos para tras, punhos juntos atras do quadril)
+      bracos_para_cima escalando o muro (bracos esticados para cima e para a frente)
     Reorienta braco e antebraco no espaco do esqueleto; maos e dedos seguem o antebraco."""
     from mathutils import Matrix, Vector
     osso = {sufixo(b.name): b for b in arm.data.bones}
@@ -69,6 +75,9 @@ def maos_na_cabeca(arm, desejado, f, tgt_inv):
     cl_l, cl_r = desejado[osso["L Clavicle"].name].translation, desejado[osso["R Clavicle"].name].translation
     lado_r = (cl_r - cl_l).normalized()
     cabeca = desejado[osso["Head"].name].translation
+    pelve = desejado[osso["Pelvis"].name].translation
+    frente = desejado[osso["L Toe0"].name].translation - desejado[osso["L Foot"].name].translation
+    frente = (frente - cima * frente.dot(cima)).normalized()
     def mira(b, filho, M_pai, alvo_dir):
         # rotacao minima que leva a direcao atual do osso (ate o filho) para alvo_dir, mantendo a torcao
         M_old = desejado[b.name]
@@ -85,10 +94,22 @@ def maos_na_cabeca(arm, desejado, f, tgt_inv):
         return M, d_local.length
     for lado, sgn in (("L", -1), ("R", 1)):
         ua, fa, hd = osso[lado + " UpperArm"], osso[lado + " Forearm"], osso[lado + " Hand"]
-        M_ua, l_ua = mira(ua, fa, desejado[ua.parent.name], lado_r * sgn * .85 + cima * .5)
+        lado = lado_r * sgn
+        if tipo == "maos_na_cabeca":
+            dir_braco = lado * .85 + cima * .5
+        elif tipo == "maos_nas_costas":
+            dir_braco = -cima * .85 - frente * .42 + lado * .14
+        else:  # bracos_para_cima
+            dir_braco = cima * .9 + frente * .35 + lado * .16
+        M_ua, l_ua = mira(ua, fa, desejado[ua.parent.name], dir_braco)
         cotovelo = (M_ua @ (ua.matrix_local.inverted() @ fa.matrix_local)).translation
-        topo = cabeca + cima * l_ua * .45 + lado_r * sgn * l_ua * .12
-        mira(fa, hd, M_ua, topo - cotovelo)
+        if tipo == "maos_na_cabeca":
+            dir_ante = cabeca + cima * l_ua * .45 + lado * l_ua * .12 - cotovelo
+        elif tipo == "maos_nas_costas":
+            dir_ante = pelve - frente * l_ua * .5 + cima * l_ua * .05 + lado * l_ua * .04 - cotovelo
+        else:
+            dir_ante = cima * .95 + frente * .22 + lado * .04
+        mira(fa, hd, M_ua, dir_ante)
 
 def redirecionar(src, arm, rest_ref, ini, fim, fator, passo=2, pose=None, no_lugar=False):
     """Passa a animacao do esqueleto src para arm. Os FBX de animacao do Rocketbox vem com a pose do 1o quadro
@@ -135,8 +156,8 @@ def redirecionar(src, arm, rest_ref, ini, fim, fator, passo=2, pose=None, no_lug
             pb.keyframe_insert('rotation_quaternion', frame=f)
             if not b.parent:
                 pb.location = basis.translation; pb.keyframe_insert('location', frame=f)
-        if pose == "maos_na_cabeca":
-            maos_na_cabeca(arm, desejado, f, tgt_inv)
+        if pose:
+            pose_bracos(arm, desejado, f, tgt_inv, pose)
     arm.animation_data.action = None
     return acao
 

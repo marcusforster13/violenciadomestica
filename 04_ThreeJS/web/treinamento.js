@@ -293,7 +293,7 @@ export async function iniciar(ctx) {
     const rotulo = new THREE.Sprite(new THREE.SpriteMaterial({ map: et, depthTest: true, transparent: true, fog: false }));
     rotulo.scale.set(.5, .125, 1); rotulo.position.y = alt + .25; g.add(rotulo);
     const mao = m.getObjectByName('Bip01_R_Hand') || m.getObjectByName('Bip01 R Hand');
-    g.userData = { hit, rotulo, nome, mixer, acoes, atual: parada, modelo: m, bracoD: mao || g, real: true, rosto: montarRosto(m) };
+    g.userData = { hit, rotulo, nome, mixer, acoes, atual: parada, modelo: m, bracoD: mao || g, real: true, rosto: montarRosto(m), olhar: montarOlhar(m) };
     return g;
   }
   /* rosto: boca acompanha o volume da fala e as palpebras piscam (ossos faciais do esqueleto adulto) */
@@ -305,6 +305,50 @@ export async function iniciar(ctx) {
     return { jaw, jawBase: jaw.quaternion.clone(), escrito: null, boca: 0, palp, piscaIni: 0, proxPisca: performance.now() + 1000 + Math.random() * 3000 };
   }
   const QZ = new THREE.Quaternion(), EIXO_Z = new THREE.Vector3(0, 0, 1);
+  /* olhar: pescoco e cabeca acompanham o policial quando ele chega perto. A frente do rosto e medida na pose de
+     repouso (modelo olhando para +Z) e guardada no espaco do osso da cabeca: funciona em qualquer esqueleto */
+  function montarOlhar(m) {
+    let cabeca, pescoco, olhoE, olhoD;
+    m.traverse(o => { if (!o.isBone) return;
+      if (/_Head$/.test(o.name)) cabeca = o; else if (/_Neck$/.test(o.name)) pescoco = o;
+      else if (/_LEye$/.test(o.name)) olhoE = o; else if (/_REye$/.test(o.name)) olhoD = o; });
+    if (!(cabeca && olhoE && olhoD)) return null;
+    // base de cada osso: se a animacao nao mexe nele (trilha constante removida na exportacao), o giro nao pode acumular
+    const ossos = [pescoco, cabeca].filter(Boolean).map(b => ({ b, base: b.quaternion.clone(), escrito: null }));
+    m.updateMatrixWorld(true);
+    const frenteLocal = new THREE.Vector3(0, 0, 1).applyQuaternion(cabeca.getWorldQuaternion(new THREE.Quaternion()).invert());
+    return { cabeca, pescoco, olhoE, olhoD, ossos, frenteLocal, peso: 0 };
+  }
+  const OV1 = new THREE.Vector3(), OV2 = new THREE.Vector3(), OV3 = new THREE.Vector3(), OQ1 = new THREE.Quaternion(), OQ2 = new THREE.Quaternion(), OQ3 = new THREE.Quaternion(), OQ0 = new THREE.Quaternion();
+  function girarNoMundo(osso, q, fracao, maxAng) {       // aplica parte de uma rotacao do mundo ao osso, com limite
+    OQ3.copy(OQ0).slerp(q, fracao);
+    const ang = 2 * Math.acos(Math.min(1, Math.abs(OQ3.w)));
+    if (ang > maxAng) { const parcial = OQ3.clone(); OQ3.copy(OQ0).slerp(parcial, maxAng / ang); }   // para no limite
+    osso.parent.getWorldQuaternion(OQ1); osso.getWorldQuaternion(OQ2);
+    osso.quaternion.copy(OQ1.invert().multiply(OQ3.multiply(OQ2)));
+    osso.updateMatrixWorld(true);
+  }
+  function frenteCabeca(o) {
+    o.olhoE.getWorldPosition(OV1); o.olhoD.getWorldPosition(OV2); OV1.add(OV2).multiplyScalar(.5);   // OV1 = ponto entre os olhos
+    return OV3.copy(o.frenteLocal).applyQuaternion(o.cabeca.getWorldQuaternion(OQ2)).normalize();
+  }
+  function olhar(n, dt, posPolicial) {
+    const o = n.userData.olhar; if (!o) return;
+    const perto = n.visible && !n.userData.destino && n.position.distanceTo(OV1.copy(posPolicial).setY(n.position.y)) < 4.5;
+    o.peso += ((perto ? 1 : 0) - o.peso) * Math.min(1, dt * 2.5);
+    for (const x of o.ossos) {                            // parte da pose da animacao deste quadro (ou da base)
+      if (x.escrito && x.b.quaternion.equals(x.escrito)) x.b.quaternion.copy(x.base); else x.base.copy(x.b.quaternion);
+      x.escrito = null;
+    }
+    if (o.peso < .01) return;
+    n.updateMatrixWorld(true);
+    for (const [osso, fr, max] of [[o.pescoco, .4, .55], [o.cabeca, 1, .75]]) {
+      if (!osso) continue;
+      const frente = frenteCabeca(o).clone(), alvo = OV2.copy(posPolicial).sub(OV1).normalize();
+      girarNoMundo(osso, OQ0.clone().setFromUnitVectors(frente, alvo), fr * o.peso, max);
+    }
+    for (const x of o.ossos) x.escrito = x.b.quaternion.clone();
+  }
   function animarRosto(n, dt, agora) {
     const r = n.userData.rosto; if (!r) return;
     let alvo = 0; const f = n.userData.fala;
@@ -322,12 +366,18 @@ export async function iniciar(ctx) {
     const t = (agora - r.piscaIni) / 75, k = t < 1 ? t : t < 2 ? 2 - t : 0;
     for (const p of r.palp) { p.b.position.copy(p.base); p.b.position.x += p.k * k; }
   }
-  function animar(npc, nome, segundos = 6) {
-    const u = npc?.userData; if (!u?.real || !u.acoes[nome]) return;
+  const AGACHADO = new Set(['escondido', 'rendido', 'algemado_agachado']);
+  function animar(npc, nome, segundos = 6, fade = .5) {
+    const u = npc?.userData; if (!u?.real) return;
+    if (u.algemado && !nome.startsWith('algemado'))       // algemado: maos sempre nas costas
+      nome = nome === 'andando' || nome === 'correndo' ? 'algemado_andando'
+        : AGACHADO.has(nome) || (AGACHADO.has(u.pose) && nome !== 'parada') ? 'algemado_agachado' : 'algemado';
+    if (!u.acoes[nome]) return;
+    u.pose = nome;
     const nova = u.acoes[nome];
-    if (u.atual !== nova) { nova.reset().play(); u.atual?.crossFadeTo(nova, .5, false); u.atual = nova; }
+    if (u.atual !== nova) { nova.reset().play(); u.atual?.crossFadeTo(nova, fade, false); u.atual = nova; }
     clearTimeout(u.volta);
-    if (nome !== 'parada' && u.acoes.parada) u.volta = setTimeout(() => animar(npc, 'parada'), segundos * 1000);
+    if (nome !== 'parada' && u.acoes.parada) u.volta = setTimeout(() => animar(npc, AGACHADO.has(u.pose) ? u.pose : 'parada'), segundos * 1000);
   }
   const npcs = {};
   function criarNPCs() {
@@ -534,11 +584,42 @@ export async function iniciar(ctx) {
       ['Resistência à prisão', true], ['Fundado receio de fuga', true], ['Perigo à integridade da vítima ou da guarnição', true], ['Por precaução, sem motivo específico', false]
     ].map(([m, ok]) => ({
       label: m, acao: () => {
-        dialogo.esconder(); S.algemado = true; som('algemas');
+        dialogo.esconder(); S.algemado = true; som('algemas'); colocarAlgemas(npcs.agressor);
         if (ok) registrar('algemas_justificadas', m); else penalidade(-4, 'Algemas sem justificativa', 'Uso de algemas exige justificativa por escrito (STF SV 11).');
         legenda('Guarnição', 'Algemado. Motivo registrado: ' + m, 3);
       }
     })), 'Justificativa do uso de algemas (SV 11)');
+  }
+  /* algemas: pose com as maos nas costas + argolas nos punhos (atualizadas a cada quadro) */
+  const metal = new THREE.MeshStandardMaterial({ color: 0xb8bcc2, metalness: 1, roughness: .28 });
+  function colocarAlgemas(n) {
+    const u = n?.userData; if (!u?.real) return;
+    u.algemado = true;
+    animar(n, AGACHADO.has(u.pose) ? 'algemado_agachado' : 'algemado', 1e6, .35);
+    const m = u.modelo, osso = k => m.getObjectByName('Bip01_' + k);
+    const g = new THREE.Group(), aros = [0, 1].map(() => { const a = new THREE.Mesh(new THREE.TorusGeometry(.034, .006, 8, 20), metal); g.add(a); return a; });
+    const corrente = new THREE.Mesh(new THREE.CylinderGeometry(.004, .004, 1, 6), metal); g.add(corrente);
+    scene.add(g);
+    u.algemas = { g, aros, corrente, maos: [osso('L_Hand'), osso('R_Hand')], antebracos: [osso('L_Forearm'), osso('R_Forearm')] };
+  }
+  const A1 = new THREE.Vector3(), A2 = new THREE.Vector3(), A3 = new THREE.Vector3(), EIXO_Y = new THREE.Vector3(0, 1, 0);
+  function atualizarAlgemas(n) {
+    const a = n.userData.algemas; if (!a) return;
+    a.g.visible = n.visible;
+    const pos = [];
+    a.maos.forEach((mao, i) => {
+      if (!mao) return;
+      mao.getWorldPosition(A1); a.antebracos[i]?.getWorldPosition(A2);
+      A3.copy(A1).sub(A2).normalize();                          // direcao do antebraco
+      a.aros[i].position.copy(A1).addScaledVector(A3, -.03);   // no punho, logo antes da mao
+      a.aros[i].quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), A3);
+      pos.push(a.aros[i].position);
+    });
+    if (pos.length === 2) {
+      a.corrente.position.copy(pos[0]).add(pos[1]).multiplyScalar(.5);
+      A1.copy(pos[1]).sub(pos[0]); a.corrente.scale.y = Math.max(.02, A1.length());
+      a.corrente.quaternion.setFromUnitVectors(EIXO_Y, A1.normalize());
+    }
   }
   function conversarVizinho() {
     animar(npcs.vizinho, 'falando');
@@ -863,11 +944,26 @@ export async function iniciar(ctx) {
   }
   function pularMuro() {
     const ag = npcs.agressor, ini = ag.position.clone(), t0 = performance.now();
-    S.variacao.fuga = 'sim'; ag.userData.semVirar = true;
+    const MURO_Z = -11.5, TOPO = 2.2, perto = MURO_Z + .42;   // muro dos fundos: face em z = -11,4, 2,2 m de altura
+    S.variacao.fuga = 'sim'; ag.userData.semVirar = true; ag.userData.destino = null; ag.userData.rota = [];
+    ag.rotation.order = 'YXZ'; ag.rotation.y = Math.PI;       // de frente para o muro
+    animar(ag, 'escondido', 1e6, .2);                          // 1) agacha para pegar impulso
+    let fase = 1;
     const passo = () => {
-      const k = Math.min(1, (performance.now() - t0) / 1300);
-      ag.position.set(ini.x, Math.sin(k * Math.PI) * 1.4 + k * .3, ini.z - k * 1.4);
-      if (k < 1) requestAnimationFrame(passo); else ag.visible = false;
+      const t = (performance.now() - t0) / 1000;
+      if (t < .35) ag.position.set(ini.x, 0, ini.z + (perto - ini.z) * (t / .35));
+      else if (t < .8) {                                       // 2) salta e agarra o topo do muro (bracos para cima)
+        if (fase < 2) { fase = 2; animar(ag, 'escalando', 1e6, .12); }
+        const k = (t - .35) / .45; ag.position.set(ini.x, Math.sin(k * Math.PI / 2) * .85, perto);   // maos na borda do muro
+      } else if (t < 1.55) {                                   // 3) puxa o corpo e sobe agachado em cima do muro
+        if (fase < 3) { fase = 3; animar(ag, 'escondido', 1e6, .3); }
+        const k = (t - .8) / .75, e = k * k * (3 - 2 * k);
+        ag.position.set(ini.x, .85 + (TOPO - .85) * e, perto + (MURO_Z - perto) * e); ag.rotation.x = .45 * Math.sin(k * Math.PI);
+      } else if (t < 1.9) { ag.position.set(ini.x, TOPO, MURO_Z); ag.rotation.x = 0; }   // 4) equilibra em cima do muro
+      else if (t < 2.45) {                                     // 5) pula para o outro lado
+        const k = (t - 1.9) / .55; ag.position.set(ini.x, TOPO + .25 * Math.sin(k * Math.PI) - TOPO * k * k, MURO_Z - 1.1 * k);
+      } else { ag.visible = false; return; }
+      requestAnimationFrame(passo);
     };
     passo();
     legenda('Guarnição', 'O suspeito pulou o muro dos fundos e fugiu.', 4);
@@ -887,7 +983,7 @@ export async function iniciar(ctx) {
     const p = ag.position, dentro = Math.abs(p.x) < 6.2 && Math.abs(p.z) < 4.3;
     ag.userData.rota = [...(dentro ? [new THREE.Vector3(p.x * .3, 0, 2.6), new THREE.Vector3(0, 0, 5.6)] : [new THREE.Vector3(8.6, 0, 7.6)]),   // de dentro: pela porta da frente
       new THREE.Vector3(1.0, 0, 12.4), new THREE.Vector3(1.0, 0, 14.6), new THREE.Vector3(3.0, 0, 16.4)];   // pelo portao
-    ag.userData.aoChegar = () => { animar(ag, 'parada', 1e6); ag.rotation.y = Math.PI / 2; };
+    ag.userData.aoChegar = () => { animar(ag, 'parada', 1e6); ag.rotation.y = Math.PI / 2; ag.userData.semVirar = true; };
     legenda('Guarnição', 'Conduzindo o preso até a viatura.', 3);
   }
   function moverNPC(n, dt) {
@@ -983,6 +1079,8 @@ export async function iniciar(ctx) {
       n.userData.rotulo.visible = V.distanceTo(n.position) < 7;
       n.userData.mixer?.update(dt);
       animarRosto(n, dt, agora);
+      olhar(n, dt, V);
+      atualizarAlgemas(n);
       moverNPC(n, dt);
       // vira o corpo para o policial quando ele chega perto (o modelo olha para +Z)
       if (n.userData.real && n !== npcs.crianca && !n.userData.destino && !n.userData.semVirar && V.distanceTo(n.position) < 3.5) {

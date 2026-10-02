@@ -20,6 +20,7 @@ Push-Location "$D\01_Cena_Render_Cycles"
 & $B -b "casa_em_silencio.blend" --python "detalhes_cozinha_sala.py" 2>&1 | Select-String -Pattern '^\[DETALHE2\]' | ForEach-Object { $_.Line }
 & $B -b "casa_em_silencio.blend" --python "detalhes_pia.py" 2>&1 | Select-String -Pattern '^\[PIA\]' | ForEach-Object { $_.Line }
 & $B -b "casa_em_silencio.blend" --python "arbustos.py" 2>&1 | Select-String -Pattern '^\[ARBUSTO\]' | ForEach-Object { $_.Line }
+& $B -b "casa_em_silencio.blend" --python "palmeiras.py" 2>&1 | Select-String -Pattern '^\[PALMEIRA\]' | ForEach-Object { $_.Line }
 & $B -b "casa_em_silencio.blend" --python "suavizar_objetos.py" 2>&1 | Select-String -Pattern '^\[SUAVE\]' | ForEach-Object { $_.Line }
 & $B -b "casa_em_silencio.blend" --python "aplicar_texturas_cc0.py" 2>&1 | Select-String -Pattern '^\[CC0\]' | ForEach-Object { $_.Line }
 Pop-Location

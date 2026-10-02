@@ -154,7 +154,7 @@ say("Modificadores aplicados em %d objetos; textos e fios convertidos em malha."
 
 # ------------------------------------------------------------------ 4. materiais: bake dos procedurais, UV no lugar de projecao
 MAT_TILE = {}
-UV_NATIVE = {"Rede_Listrada", "Tapete", "Grama_Cartao", "Cobogo_Alpha", "Folha_Costela", "Folha_Arbusto"}
+UV_NATIVE = {"Rede_Listrada", "Tapete", "Grama_Cartao", "Cobogo_Alpha", "Folha_Costela", "Folha_Arbusto", "Folha_Palmeira"}
 
 def bake_tile(mat, tile, res, vertical=False):
     img = bpy.data.images.new(mat.name + "_bake", res, res, alpha=False)
@@ -376,7 +376,7 @@ say("Grama: %d tufos em cartoes cruzados com alfa (%d tris) no lugar de ~15 milh
 # Uma caixa orientada (OBB) por objeto relevante: paredes, pisos, moveis, carros, postes, troncos.
 # Sai como objeto "Colisao" (colecao 99_Colisao, fora do render) e em colisao.fbx / colisao.glb.
 COL_FORA = {"07c_Grama_Vegetacao", "09_Luzes_Cameras"}
-COL_PULAR = ("Fio_", "Cabo_", "Ramal_", "Travessia_", "Forro_Ripado", "_Folhas", "Galhos", "Grama_Cartao",
+COL_PULAR = ("Fio_", "Cabo_", "Ramal_", "Travessia_", "Forro_Ripado", "_Folhas", "_Copa", "Galhos", "Grama_Cartao",
              "Giroflex_Lente", "Adesivo", "Placa_Texto", "Numero_", "Faixa_Central", "LED", "Cortina")
 caixas = []
 for ob in scene.objects:
