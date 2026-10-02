@@ -1,0 +1,128 @@
+﻿A CASA EM SILÊNCIO — FALAS DO AGRESSOR
+
+============================================================
+
+
+
+Personagem: homem, cerca de 35 anos, bebeu. Alterna entre minimizar
+
+("foi só uma briga") e irritação. Nada de grito exagerado.
+
+
+
+Como gravar:
+
+- Um arquivo por fala, com o nome indicado (.wav ou .mp3).
+
+- Salvar em 06_Audio\brutos\
+
+- Falar exatamente o texto (é por ele que o site encontra a gravação).
+
+- ~0,5 s de silêncio no começo e no fim. O tempo é só referência.
+
+
+
+------------------------------------------------------------
+
+
+
+[ ]  1.  "Foi só uma briga de casal, pode ir embora."
+
+      Quando: Ao ser abordado (variação calmo e manipulador)
+
+      Tempo: 4-5 s     Arquivo: fala_agressor_01
+
+
+
+[ ]  2.  "Sai da minha casa! Isso não é assunto de polícia!"
+
+      Quando: Ao ser abordado (variação agressivo)
+
+      Tempo: 4-6 s     Arquivo: fala_agressor_02
+
+
+
+[ ]  3.  "Tá bom, tá bom… mas foi só uma briga."
+
+      Quando: Quando o policial separa com calma
+
+      Tempo: 5-6 s     Arquivo: fala_agressor_03
+
+
+
+[ ]  4.  "Você não manda na minha casa!"
+
+      Quando: Quando o policial grita com ele (erro)
+
+      Tempo: 3-4 s     Arquivo: fala_agressor_04
+
+
+
+[ ]  5.  "Isso é um absurdo…"
+
+      Quando: Ao receber voz de prisão na conversa
+
+      Tempo: 2-3 s     Arquivo: fala_agressor_05
+
+
+
+[ ]  6.  "Fala alguma coisa pra eles e eu te pego depois!"
+
+      Quando: Ameaça à vítima quando o policial demora a separar
+
+      Tempo: 4-6 s     Arquivo: fala_agressor_06
+
+
+
+[ ]  7.  "Tá bom, tá bom! Não atira! Eu não fiz nada…"
+
+      Quando: Escondido no quintal: se rende
+
+      Tempo: 5-7 s     Arquivo: fala_agressor_07
+
+
+
+[ ]  8.  "Vou nada!"
+
+      Quando: Escondido no quintal: foge para o muro
+
+      Tempo: 1-2 s     Arquivo: fala_agressor_08
+
+
+
+[ ]  9.  "Ela chamou a polícia pra mim? Eu vou lá falar com ela!"
+
+      Quando: Escondido no quintal: tenta voltar para a casa
+
+      Tempo: 5-7 s     Arquivo: fala_agressor_09
+
+
+
+[ ] 10.  "Tá bom! Tô parado… não atira!"
+
+      Quando: Depois de ser contido na fuga ou no retorno
+
+      Tempo: 3-4 s     Arquivo: fala_agressor_10
+
+
+
+[ ] 11.  "Isso é um absurdo… eu quero ligar pro meu irmão."
+
+      Quando: Ao receber voz de prisão e os direitos
+
+      Tempo: 5-7 s     Arquivo: fala_agressor_11
+
+
+
+[ ] 12.  "O que vocês tão fazendo aqui? Eu não fiz nada, ela que tá inventando."
+
+      Quando: Modo exploração (antes de iniciar o treinamento)
+
+      Tempo: 6-8 s     Arquivo: fala_agressor_12
+
+
+
+------------------------------------------------------------
+
+Total: 12 falas.
+

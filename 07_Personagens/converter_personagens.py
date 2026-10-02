@@ -76,8 +76,12 @@ def pose_bracos(arm, desejado, f, tgt_inv, tipo):
     lado_r = (cl_r - cl_l).normalized()
     cabeca = desejado[osso["Head"].name].translation
     pelve = desejado[osso["Pelvis"].name].translation
-    frente = desejado[osso["L Toe0"].name].translation - desejado[osso["L Foot"].name].translation
-    frente = (frente - cima * frente.dot(cima)).normalized()
+    # frente estavel: perpendicular a linha dos ombros (o pe gira ao andar e invertia a direcao em alguns quadros);
+    # o pe so decide o sentido (para a frente ou para tras)
+    frente = cima.cross(lado_r).normalized()
+    pe = desejado[osso["L Toe0"].name].translation - desejado[osso["L Foot"].name].translation
+    pe2 = desejado[osso["R Toe0"].name].translation - desejado[osso["R Foot"].name].translation
+    if frente.dot(pe + pe2) < 0: frente = -frente
     def mira(b, filho, M_pai, alvo_dir):
         # rotacao minima que leva a direcao atual do osso (ate o filho) para alvo_dir, mantendo a torcao
         M_old = desejado[b.name]

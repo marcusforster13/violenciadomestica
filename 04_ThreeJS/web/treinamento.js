@@ -211,7 +211,12 @@ export async function iniciar(ctx) {
     await espera(350);
   }
   let narrando = false;
+  function liberarAgressor() {
+    const a = S.agressorPendente; if (!a) return;
+    S.agressorPendente = null; npcs.agressor = a; scene.add(a);
+  }
   async function relatoVitima() {
+    liberarAgressor();
     const v = npcs.vitima; if (!v || narrando) return;
     narrando = true;
     try {
@@ -256,7 +261,7 @@ export async function iniciar(ctx) {
     eg.fillStyle = '#efe9df'; eg.font = '600 32px Segoe UI, sans-serif'; eg.textAlign = 'center'; eg.fillText(nome, 128, 44);
     const et = new THREE.CanvasTexture(ecv); et.colorSpace = THREE.SRGBColorSpace;
     const rotulo = new THREE.Sprite(new THREE.SpriteMaterial({ map: et, depthTest: true, transparent: true, fog: false }));
-    rotulo.scale.set(.5, .125, 1); rotulo.position.y = altura + .25; rotulo.renderOrder = 999; g.add(rotulo);
+    rotulo.scale.set(.5, .125, 1); rotulo.position.y = altura + .25; rotulo.renderOrder = 999; rotulo.visible = false; g.add(rotulo);   // nomes ocultos
     g.userData = { hit, bracoD, rotulo, nome };
     return g;
   }
@@ -291,7 +296,7 @@ export async function iniciar(ctx) {
     eg.fillStyle = '#efe9df'; eg.font = '600 32px Segoe UI, sans-serif'; eg.textAlign = 'center'; eg.fillText(nome, 128, 44);
     const et = new THREE.CanvasTexture(ecv); et.colorSpace = THREE.SRGBColorSpace;
     const rotulo = new THREE.Sprite(new THREE.SpriteMaterial({ map: et, depthTest: true, transparent: true, fog: false }));
-    rotulo.scale.set(.5, .125, 1); rotulo.position.y = alt + .25; g.add(rotulo);
+    rotulo.scale.set(.5, .125, 1); rotulo.position.y = alt + .25; rotulo.visible = false; g.add(rotulo);   // nomes ocultos
     const mao = m.getObjectByName('Bip01_R_Hand') || m.getObjectByName('Bip01 R Hand');
     g.userData = { hit, rotulo, nome, mixer, acoes, atual: parada, modelo: m, bracoD: mao || g, real: true, rosto: montarRosto(m), olhar: montarOlhar(m) };
     return g;
@@ -382,6 +387,7 @@ export async function iniciar(ctx) {
   const npcs = {};
   function criarNPCs() {
     Object.values(npcs).forEach(n => scene.remove(n)); for (const k in npcs) delete npcs[k];
+    S.agressorPendente = null;
     const v = personagem('vitima', 'Vítima', 0x9b2d3a, 1.64, 0x3a3f55); v.position.set(-3.1, 0, 0.7); v.rotation.y = 2.4;
     if (!v.userData.real) {
       const lesao = new THREE.MeshStandardMaterial({ color: 0x6a1010, roughness: .5 });
@@ -394,7 +400,8 @@ export async function iniciar(ctx) {
       const a = personagem('agressor', 'Agressor', 0x3d4045, 1.78);
       if (va === 'escondido') { a.position.set(10.5, 0, -1.25); a.rotation.y = -.6; }   // agachado na grama ao lado da casa, atras do arbusto
       else { a.position.set(3.6, 0, -1.6); a.rotation.y = -2.2; }
-      npcs.agressor = a; scene.add(a);
+      // escondido no quintal: so entra na cena depois que o policial conversa com a vitima (ela conta que ele esta por perto)
+      if (va === 'escondido') S.agressorPendente = a; else { npcs.agressor = a; scene.add(a); }
       if (va === 'escondido') animar(a, a.userData.acoes?.escondido ? 'escondido' : 'nervoso', 1e6);
       else if (va === 'agressivo') animar(a, 'parada'); else animar(a, 'nervoso', 1e6);
       if (S.variacao.faca === 'na_mao') {
@@ -522,6 +529,7 @@ export async function iniciar(ctx) {
     if (e.falha_grave) registrar(e.falha_grave);
   }
   function conversarVitima() {
+    liberarAgressor();
     animar(npcs.vitima, 'falando');
     if (!S.contatoVitima) {
       return falarDialogo('Vítima', dlg('vitima_primeiro_contato').map(op => ({
@@ -1076,7 +1084,6 @@ export async function iniciar(ctx) {
     if (agora > legAte) { leg.visible = false; const hl = document.getElementById('legendaHTML'); if (hl && !hl.hidden) hl.hidden = true; }
     camera.getWorldPosition(V); camera.getWorldDirection(V2);
     for (const n of Object.values(npcs)) {
-      n.userData.rotulo.visible = V.distanceTo(n.position) < 7;
       n.userData.mixer?.update(dt);
       animarRosto(n, dt, agora);
       olhar(n, dt, V);

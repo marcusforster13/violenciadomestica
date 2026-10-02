@@ -1,826 +1,978 @@
 {
- "gerado_em": "2026-10-02 10:51",
+ "gerado_em": "2026-10-02 11:26",
  "qualidade": "padrao",
  "lightmaps": {
   "01_Estrutura_Estatico": {
    "lm": "lightmaps/LM_01_Estrutura.png",
-   "max": 0.298
+   "max": 0.29819
   },
   "Porta_Quarto": {
    "lm": "lightmaps/LM_01_Estrutura.png",
-   "max": 0.298
+   "max": 0.29819
   },
   "Macaneta": {
    "lm": "lightmaps/LM_01_Estrutura.png",
-   "max": 0.298
+   "max": 0.29819
   },
   "02_Sala_Estatico": {
    "lm": "lightmaps/LM_02_Sala.png",
-   "max": 0.62553
+   "max": 0.62638
   },
   "03_Jantar_Estatico": {
    "lm": "lightmaps/LM_03_Jantar.png",
-   "max": 0.46742
+   "max": 0.46298
   },
   "04_Cozinha_Estatico": {
    "lm": "lightmaps/LM_04_Cozinha.png",
-   "max": 1.37665
+   "max": 1.37519
   },
   "05_Varanda_Estatico": {
    "lm": "lightmaps/LM_05_Varanda.png",
-   "max": 0.14991
+   "max": 0.15
   },
   "06_Jardim_Estatico": {
    "lm": "lightmaps/LM_06_Jardim.png",
-   "max": 0.27348
+   "max": 0.27358
   },
   "07_Rua_Condominio_Estatico": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.20907
+   "max": 2.20858
   },
   "Portao_Folha_Esq_Travessa": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.20907
+   "max": 2.20858
   },
   "Portao_Folha_Esq_Travessa001": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.20907
+   "max": 2.20858
   },
   "Portao_Folha_Esq_Travessa002": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.20907
+   "max": 2.20858
   },
   "Portao_Folha_Esq_Montante": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.20907
+   "max": 2.20858
   },
   "Portao_Folha_Esq_Montante001": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.20907
+   "max": 2.20858
   },
   "Portao_Folha_Esq_Barras": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.20907
+   "max": 2.20858
   },
   "Portao_Folha_Dir_Travessa": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.20907
+   "max": 2.20858
   },
   "Portao_Folha_Dir_Travessa001": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.20907
+   "max": 2.20858
   },
   "Portao_Folha_Dir_Travessa002": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.20907
+   "max": 2.20858
   },
   "Portao_Folha_Dir_Montante": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.20907
+   "max": 2.20858
   },
   "Portao_Folha_Dir_Montante001": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.20907
+   "max": 2.20858
   },
   "Portao_Folha_Dir_Barras": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.20907
+   "max": 2.20858
   },
   "07b_Casas_Vizinhas_Estatico": {
    "lm": "lightmaps/LM_07b_Casas_Vizinhas.png",
-   "max": 0.55185
+   "max": 0.55068
   },
   "07d_Postes_Fiacao_Estatico": {
    "lm": "lightmaps/LM_07d_Postes_Fiacao.png",
-   "max": 0.40765
+   "max": 0.40994
   },
   "V_Cadeira_4_Pe": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Cadeira_4_Pe001": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Cadeira_4_Montante": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Cadeira_4_Pe002": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Cadeira_4_Pe003": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Cadeira_4_Montante001": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Cadeira_4_Assento": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Cadeira_4_Encosto": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Cacos_Prato": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Copo_Tombado": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Reboco_Caido": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Marca_Quadro_Parede": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Prego": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Moldura": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Foto": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Cacos_Vidro": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Celular_Corpo": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Celular_Tela": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Luminaria_Base": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Luminaria_Haste": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Luminaria_Cupula": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Luminaria_Lampada": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Almofada_Jogada": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Controle_Remoto": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Livro_Caido_1": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Livro_Caido_2": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Livro_Caido_3": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Livro_Caido_4": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Garrafa_1": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Garrafa_2": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Garrafa_3": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Garrafa_4": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Garrafa_Chao": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Desenho_Crianca": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Ima_1": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Ima_2": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Mala_Base": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Mala_Tampa": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Roupa_1": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Roupa_2": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Roupa_3": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Roupa_4": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Roupa_5": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Roupa_6": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Roupa_7": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Roupa_Chao": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Urso_Corpo": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Urso_Cabeca": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Urso_Orelha": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Urso_Pata": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Urso_Orelha001": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Urso_Pata001": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Garrafa_1_Det_Tampinha": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Garrafa_1_Det_Rotulo": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Garrafa_1_Det_Rotulo_Faixa": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Garrafa_2_Det_Tampinha": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Garrafa_2_Det_Rotulo": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Garrafa_2_Det_Rotulo_Faixa": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Garrafa_3_Det_Tampinha": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Garrafa_3_Det_Rotulo": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Garrafa_3_Det_Rotulo_Faixa": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Garrafa_4_Det_Tampinha": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Garrafa_4_Det_Rotulo": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Garrafa_4_Det_Rotulo_Faixa": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Garrafa_Chao_Det_Rotulo": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Garrafa_Chao_Det_Rotulo_Faixa": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Bebida_Derramada": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Bebida_Escorrida": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Bebida_Chao": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Bebida_Gota_0": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Bebida_Gota_1": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Bebida_Gota_2": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Bebida_Gota_3": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Bebida_Gota_4": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Bebida_Gota_5": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Bebida_Gota_6": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Celular_Hora": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Celular_Aviso": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
+   "max": 36.12762
   },
   "V_Desenho_Texto": {
    "lm": "lightmaps/LM_08_Vestigios.png",
-   "max": 36.13994
-  },
-  "Viatura_PMERJ_Carroceria": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Forro_Caixa_Roda": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Forro_Caixa_Roda001": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Interior": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Banco": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Banco001": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Volante": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Arco_Roda": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Pneu": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Aro": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Raio": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Raio001": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Raio002": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Raio003": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Raio004": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Cubo": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Disco": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Arco_Roda001": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Pneu001": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Aro001": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Raio005": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Raio006": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Raio007": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Raio008": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Raio009": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Cubo001": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Disco001": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Arco_Roda002": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Pneu002": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Aro002": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Raio010": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Raio011": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Raio012": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Raio013": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Raio014": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Cubo002": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Disco002": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Arco_Roda003": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Pneu003": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Aro003": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Raio015": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Raio016": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Raio017": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Raio018": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Raio019": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Cubo003": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Disco003": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Parachoque_Diant": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Protetor_Carter": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Grade": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Grade_Friso": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Emblema": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Limpador": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Limpador001": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Parachoque_Tras": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Farol": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Farol_Milha": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Lanterna": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Retrovisor": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Retrovisor_Base": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Friso_Porta": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Friso_Porta001": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Friso_Porta002": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Macaneta": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Macaneta001": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Rack_Teto": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Farol001": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Farol_Milha001": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Lanterna001": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Retrovisor001": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Retrovisor_Base001": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Friso_Porta003": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Friso_Porta004": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Friso_Porta005": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Macaneta002": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Macaneta003": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Rack_Teto001": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Placa": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Placa_Faixa": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Placa001": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
-  },
-  "Viatura_PMERJ_Placa_Faixa001": {
-   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
+   "max": 36.12762
   },
   "Giroflex_Base": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
+   "max": 28.73822
   },
   "Giroflex_Lente_1": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
+   "max": 28.73822
   },
   "Giroflex_Lente_2": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
+   "max": 28.73822
   },
   "Giroflex_Lente_3": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
+   "max": 28.73822
   },
   "Giroflex_Lente_4": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
+   "max": 28.73822
   },
   "Giroflex_Lente_5": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
+   "max": 28.73822
   },
   "Giroflex_Lente_6": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
+   "max": 28.73822
   },
   "Viatura_Antena": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
+   "max": 28.73822
   },
-  "Brasao_Moldura": {
+  "Viatura_PMERJ_Carroceria": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
+   "max": 28.73822
   },
-  "Brasao_Imagem": {
+  "Viatura_PMERJ_Cortador": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
+   "max": 28.73822
   },
-  "Brasao_Moldura001": {
+  "Viatura_PMERJ_Forro_Caixa": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
+   "max": 28.73822
   },
-  "Brasao_Imagem001": {
+  "Viatura_PMERJ_Alargador": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Alargador001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Forro_Caixa001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Alargador002": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Alargador003": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Pneu": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Aro": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio002": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio003": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio004": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio005": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio006": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio007": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio008": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio009": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Cubo": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Disco": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Pinca": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Pneu001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Aro001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio010": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio011": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio012": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio013": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio014": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio015": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio016": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio017": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio018": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio019": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Cubo001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Disco001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Pinca001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Pneu002": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Aro002": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio020": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio021": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio022": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio023": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio024": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio025": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio026": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio027": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio028": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio029": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Cubo002": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Disco002": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Pinca002": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Pneu003": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Aro003": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio030": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio031": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio032": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio033": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio034": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio035": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio036": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio037": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio038": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Raio039": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Cubo003": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Disco003": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Pinca003": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Parachoque_Diant": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Protetor_Carter": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Grade": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Grade_Friso": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Grade_Friso001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Parachoque_Tras": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Farol": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_DRL": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Farol_Milha": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Lanterna": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Refletor": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Retrovisor": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Retrovisor_Base": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Retrovisor_Espelho": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Friso_Porta": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Friso_Porta001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Friso_Porta002": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Macaneta": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Macaneta001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Rack_Teto": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Rack_Apoio": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Rack_Apoio001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Farol001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_DRL001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Farol_Milha001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Lanterna001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Refletor001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Retrovisor001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Retrovisor_Base001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Retrovisor_Espelho001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Friso_Porta003": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Friso_Porta004": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Friso_Porta005": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Macaneta002": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Macaneta003": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Rack_Teto001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Rack_Apoio002": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Rack_Apoio003": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Limpador": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Limpador001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Painel": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Banco": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Encosto": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Banco001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Encosto001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Banco_Tras": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Volante": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Placa": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Placa_Faixa": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
   },
   "Viatura_PMERJ_Placa_Texto": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Placa001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Viatura_PMERJ_Placa_Faixa001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
   },
   "Viatura_PMERJ_Placa_Texto001": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
+   "max": 28.73822
   },
   "Adesivo_Policia_Militar": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
+   "max": 28.73822
   },
   "Adesivo_190": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
+   "max": 28.73822
   },
   "Adesivo_PMERJ": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
+   "max": 28.73822
+  },
+  "Brasao_Moldura": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Brasao_Imagem": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
   },
   "Adesivo_Policia_Militar001": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
+   "max": 28.73822
   },
   "Adesivo_190001": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
+   "max": 28.73822
   },
   "Adesivo_PMERJ001": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
+   "max": 28.73822
+  },
+  "Brasao_Moldura001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
+  },
+  "Brasao_Imagem001": {
+   "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
+   "max": 28.73822
   },
   "Adesivo_Traseira": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 8.70661
+   "max": 28.73822
   },
   "10b_Carros_Moradores_Estatico": {
    "lm": "lightmaps/LM_10b_Carros_Moradores.png",
-   "max": 1.12764
+   "max": 1.30578
   }
  },
  "lightmap_ganho": 3.14159,
