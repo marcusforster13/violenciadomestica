@@ -27,7 +27,8 @@ PAPEIS = {
                                      "andando": "m_walk_fast_01", "algemado": "m_idle_neutral_01+maos_nas_costas",
                                      "algemado_agachado": "m_crouch_idle+maos_nas_costas",
                                      "algemado_andando": "m_walk_fast_01+maos_nas_costas",
-                                     "escalando": "m_idle_neutral_01+bracos_para_cima"}),
+                                     "escalando": "m_idle_neutral_01+bracos_para_cima",
+                                     "maos_cabeca": "m_idle_neutral_01+maos_na_cabeca", "levantando": "m_crouch_out"}),
     "crianca":  ("Female_Child_01", {"parada": "f_crouch_idle", "ofegante": "f_idle_breathe_01"}),
     "vizinho":  ("Male_Adult_14",   {"parada": "m_idle_neutral_01", "falando": "m_gestic_talk_neutral_01"}),
 }
@@ -96,24 +97,45 @@ def pose_bracos(arm, desejado, f, tgt_inv, tipo):
         pb.rotation_quaternion = (base.inverted() @ M).to_quaternion()
         pb.keyframe_insert("rotation_quaternion", frame=f)
         return M, d_local.length
+    def ik_cotovelo(ombro, punho, l1, l2, polo):
+        # IK de dois ossos: posicao do cotovelo para o punho chegar exatamente no alvo, dobrando para o lado do "polo"
+        d = punho - ombro; dist = min(d.length, (l1 + l2) * .999); u = d.normalized()
+        a = (l1 * l1 - l2 * l2 + dist * dist) / (2 * dist); h = max(0.0, l1 * l1 - a * a) ** .5
+        p = (polo - u * polo.dot(u)).normalized()
+        return ombro + u * a + p * h
     for lado, sgn in (("L", -1), ("R", 1)):
         ua, fa, hd = osso[lado + " UpperArm"], osso[lado + " Forearm"], osso[lado + " Hand"]
         lado = lado_r * sgn
         if tipo == "maos_na_cabeca":
-            dir_braco = lado * .85 + cima * .5
+            # punho apoiado no alto/atras da cabeca (o osso da cabeca nasce na nuca), maos se encontrando no meio
+            l1 = (ua.matrix_local.inverted() @ fa.matrix_local).translation.length
+            l2 = (fa.matrix_local.inverted() @ hd.matrix_local).translation.length
+            ombro = (desejado[ua.parent.name] @ (ua.parent.matrix_local.inverted() @ ua.matrix_local)).translation
+            punho = cabeca + cima * l1 * .58 - frente * l1 * .28 + lado * l1 * .2
+            cot = ik_cotovelo(ombro, punho, l1, l2, lado * .9 - frente * .25 - cima * .2)
+            M_ua, _ = mira(ua, fa, desejado[ua.parent.name], cot - ombro)
+            M_fa, _ = mira(fa, hd, M_ua, punho - cot)
+            dedo = osso.get(("L" if sgn < 0 else "R") + " Finger2")
+            if dedo: mira(hd, dedo, M_fa, -lado * .8 - cima * .35 - frente * .15)   # dedos por cima da cabeca, para a outra mao
+            continue
+        if tipo == "maos_na_cabeca":                     # cotovelos abertos para os lados e um pouco para tras
+            dir_braco = lado * .88 + cima * .3 - frente * .22
         elif tipo == "maos_nas_costas":
             dir_braco = -cima * .85 - frente * .42 + lado * .14
         else:  # bracos_para_cima
             dir_braco = cima * .9 + frente * .35 + lado * .16
         M_ua, l_ua = mira(ua, fa, desejado[ua.parent.name], dir_braco)
         cotovelo = (M_ua @ (ua.matrix_local.inverted() @ fa.matrix_local)).translation
-        if tipo == "maos_na_cabeca":
-            dir_ante = cabeca + cima * l_ua * .45 + lado * l_ua * .12 - cotovelo
+        if tipo == "maos_na_cabeca":                     # punhos no alto e atras da cabeca
+            dir_ante = cabeca + cima * l_ua * .72 - frente * l_ua * .22 + lado * l_ua * .03 - cotovelo   # o osso da cabeca nasce na nuca: topo ~0,7 braco acima
         elif tipo == "maos_nas_costas":
             dir_ante = pelve - frente * l_ua * .5 + cima * l_ua * .05 + lado * l_ua * .04 - cotovelo
         else:
             dir_ante = cima * .95 + frente * .22 + lado * .04
-        mira(fa, hd, M_ua, dir_ante)
+        M_fa, _ = mira(fa, hd, M_ua, dir_ante)
+        if tipo == "maos_na_cabeca" and (lado_ := osso.get(("L" if sgn < 0 else "R") + " Finger2")):
+            # dedos apontando para a outra mao, por cima/atras da cabeca (maos entrelacadas)
+            mira(hd, lado_, M_fa, -lado * .85 + cima * .15 - frente * .25)
 
 def redirecionar(src, arm, rest_ref, ini, fim, fator, passo=2, pose=None, no_lugar=False):
     """Passa a animacao do esqueleto src para arm. Os FBX de animacao do Rocketbox vem com a pose do 1o quadro

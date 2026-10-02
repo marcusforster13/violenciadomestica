@@ -1030,18 +1030,27 @@ export async function iniciar(ctx) {
       aoEscolher?.(op);
     } }));
   }
+  function levantar(ag, depois = 'nervoso') {
+    const u = ag?.userData; if (!u?.real) return;
+    if (!AGACHADO.has(u.pose) || !u.acoes.levantando) return animar(ag, depois, 1e6);
+    const ac = u.acoes.levantando; ac.setLoop(THREE.LoopOnce, 1); ac.clampWhenFinished = true; ac.timeScale = 1.5;
+    animar(ag, 'levantando', 1e6, .25);
+    // o clipe tem ~2 s de levantar e depois fica parado: troca para a pose em pe assim que ele termina de subir
+    setTimeout(() => { if (u.pose === 'levantando') animar(ag, depois, 1e6, .35); }, Math.min(ac.getClip().duration, 2.1) / 1.5 * 1000);
+  }
   function descobrirAgressor() {
     if (S.agressorAchado) return;
     S.agressorAchado = true; registrar('localizar_agressor');
     if (S.apoio) registrar('apoio_antes_abordagem');
     const ag = npcs.agressor; if (!ag) return;
     ag.userData.semVirar = false;
-    dica('Ele está agachado atrás do arbusto. Mantenha distância, identifique-se e dê ordens claras.');
+    levantar(ag, 'nervoso');                               // fica em pe para a abordagem
+    dica('Ele estava agachado atrás do arbusto. Mantenha distância, identifique-se e dê ordens claras.');
     abrirAbordagem();
   }
   function abrirAbordagem() {
     S.abordando = true;
-    falarDialogo('Abordagem', opcoesJSON(CEN.abordagem.inicio, () => reagir()), 'Suspeito escondido no quintal');
+    falarDialogo('Abordagem', opcoesJSON(CEN.abordagem.inicio, op => { S.ordemCorreta = op.acao === 'verbalizacao'; reagir(); }), 'Suspeito escondido no quintal');
   }
   function abordagemClique() {
     if (S.rendido && !npcs.agressor.userData.destino) return S.ferramenta === 'algemas' ? algemar() : abrirPrisao();
@@ -1077,9 +1086,11 @@ export async function iniciar(ctx) {
   function render(falarDeNovo = true) {
     const ag = npcs.agressor; S.rendido = true;
     ag.userData.destino = null; ag.userData.rota = [];
-    animar(ag, ag.userData.acoes?.rendido ? 'rendido' : 'nervoso', 1e6);
+    const maos = (S.ordemCorreta || falarDeNovo) && ag.userData.acoes?.maos_cabeca;   // falarDeNovo = contido apos fugir/voltar
+    animar(ag, maos ? 'maos_cabeca' : 'nervoso', 1e6, .45);
+    if (!maos) dica('Ele parou, mas sem ordem clara não sabe o que fazer: dê o comando "mãos na cabeça" antes de se aproximar.');
     if (falarDeNovo) setTimeout(() => dizer(ag, 'Agressor', { texto: 'Tá bom! Tô parado… não atira!' }, 'm'), 600);
-    dica('Ele se rendeu: clique nele para a busca pessoal e a voz de prisão. Algemas só com justificativa (STF SV 11).');
+    if (maos) dica('Ele se rendeu com as mãos na cabeça: clique nele para a busca pessoal e a voz de prisão. Algemas só com justificativa (STF SV 11).');
   }
   function pularMuro() {
     const ag = npcs.agressor, ini = ag.position.clone(), t0 = performance.now();
