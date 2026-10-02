@@ -152,10 +152,23 @@ export async function iniciar(ctx) {
     const vr = renderer.xr.isPresenting; leg.visible = vr;          // no VR: legenda no espaco; no computador: faixa HTML
     const hl = document.getElementById('legendaHTML'); if (hl && !vr) { hl.innerHTML = `<b>${quem}:</b> ${texto}`; hl.hidden = false; }
   }
+  // catalogo de vozes gravadas (cenario -> vozes.falas): o texto falado encontra o arquivo
+  const VOZ = new Map((CEN.vozes?.falas || []).map(f => [f.texto, f.arquivo]));
+  const gravacao = texto => { const a = VOZ.get(texto); return a && window.__som?.tem(a) ? a : null; };
+  const duracaoFala = texto => { const a = gravacao(texto); return a ? window.__som.duracao(a) : Math.max(2.6, texto.length / 14); };
+  const espera = ms => new Promise(r => setTimeout(r, ms));
   function falar(quem, texto, voz = 'f') {
+    const npc = npcPorNome(quem), arq = gravacao(texto);
+    if (arq) {                                            // voz gravada: sai da personagem (ou do radio/telefone)
+      const seg = window.__som.duracao(arq);
+      legenda(quem, texto, seg + .6);
+      const med = window.__som.tocar(arq, npc ? npc.position.clone().setY(1.55) : null, !!npc);
+      if (npc) npc.userData.fala = { medidor: typeof med === 'function' ? med : null, sintetica: typeof med !== 'function', ate: performance.now() + seg * 1000 };
+      return espera(seg * 1000);
+    }
     const seg = Math.max(3, texto.length / 14);
     legenda(quem, texto, seg);
-    const npc = npcPorNome(quem), p = vozSintetica(texto, voz);
+    const p = vozSintetica(texto, voz);
     if (npc) { const f = { sintetica: true, ate: performance.now() + (p ? seg + 6 : seg * .8) * 1000 }; npc.userData.fala = f; p?.then(() => { if (npc.userData.fala === f) npc.userData.fala = null; }); }
     return p;
   }
@@ -178,9 +191,8 @@ export async function iniciar(ctx) {
   if ('speechSynthesis' in window) speechSynthesis.getVoices();      // o Chrome carrega a lista de vozes na primeira chamada
 
   /* fala com audio gravado (06_Audio/brutos/<audio>.mp3) ou voz sintetica, legenda e gesto; termina quando a fala acaba */
-  const espera = ms => new Promise(r => setTimeout(r, ms));
   async function dizer(npc, quem, linha, voz = 'f') {
-    const { texto, gesto, audio } = linha;
+    const { texto, gesto } = linha, audio = linha.audio || VOZ.get(texto);
     const som = window.__som, gravado = audio && som?.tem(audio);
     const seg = gravado ? som.duracao(audio) : Math.max(2.5, texto.length / 13);
     legenda(quem, texto, seg + .6);
@@ -436,10 +448,10 @@ export async function iniciar(ctx) {
     if (id === 'radio_chegada' && S.entrou) return;    // so vale antes de entrar
     if (id === 'caracteristicas_agressor') {
       if (S.variacao.agressor === 'fugiu' || S.variacao.fuga === 'sim') registrar('informar_fuga_radio');
-      return setTimeout(() => legenda('COPOM', 'Copiado. Viaturas da área informadas.', 2.5), 1800);
+      return setTimeout(() => falar('COPOM', 'Copiado. Viaturas da área informadas.', 'm'), 1800);
     }
     registrar(id);
-    setTimeout(() => legenda('COPOM', 'Copiado. Prossiga.', 2.5), 1800);
+    setTimeout(() => falar('COPOM', 'Copiado. Prossiga.', 'm'), 1800);
   }
   function abrirChecklist() {
     fecharPaineis();
@@ -676,7 +688,7 @@ export async function iniciar(ctx) {
     if (S.variacao.crianca !== 'vizinha') window.__som?.iniciarTreino();   // choro baixo de onde a crianca esta
     rig.position.set(1.0, 0, 18.4); ctx.setYaw(0);
     const lin = CEN.chamada_190.legenda; let t = 0;
-    lin.forEach(([q, txt]) => { setTimeout(() => falar('Ligação 190 · ' + q, txt, q === 'Atendente' ? 'm' : 'f'), t); t += Math.max(2600, txt.length * 70); });
+    lin.forEach(([q, txt]) => { setTimeout(() => falar('Ligação 190 · ' + q, txt, q === 'Atendente' ? 'm' : 'f'), t); t += Math.max(2600, txt.length * 70, duracaoFala(txt) * 1000 + 450); });
     setTimeout(() => falar('Rádio · COPOM', CEN.chamada_190.despacho, 'm'), t + 400);
     if (S.modo === 'treino') setTimeout(() => dica('Os objetivos aparecem no canto da tela. Comece informando a chegada pelo rádio (R ou menu).'), t + 4000);
     status();
