@@ -1132,7 +1132,9 @@ export async function iniciar(ctx) {
     animar(ag, 'andando', 1e6); ag.userData.vel = 1.3; ag.userData.semVirar = true;
     const p = ag.position, dentro = Math.abs(p.x) < 6.2 && Math.abs(p.z) < 4.3;
     ag.userData.rota = [...(dentro ? [new THREE.Vector3(p.x * .3, 0, 2.6), new THREE.Vector3(0, 0, 5.6)] : [new THREE.Vector3(8.6, 0, 7.6)]),   // de dentro: pela porta da frente
-      new THREE.Vector3(1.0, 0, 12.4), new THREE.Vector3(1.0, 0, 14.6), new THREE.Vector3(3.0, 0, 16.4)];   // pelo portao
+      // portao: a folha de x=0 a 2 fica fechada; a outra (dobradica em x=-2) esta aberta para dentro, com a ponta em x=-0,8.
+      // o vao livre fica entre x=-0,8 e x=0: passa por x=-0,4
+      new THREE.Vector3(-.4, 0, 11.4), new THREE.Vector3(-.4, 0, 14.4), new THREE.Vector3(3.0, 0, 16.4)];
     ag.userData.aoChegar = () => { animar(ag, 'parada', 1e6); ag.rotation.y = Math.PI / 2; ag.userData.semVirar = true; setTimeout(avisoPreservacao, 1500); };
     legenda('Guarnição', 'Conduzindo o preso até a viatura.', 3);
   }
