@@ -27,7 +27,7 @@ const MODELO = 'eleven_multilingual_v2';
 const PERFIL = {
   vitima:    { nome: 'Vítima', voz: '4PNBmCCUBwRktp7B7R1y', rotulo: 'Larissa Diniz', estilo: { stability: .38, similarity_boost: .8, style: .4 } },
   crianca:   { nome: 'Criança', voz: 'HReOQZPV9tH5iTEnSbGo', rotulo: 'Bianca', estilo: { stability: .35, similarity_boost: .75, style: .55 } },
-  vizinho:   { nome: 'Vizinho', voz: 'zoe2cQFqDDW4DteHDEWI', rotulo: 'Manoel Lopes', estilo: { stability: .5, similarity_boost: .8, style: .25 } },
+  vizinho:   { nome: 'Vizinho', voz: 'bJrNspxJVFovUxNBQ0wh', rotulo: 'Marcelo Costa (biblioteca)', estilo: { stability: .5, similarity_boost: .8, style: .25 } },
   atendente: { nome: 'Atendente do 190', voz: '9pDzHy2OpOgeXM8SeL0t', rotulo: 'Borges', estilo: { stability: .65, similarity_boost: .8, style: .1 } },
   copom:     { nome: 'COPOM (rádio)', voz: 'FhdOWgf0bSw3HKWefhlq', rotulo: 'Jhony Tygas', estilo: { stability: .7, similarity_boost: .8, style: .05 } },
   guarnicao: { nome: 'Guarnição (policial)', voz: 'blPx0tvsvee8CuFd63lX', rotulo: 'Sávio F.', estilo: { stability: .6, similarity_boost: .8, style: .15 } },
@@ -98,7 +98,12 @@ async function conferirVozesBrasileiras(quem) {
   const { voices } = await (await api('/voices')).json();
   const porId = new Map(voices.map(v => [v.voice_id, v]));
   for (const k of quem) {
-    const v = porId.get(PERFIL[k].voz), l = (v && v.labels) || {};
+    let v = porId.get(PERFIL[k].voz), l = (v && v.labels) || {};
+    if (!v) {   // voz da biblioteca publica, usada direto pelo id (a chave nao precisa adiciona-la a conta)
+      const q = new URLSearchParams({ page_size: '100', language: 'pt', accent: 'brazilian', search: PERFIL[k].rotulo.replace(/ (.*)$/, '') });
+      const s = ((await (await api('/shared-voices?' + q)).json()).voices || []).find(x => x.voice_id === PERFIL[k].voz);
+      if (s) { v = s; l = { gender: s.gender, age: s.age, accent: s.accent, language: s.language }; }
+    }
     if (!v || !/brazil/i.test(l.accent || '') || !/^pt/i.test(l.language || 'pt'))
       throw new Error(`a voz de ${PERFIL[k].nome} (${PERFIL[k].rotulo}) nao e brasileira ou nao esta na conta; nada foi gerado`);
     console.log(`  ${PERFIL[k].nome.padEnd(22)} -> ${v.name} (${[l.gender, l.age, l.accent].filter(Boolean).join(', ')})`);
