@@ -32,7 +32,7 @@ const PERFIL = {
   copom:     { nome: 'COPOM (rádio)', voz: 'FhdOWgf0bSw3HKWefhlq', rotulo: 'Jhony Tygas', estilo: { stability: .7, similarity_boost: .8, style: .05 } },
   guarnicao: { nome: 'Guarnição (policial)', voz: 'blPx0tvsvee8CuFd63lX', rotulo: 'Sávio F.', estilo: { stability: .6, similarity_boost: .8, style: .15 } },
   // agressor repete a voz do atendente do 190: o atendente so fala na ligacao do inicio, nunca junto com o agressor
-  agressor:  { nome: 'Agressor', voz: '9pDzHy2OpOgeXM8SeL0t', rotulo: 'Borges (repetida: atendente do 190)', estilo: { stability: .32, similarity_boost: .8, style: .5 } },
+  agressor:  { nome: 'Agressor', voz: 'czvzJwIVS2asEKnthV40', rotulo: 'Daniel (biblioteca)', estilo: { stability: .32, similarity_boost: .8, style: .5 } },
 };
 const DE = { 'Vítima': 'vitima', 'Criança': 'crianca', 'Vizinho': 'vizinho', 'Atendente do 190': 'atendente', 'COPOM (rádio)': 'copom',
              'Guarnição (policial)': 'guarnicao', 'Agressor': 'agressor' };
