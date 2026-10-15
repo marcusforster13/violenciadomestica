@@ -35,15 +35,15 @@ Como gravar:
       Quando: Relato (ao clicar nela / "conte o que aconteceu") · só quando escondido
       Tempo: 9–12 s     Arquivo: fala_vitima_relato_06
 
-[ ]  7.  "Quando ouviu a sirene ele saiu correndo pelo portão. Não sei pra onde ele foi."
+[x]  7.  "Quando ouviu a sirene ele saiu correndo pelo portão. Não sei pra onde ele foi."
       Quando: Relato (ao clicar nela / "conte o que aconteceu") · só quando fugiu
       Tempo: 7–9 s     Arquivo: fala_vitima_relato_06b
 
-[ ]  8.  "Ele tá lá na cozinha… agora fica fingindo que não aconteceu nada."
+[x]  8.  "Ele tá lá na cozinha… agora fica fingindo que não aconteceu nada."
       Quando: Relato (ao clicar nela / "conte o que aconteceu") · só quando calmo manipulador
       Tempo: 6–8 s     Arquivo: fala_vitima_relato_06c
 
-[ ]  9.  "Ele tá lá na cozinha… cuidado, ele tá muito alterado."
+[x]  9.  "Ele tá lá na cozinha… cuidado, ele tá muito alterado."
       Quando: Relato (ao clicar nela / "conte o que aconteceu") · só quando agressivo
       Tempo: 5–7 s     Arquivo: fala_vitima_relato_06d
 
@@ -51,91 +51,91 @@ Como gravar:
       Quando: Relato (ao clicar nela / "conte o que aconteceu")
       Tempo: 6–8 s     Arquivo: fala_vitima_relato_07
 
-[ ] 11.  "Foi só uma discussão… ele bebeu um pouco e a gente brigou."
+[x] 11.  "Foi só uma discussão… ele bebeu um pouco e a gente brigou."
       Quando: Relato na variação em que ela minimiza
       Tempo: 6–8 s     Arquivo: fala_vitima_minimiza_01
 
-[ ] 12.  "Esse machucado? Eu bati na mesa. Não precisa fazer nada com ele, não."
+[x] 12.  "Esse machucado? Eu bati na mesa. Não precisa fazer nada com ele, não."
       Quando: Relato na variação em que ela minimiza
       Tempo: 6–8 s     Arquivo: fala_vitima_minimiza_02
 
-[ ] 13.  "Moço… eu preciso de ajuda. Meu marido me bateu. Ele… ele tá aqui em casa ainda."
+[x] 13.  "Moço… eu preciso de ajuda. Meu marido me bateu. Ele… ele tá aqui em casa ainda."
       Quando: Ligação para o 190, sussurrando ao telefone
       Tempo: 8–11 s     Arquivo: fala_vitima_190_01
 
-[ ] 14.  "Tô com a boca sangrando… meu braço tá doendo muito. Ele quebrou as coisas."
+[x] 14.  "Tô com a boca sangrando… meu braço tá doendo muito. Ele quebrou as coisas."
       Quando: Ligação para o 190, sussurrando ao telefone
       Tempo: 7–9 s     Arquivo: fala_vitima_190_02
 
-[ ] 15.  "Rua das Amendoeiras, 147, condomínio… a casa com o portão preto."
+[x] 15.  "Rua das Amendoeiras, 147, condomínio… a casa com o portão preto."
       Quando: Ligação para o 190, sussurrando ao telefone
       Tempo: 5–7 s     Arquivo: fala_vitima_190_03
 
-[ ] 16.  "Minha filha… ela tá no quarto. Ela tem seis anos."
+[x] 16.  "Minha filha… ela tá no quarto. Ela tem seis anos."
       Quando: Ligação para o 190, sussurrando ao telefone
       Tempo: 5–7 s     Arquivo: fala_vitima_190_04
 
-[ ] 17.  "Não sei… tem faca na cozinha… ele tá vindo, eu vou desligar…"
+[x] 17.  "Não sei… tem faca na cozinha… ele tá vindo, eu vou desligar…"
       Quando: Ligação para o 190, sussurrando ao telefone
       Tempo: 7–9 s     Arquivo: fala_vitima_190_05
 
-[ ] 18.  "Socorro! Me ajuda, por favor!"
+[x] 18.  "Socorro! Me ajuda, por favor!"
       Quando: Atrás da porta, quando o policial se identifica
       Tempo: 2–3 s     Arquivo: fala_vitima_01
 
-[ ] 19.  "Na boca… e o meu braço. Ele me empurrou contra a mesa."
+[x] 19.  "Na boca… e o meu braço. Ele me empurrou contra a mesa."
       Quando: Primeiro contato, quando o policial é acolhedor
       Tempo: 6–8 s     Arquivo: fala_vitima_02
 
-[ ] 20.  "Eu… não sei. Eu não fiz nada."
+[x] 20.  "Eu… não sei. Eu não fiz nada."
       Quando: Primeiro contato, quando o policial julga ou minimiza
       Tempo: 4–5 s     Arquivo: fala_vitima_03
 
-[ ] 21.  "Ele já me ameaçou outras vezes. Eu ia embora hoje… a mala está lá."
+[x] 21.  "Ele já me ameaçou outras vezes. Eu ia embora hoje… a mala está lá."
       Quando: Pergunta sobre ameaças e risco
       Tempo: 7–9 s     Arquivo: fala_vitima_04
 
-[ ] 22.  "No quarto… ela está escondida."
+[x] 22.  "No quarto… ela está escondida."
       Quando: Onde está a filha (criança no quarto ou no corredor)
       Tempo: 3–4 s     Arquivo: fala_vitima_05
 
-[ ] 23.  "Ela correu para a casa da vizinha."
+[x] 23.  "Ela correu para a casa da vizinha."
       Quando: Onde está a filha (criança na vizinha)
       Tempo: 3–4 s     Arquivo: fala_vitima_06
 
-[ ] 24.  "Tá… obrigada."
+[x] 24.  "Tá… obrigada."
       Quando: Quando o policial fala em proteger a filha
       Tempo: 1–2 s     Arquivo: fala_vitima_07
 
-[ ] 25.  "Eu não sabia que podia pedir isso."
+[x] 25.  "Eu não sabia que podia pedir isso."
       Quando: Quando o policial informa os direitos
       Tempo: 3–4 s     Arquivo: fala_vitima_08
 
-[ ] 26.  "Tá bom."
+[x] 26.  "Tá bom."
       Quando: Quando o policial fala em hospital e IML
       Tempo: 1–2 s     Arquivo: fala_vitima_09
 
-[ ] 27.  "Minha mãe mora em Niterói."
+[x] 27.  "Minha mãe mora em Niterói."
       Quando: Quando o policial oferece local seguro
       Tempo: 2–3 s     Arquivo: fala_vitima_10
 
-[ ] 28.  "Os documentos da minha filha estão no quarto."
+[x] 28.  "Os documentos da minha filha estão no quarto."
       Quando: Quando o policial oferece buscar pertences
       Tempo: 3–5 s     Arquivo: fala_vitima_11
 
-[ ] 29.  "De novo? Eu já falei…"
+[x] 29.  "De novo? Eu já falei…"
       Quando: Quando o policial pede para contar tudo de novo (erro)
       Tempo: 3–4 s     Arquivo: fala_vitima_12
 
-[ ] 30.  "Não precisa disso tudo… eu caí, foi só uma discussão."
+[x] 30.  "Não precisa disso tudo… eu caí, foi só uma discussão."
       Quando: Variação: ela minimiza e não quer ir à delegacia
       Tempo: 5–7 s     Arquivo: fala_vitima_13
 
-[ ] 31.  "Eu não quero dar queixa. Ele é o pai da minha filha."
+[x] 31.  "Eu não quero dar queixa. Ele é o pai da minha filha."
       Quando: Variação: ela quer desistir da queixa
       Tempo: 5–7 s     Arquivo: fala_vitima_14
 
-[ ] 32.  "Tá… eu vou."
+[x] 32.  "Tá… eu vou."
       Quando: Depois que o policial explica que o caso segue
       Tempo: 2–3 s     Arquivo: fala_vitima_15
 

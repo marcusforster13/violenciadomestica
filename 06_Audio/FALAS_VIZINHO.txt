@@ -11,11 +11,11 @@ Como gravar:
 
 ------------------------------------------------------------
 
-[ ]  1.  "Eu ouvi gritaria e barulho de vidro quebrando. Não é a primeira vez, já aconteceu outras vezes. Meu nome é Carlos, moro no 150."
+[x]  1.  "Eu ouvi gritaria e barulho de vidro quebrando. Não é a primeira vez, já aconteceu outras vezes. Meu nome é Carlos, moro no 150."
       Quando: Testemunha: quando o policial pede o relato e o documento
       Tempo: 10–14 s     Arquivo: fala_vizinho_01
 
-[ ]  2.  "Eu ouvi gritaria e barulho de coisa quebrando. Já é a segunda vez esse mês."
+[x]  2.  "Eu ouvi gritaria e barulho de coisa quebrando. Já é a segunda vez esse mês."
       Quando: Modo exploração (antes de iniciar o treinamento)
       Tempo: 7–9 s     Arquivo: fala_vizinho_02
 

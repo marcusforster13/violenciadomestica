@@ -11,23 +11,23 @@ Como gravar:
 
 ------------------------------------------------------------
 
-[ ]  1.  "Polícia Militar, qual a sua emergência?"
+[x]  1.  "Polícia Militar, qual a sua emergência?"
       Quando: Ligação para o 190 (início do treinamento)
       Tempo: 3–4 s     Arquivo: fala_atendente_190_01
 
-[ ]  2.  "A senhora está ferida?"
+[x]  2.  "A senhora está ferida?"
       Quando: Ligação para o 190 (início do treinamento)
       Tempo: 2–2 s     Arquivo: fala_atendente_190_02
 
-[ ]  3.  "Qual o endereço?"
+[x]  3.  "Qual o endereço?"
       Quando: Ligação para o 190 (início do treinamento)
       Tempo: 1–2 s     Arquivo: fala_atendente_190_03
 
-[ ]  4.  "Tem mais alguém na casa?"
+[x]  4.  "Tem mais alguém na casa?"
       Quando: Ligação para o 190 (início do treinamento)
       Tempo: 2–3 s     Arquivo: fala_atendente_190_04
 
-[ ]  5.  "Ele está armado?"
+[x]  5.  "Ele está armado?"
       Quando: Ligação para o 190 (início do treinamento)
       Tempo: 1–2 s     Arquivo: fala_atendente_190_05
 

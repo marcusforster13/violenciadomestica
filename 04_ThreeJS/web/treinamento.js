@@ -1121,7 +1121,8 @@ export async function iniciar(ctx) {
   }
   function abrirPrisao() {
     const ops = opcoesJSON(CEN.abordagem.prisao, op => {
-      if (op.resposta) setTimeout(() => legenda(op.acao === 'busca_pessoal' ? 'Busca pessoal' : 'Agressor', op.resposta, 5), 300);
+      if (op.resposta) setTimeout(() => op.acao === 'busca_pessoal' ? legenda('Busca pessoal', op.resposta, 5)   // narracao (so texto)
+                                                                    : falar('Agressor', op.resposta, 'm'), 300);  // fala dele (voz gravada)
       if (op.acao === 'conduzir_viatura') conduzir();
     });
     if (!S.algemado) ops.splice(1, 0, { label: 'Algemar (justificar o motivo)', acao: () => { dialogo.esconder(); algemar(); } });

@@ -11,11 +11,11 @@ Como gravar:
 
 ------------------------------------------------------------
 
-[ ]  1.  "Moço… cadê a minha mãe?"
+[x]  1.  "Moço… cadê a minha mãe?"
       Quando: Quando o policial encontra a criança
       Tempo: 3–4 s     Arquivo: fala_crianca_01
 
-[ ]  2.  "O papai gritou muito… a mamãe tá machucada?"
+[x]  2.  "O papai gritou muito… a mamãe tá machucada?"
       Quando: Quando o policial fala com calma com ela
       Tempo: 4–6 s     Arquivo: fala_crianca_02
 

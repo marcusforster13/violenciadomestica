@@ -11,17 +11,21 @@ Como gravar:
 
 ------------------------------------------------------------
 
-[ ]  1.  "Ocorrência de violência doméstica. Rua das Amendoeiras, 147. Vítima ferida, agressor no local, criança de 6 anos na residência, possível faca."
+[x]  1.  "Ocorrência de violência doméstica. Rua das Amendoeiras, 147. Vítima ferida, agressor no local, criança de 6 anos na residência, possível faca."
       Quando: Despacho da ocorrência pelo rádio
       Tempo: 9–12 s     Arquivo: fala_copom_01
 
-[ ]  2.  "Copiado. Prossiga."
+[x]  2.  "Copiado. Prossiga."
       Quando: Resposta quando o policial chama pelo rádio
       Tempo: 1–2 s     Arquivo: fala_copom_02
 
-[ ]  3.  "Copiado. Viaturas da área informadas."
+[x]  3.  "Copiado. Viaturas da área informadas."
       Quando: Resposta ao informe de fuga
       Tempo: 2–3 s     Arquivo: fala_copom_03
 
+[x]  4.  "Guarnição, perícia a caminho. Preservem o local e fotografem os vestígios com placa até a chegada."
+      Quando: Rádio: depois da prisão, pede a preservação do local
+      Tempo: 7–9 s     Arquivo: fala_copom_04
+
 ------------------------------------------------------------
-Total: 3 falas ([x] = já gravada).
+Total: 4 falas ([x] = já gravada).

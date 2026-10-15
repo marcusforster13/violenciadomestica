@@ -18,7 +18,7 @@ for k, rotulo in (('completo', 'Relato (ao clicar nela / "conte o que aconteceu"
         falas.append({'arquivo': l['audio'], 'personagem': 'Vítima', 'quando': quando, 'texto': l['texto']})
 falas += CEN['vozes']['falas']
 
-ORDEM = ['Vítima', 'Agressor', 'Criança', 'Vizinho', 'Atendente do 190', 'COPOM (rádio)']
+ORDEM = ['Vítima', 'Agressor', 'Criança', 'Vizinho', 'Atendente do 190', 'COPOM (rádio)', 'Guarnição (policial)']
 DICAS = {
     'Vítima': 'Mulher, cerca de 30 anos, acabou de ser agredida. Voz baixa e cansada, com pausas nos "…". As falas da ligação para o 190 são sussurradas, com medo de ser ouvida.',
     'Agressor': 'Homem, cerca de 35 anos, bebeu. Alterna entre minimizar ("foi só uma briga") e irritação. Nada de grito exagerado: a tensão é mais realista.',
@@ -26,6 +26,7 @@ DICAS = {
     'Vizinho': 'Homem adulto, preocupado, falando com o policial na calçada. Tom de quem quer ajudar sem se envolver demais.',
     'Atendente do 190': 'Atendente da central: voz calma, firme e objetiva.',
     'COPOM (rádio)': 'Operador de rádio: frases curtas, tom neutro. Pode gravar perto do microfone com um pouco de "rádio" na voz.',
+    'Guarnição (policial)': 'O policial (jogador) falando na porta e no rádio: firme, claro e objetivo.',
 }
 def seg(t):   # estimativa: fala pausada (~2,3 palavras/s) + pausas nos "…"
     s = len(t.split()) / 2.3 + t.count('…') * .6
@@ -75,7 +76,7 @@ print('[VOZES] %d falas, %d gravadas -> ROTEIRO_VOZES.html' % (total, feitas))
 
 # um .txt por personagem, para imprimir (FALAS_VITIMA.txt, FALAS_AGRESSOR.txt, ...)
 ARQ_TXT = {'Vítima': 'VITIMA', 'Agressor': 'AGRESSOR', 'Criança': 'CRIANCA', 'Vizinho': 'VIZINHO',
-           'Atendente do 190': 'ATENDENTE_190', 'COPOM (rádio)': 'COPOM'}
+           'Atendente do 190': 'ATENDENTE_190', 'COPOM (rádio)': 'COPOM', 'Guarnição (policial)': 'GUARNICAO'}
 for p in ORDEM:
     grupo = [f for f in falas if f['personagem'] == p]
     if not grupo: continue

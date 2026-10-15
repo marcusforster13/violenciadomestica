@@ -1,0 +1,39 @@
+﻿A CASA EM SILÊNCIO — FALAS: GUARNIÇÃO (POLICIAL)
+============================================================
+
+O policial (jogador) falando na porta e no rádio: firme, claro e objetivo.
+
+Como gravar:
+- Um arquivo por fala, com o nome indicado (.wav ou .mp3).
+- Salvar em 06_Audio\brutos\ (ou mandar para o Claude).
+- Falar exatamente o texto (é por ele que o site encontra a gravação).
+- ~0,5 s de silêncio no começo e no fim. O tempo é só referência.
+
+------------------------------------------------------------
+
+[x]  1.  "Polícia Militar!"
+      Quando: Na porta, ao se identificar
+      Tempo: 1–2 s     Arquivo: fala_guarnicao_01
+
+[x]  2.  "COPOM, guarnição no local da ocorrência."
+      Quando: Rádio: informa a chegada
+      Tempo: 3–4 s     Arquivo: fala_guarnicao_02
+
+[x]  3.  "COPOM, solicito SAMU no local: vítima com lesões no rosto e no braço."
+      Quando: Rádio: pede o SAMU
+      Tempo: 6–8 s     Arquivo: fala_guarnicao_03
+
+[x]  4.  "COPOM, solicito perícia no local. Local isolado."
+      Quando: Rádio: pede a perícia
+      Tempo: 3–4 s     Arquivo: fala_guarnicao_04
+
+[x]  5.  "COPOM, solicito apoio de outra guarnição."
+      Quando: Rádio: pede apoio
+      Tempo: 3–4 s     Arquivo: fala_guarnicao_05
+
+[x]  6.  "COPOM, autor evadiu-se pelos fundos: homem, cerca de 35 anos, camisa polo listrada, bermuda bege, mão direita machucada."
+      Quando: Rádio: informa a fuga
+      Tempo: 8–11 s     Arquivo: fala_guarnicao_06
+
+------------------------------------------------------------
+Total: 6 falas ([x] = já gravada).
