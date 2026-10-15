@@ -28,7 +28,7 @@ const PERFIL = {
   vitima:    { nome: 'Vítima', voz: '4PNBmCCUBwRktp7B7R1y', rotulo: 'Larissa Diniz', estilo: { stability: .38, similarity_boost: .8, style: .4 } },
   crianca:   { nome: 'Criança', voz: 'HReOQZPV9tH5iTEnSbGo', rotulo: 'Bianca', estilo: { stability: .35, similarity_boost: .75, style: .55 } },
   vizinho:   { nome: 'Vizinho', voz: 'bJrNspxJVFovUxNBQ0wh', rotulo: 'Marcelo Costa (biblioteca)', estilo: { stability: .5, similarity_boost: .8, style: .25 } },
-  atendente: { nome: 'Atendente do 190', voz: '9pDzHy2OpOgeXM8SeL0t', rotulo: 'Borges', estilo: { stability: .65, similarity_boost: .8, style: .1 } },
+  atendente: { nome: 'Atendente do 190', voz: '7eUAxNOneHxqfyRS77mW', rotulo: 'Carla (biblioteca)', estilo: { stability: .6, similarity_boost: .8, style: .1 } },
   copom:     { nome: 'COPOM (rádio)', voz: 'FhdOWgf0bSw3HKWefhlq', rotulo: 'Jhony Tygas', estilo: { stability: .7, similarity_boost: .8, style: .05 } },
   guarnicao: { nome: 'Guarnição (policial)', voz: 'blPx0tvsvee8CuFd63lX', rotulo: 'Sávio F.', estilo: { stability: .6, similarity_boost: .8, style: .15 } },
   // agressor repete a voz do atendente do 190: o atendente so fala na ligacao do inicio, nunca junto com o agressor

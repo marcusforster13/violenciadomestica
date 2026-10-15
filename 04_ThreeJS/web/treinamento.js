@@ -855,7 +855,7 @@ export async function iniciar(ctx) {
     if (S.variacao.crianca !== 'vizinha') window.__som?.iniciarTreino();   // choro baixo de onde a crianca esta
     rig.position.set(1.0, 0, 18.4); ctx.setYaw(0);
     const lin = CEN.chamada_190.legenda; let t = 0;
-    lin.forEach(([q, txt]) => { setTimeout(() => falar('Ligação 190 · ' + q, txt, q === 'Atendente' ? 'm' : 'f'), t); t += Math.max(2600, txt.length * 70, duracaoFala(txt) * 1000 + 450); });
+    lin.forEach(([q, txt]) => { setTimeout(() => falar('Ligação 190 · ' + q, txt, 'f'), t); t += Math.max(2600, txt.length * 70, duracaoFala(txt) * 1000 + 450); });
     setTimeout(() => falar('Rádio · COPOM', CEN.chamada_190.despacho, 'm'), t + 400);
     if (S.modo === 'treino') setTimeout(() => dica('Os objetivos aparecem no canto da tela. Comece informando a chegada pelo rádio (R ou menu).'), t + 4000);
     status();
