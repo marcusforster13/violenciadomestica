@@ -303,12 +303,14 @@ function irPara(nome) {
   rig.position.set(x, Math.max(0, y - 1.6), z);
   yaw = Math.atan2(-(ax - x), -(az - z)); pitch = Math.atan2(ay - y, Math.hypot(ax - x, az - z));
 }
-const NOMES = { Camera_Rua: 'Rua', Camera_Viatura: 'Viatura', Camera_Vizinhos: 'Vizinhos', Camera_Entrada: 'Varanda', Camera_Interior: 'Interior' };
-Object.keys(CFG.cameras).forEach((k, i) => {
+const NOMES = { Camera_Rua: 'Rua', Camera_Viatura: 'Viatura', Camera_Vizinhos: 'Vizinhos', Camera_Entrada: 'Varanda', Camera_Interior: 'Interior', Camera_Portaria: 'Portaria' };
+CFG.cameras.Camera_Portaria = { pos: [40.3, 1.65, 18.6], alvo: [40.5, 1.6, 14] };      // em frente a janela da central de monitoramento
+const VISTAS = Object.keys(CFG.cameras).filter(k => !k.startsWith('CFTV_'));          // as cameras da guarita so alimentam os monitores
+VISTAS.forEach((k, i) => {
   const b = document.createElement('button'); b.type = 'button'; b.textContent = `${i + 1} · ${NOMES[k] || k}`;
   b.onclick = () => irPara(k); $('vistas').appendChild(b);
 });
-irPara(CFG.cameras.Camera_Rua ? 'Camera_Rua' : Object.keys(CFG.cameras)[0]);
+irPara(CFG.cameras.Camera_Rua ? 'Camera_Rua' : VISTAS[0]);
 
 /* ---------- controles desktop ---------- */
 const keys = new Set(), ray = new THREE.Raycaster(); ray.firstHitOnly = true;
@@ -323,7 +325,7 @@ addEventListener('keydown', e => {
   if (e.code === 'KeyC') alternarCeu();
   if (e.code === 'KeyN') colisaoAtiva = !colisaoAtiva;
   if (e.code === 'Escape') panel.visible = false;
-  const n = +e.key; if (n >= 1 && n <= 9) irPara(Object.keys(CFG.cameras)[n - 1]);
+  const n = +e.key; if (n >= 1 && n <= 9) irPara(VISTAS[n - 1]);
 });
 addEventListener('keyup', e => keys.delete(e.code));
 const el = renderer.domElement;
@@ -441,6 +443,7 @@ renderer.setAnimationLoop(() => {
   hotspots.children.forEach((g, i) => { g.lookAt(V1); g.userData.ring.scale.setScalar(1 + .18 * Math.sin(t * 3 + i)); });
   window.__trein?.quadro();
   window.__som?.quadro(dt);
+  window.__cftv?.quadro(t);
   renderer.render(scene, camera);
 });
 
@@ -448,6 +451,9 @@ renderer.setAnimationLoop(() => {
 import('./audio.js').then(m => m.iniciarAudio({ scene, camera, renderer })).catch(e => console.warn('Áudio não carregou:', e));
 let somMudo = false;
 addEventListener('keydown', e => { if (e.code === 'KeyM' && window.__som) { somMudo = !somMudo; window.__som.mudo(somMudo); } });
+
+/* ---------- central de monitoramento da guarita (telas com as cameras ao vivo) ---------- */
+import('./cftv.js').then(m => m.iniciarCFTV({ scene, camera, renderer, CFG })).catch(e => console.warn('CFTV não carregou:', e));
 
 /* ---------- motor do treinamento (fase 2) ---------- */
 import('./treinamento.js').then(m => m.iniciar({

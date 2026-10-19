@@ -154,7 +154,7 @@ say("Modificadores aplicados em %d objetos; textos e fios convertidos em malha."
 
 # ------------------------------------------------------------------ 4. materiais: bake dos procedurais, UV no lugar de projecao
 MAT_TILE = {}
-UV_NATIVE = {"Rede_Listrada", "Tapete", "Grama_Cartao", "Cobogo_Alpha", "Folha_Costela", "Folha_Arbusto", "Folha_Palmeira"}
+UV_NATIVE = {"Rede_Listrada", "Tapete", "Grama_Cartao", "Cobogo_Alpha", "Folha_Costela", "Folha_Arbusto", "Folha_Palmeira", "CFTV_Tela"}
 
 def bake_tile(mat, tile, res, vertical=False):
     img = bpy.data.images.new(mat.name + "_bake", res, res, alpha=False)
@@ -375,7 +375,7 @@ say("Grama: %d tufos em cartoes cruzados com alfa (%d tris) no lugar de ~15 milh
 # ------------------------------------------------------------------ 6b. malha de colisao simplificada
 # Uma caixa orientada (OBB) por objeto relevante: paredes, pisos, moveis, carros, postes, troncos.
 # Sai como objeto "Colisao" (colecao 99_Colisao, fora do render) e em colisao.fbx / colisao.glb.
-COL_FORA = {"07c_Grama_Vegetacao", "09_Luzes_Cameras"}
+COL_FORA = {"07c_Grama_Vegetacao", "09_Luzes_Cameras", "12_CFTV"}
 COL_PULAR = ("Fio_", "Cabo_", "Ramal_", "Travessia_", "Forro_Ripado", "_Folhas", "_Copa", "Galhos", "Grama_Cartao",
              "Giroflex_Lente", "Adesivo", "Placa_Texto", "Numero_", "Faixa_Central", "LED", "Cortina")
 caixas = []
@@ -394,7 +394,7 @@ for ob in scene.objects:
 say("Colisao: %d caixas orientadas preparadas." % len(caixas))
 
 # ------------------------------------------------------------------ 7. juntar geometria estatica por colecao
-INTERATIVO_COL = {"08_Vestigios", "10_Viatura_PMERJ", "09_Luzes_Cameras"}
+INTERATIVO_COL = {"08_Vestigios", "10_Viatura_PMERJ", "09_Luzes_Cameras", "12_CFTV"}
 INTERATIVO_PAI = ("Porta_Quarto_Dobradica", "Portao_Folha", "Viatura_PMERJ", "V_")
 
 def interativo(ob):

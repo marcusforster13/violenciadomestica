@@ -191,7 +191,7 @@ for m in bpy.data.materials:
 say("%d materiais trocados por PBR com texturas CC0" % n_pbr)
 
 # ------------------------------------------------------------------ 2. lightmaps (bake do Cycles)
-SEM_LIGHTMAP = {"07c_Grama_Vegetacao", "09_Luzes_Cameras", "99_Colisao"}
+SEM_LIGHTMAP = {"07c_Grama_Vegetacao", "09_Luzes_Cameras", "99_Colisao", "12_CFTV"}
 # niveis:  rapido (teste, ~2 min) | padrao (~5 min) | alta (~30-60 min)
 ALTA = "alta" in ARGS
 RES = {"07_Rua_Condominio": 2048, "07b_Casas_Vizinhas": 2048, "01_Estrutura": 1024,
