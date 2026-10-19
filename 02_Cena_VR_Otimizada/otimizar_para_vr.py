@@ -304,7 +304,7 @@ def box_uv(ob):
     bm.to_mesh(me); bm.free()
 
 for ob in scene.objects:
-    if ob.type == "MESH" and ob.name != "Cobogo_Placa":
+    if ob.type == "MESH" and ob.name != "Cobogo_Placa" and not ob.get("uv_proprio"):     # modelos importados mantem a UV deles
         box_uv(ob)
 say("UVs em caixa (escala real em metros) aplicadas em todas as malhas.")
 

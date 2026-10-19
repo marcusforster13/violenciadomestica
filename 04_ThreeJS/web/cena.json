@@ -1,18 +1,18 @@
 {
- "gerado_em": "2026-10-19 11:07",
+ "gerado_em": "2026-10-19 14:05",
  "qualidade": "padrao",
  "lightmaps": {
   "01_Estrutura_Estatico": {
    "lm": "lightmaps/LM_01_Estrutura.png",
-   "max": 0.29788
+   "max": 0.29785
   },
   "Porta_Quarto": {
    "lm": "lightmaps/LM_01_Estrutura.png",
-   "max": 0.29788
+   "max": 0.29785
   },
   "Macaneta": {
    "lm": "lightmaps/LM_01_Estrutura.png",
-   "max": 0.29788
+   "max": 0.29785
   },
   "02_Sala_Estatico": {
    "lm": "lightmaps/LM_02_Sala.png",
@@ -20,7 +20,7 @@
   },
   "03_Jantar_Estatico": {
    "lm": "lightmaps/LM_03_Jantar.png",
-   "max": 0.47247
+   "max": 0.46741
   },
   "04_Cozinha_Estatico": {
    "lm": "lightmaps/LM_04_Cozinha.png",
@@ -32,67 +32,67 @@
   },
   "06_Jardim_Estatico": {
    "lm": "lightmaps/LM_06_Jardim.png",
-   "max": 0.2716
+   "max": 0.27171
   },
   "07_Rua_Condominio_Estatico": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.09672
+   "max": 2.09691
   },
   "Portao_Folha_Esq_Travessa": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.09672
+   "max": 2.09691
   },
   "Portao_Folha_Esq_Travessa001": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.09672
+   "max": 2.09691
   },
   "Portao_Folha_Esq_Travessa002": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.09672
+   "max": 2.09691
   },
   "Portao_Folha_Esq_Montante": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.09672
+   "max": 2.09691
   },
   "Portao_Folha_Esq_Montante001": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.09672
+   "max": 2.09691
   },
   "Portao_Folha_Esq_Barras": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.09672
+   "max": 2.09691
   },
   "Portao_Folha_Dir_Travessa": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.09672
+   "max": 2.09691
   },
   "Portao_Folha_Dir_Travessa001": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.09672
+   "max": 2.09691
   },
   "Portao_Folha_Dir_Travessa002": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.09672
+   "max": 2.09691
   },
   "Portao_Folha_Dir_Montante": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.09672
+   "max": 2.09691
   },
   "Portao_Folha_Dir_Montante001": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.09672
+   "max": 2.09691
   },
   "Portao_Folha_Dir_Barras": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 2.09672
+   "max": 2.09691
   },
   "07b_Casas_Vizinhas_Estatico": {
    "lm": "lightmaps/LM_07b_Casas_Vizinhas.png",
-   "max": 0.55134
+   "max": 0.55147
   },
   "07d_Postes_Fiacao_Estatico": {
    "lm": "lightmaps/LM_07d_Postes_Fiacao.png",
-   "max": 0.40151
+   "max": 0.40195
   },
   "07e_Guarita_Estatico": {
    "lm": "lightmaps/LM_07e_Guarita.png",
@@ -428,83 +428,83 @@
   },
   "Giroflex_Base": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 1.38556
+   "max": 1.37955
   },
   "Giroflex_Lente_1": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 1.38556
+   "max": 1.37955
   },
   "Giroflex_Lente_2": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 1.38556
+   "max": 1.37955
   },
   "Giroflex_Lente_3": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 1.38556
+   "max": 1.37955
   },
   "Giroflex_Lente_4": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 1.38556
+   "max": 1.37955
   },
   "Giroflex_Lente_5": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 1.38556
+   "max": 1.37955
   },
   "Giroflex_Lente_6": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 1.38556
+   "max": 1.37955
   },
   "Viatura_Antena": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 1.38556
+   "max": 1.37955
   },
   "Viatura_PMERJ_Adesivo": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 1.38556
+   "max": 1.37955
   },
   "Viatura_PMERJ_Adesivo_001": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 1.38556
+   "max": 1.37955
   },
   "Viatura_PMERJ_Brasao_Imagem": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 1.38556
+   "max": 1.37955
   },
   "Viatura_PMERJ_Brasao_Imagem_001": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 1.38556
+   "max": 1.37955
   },
   "Viatura_PMERJ_Carroceria": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 1.38556
+   "max": 1.37955
   },
   "Viatura_PMERJ_Listra": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 1.38556
+   "max": 1.37955
   },
   "Viatura_PMERJ_Listra_001": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 1.38556
+   "max": 1.37955
   },
   "Viatura_PMERJ_Roda_DD": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 1.38556
+   "max": 1.37955
   },
   "Viatura_PMERJ_Roda_DE": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 1.38556
+   "max": 1.37955
   },
   "Viatura_PMERJ_Roda_TD": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 1.38556
+   "max": 1.37955
   },
   "Viatura_PMERJ_Roda_TE": {
    "lm": "lightmaps/LM_10_Viatura_PMERJ.png",
-   "max": 1.38556
+   "max": 1.37955
   },
   "10b_Carros_Moradores_Estatico": {
    "lm": "lightmaps/LM_10b_Carros_Moradores.png",
-   "max": 1.30468
+   "max": 1.70016
   }
  },
  "lightmap_ganho": 3.14159,

@@ -6,7 +6,7 @@ animadas), antena, posicao na rua e os materiais da cena. A carroceria e um "lof
 separados (para-brisa inclinado, janelas das portas e vigia), colunas pretas, estreitamento do teto,
 saias plasticas pretas, para-choques moldados, rodas com pneu e aro, e o padrao de pintura
 (branco com faixa azul, POLICIA MILITAR, 190, PMERJ e espaco do brasao).
-Tambem retira o carro da garagem do vizinho da esquerda e simplifica os outros carros de moradores.
+Tambem tira os carros das garagens dos vizinhos (menos poligonos) e simplifica o carro vermelho da rua.
 
 Idempotente. Uso:  blender -b casa_em_silencio.blend --python viatura.py
 """
@@ -140,7 +140,7 @@ def usar_modelo_usuario():
     ob.parent = VTR; ob.matrix_parent_inverse = Matrix.Identity(4); ob.matrix_basis = Matrix.Identity(4)
     ob.name = "Viatura_PMERJ_Modelo"; ob.data.name = "Viatura_PMERJ_Modelo"
     for pl in ob.data.polygons: pl.use_smooth = True
-    ob["detalhado"] = True; ob["modelo_usuario"] = "viatura_usuario.glb"
+    ob["detalhado"] = True; ob["uv_proprio"] = True; ob["modelo_usuario"] = "viatura_usuario.glb"
     for o in novos:
         if o is not ob: bpy.data.objects.remove(o, do_unlink=True)
     # altura do teto onde vai o giroflex (maior ponto sob a base de 0,34 x 1,3 m) e onde vai a antena
@@ -183,7 +183,7 @@ def usar_viatura_pronta():
         for c in list(o.users_collection): c.objects.unlink(o)
         COL.objects.link(o)
         o.parent = VTR; o.matrix_parent_inverse = Matrix.Identity(4); o.matrix_basis = mw
-        o["detalhado"] = True
+        o["detalhado"] = True; o["uv_proprio"] = True          # a versao VR nao refaz a UV (textura do modelo)
         o.name = "Viatura_PMERJ_" + o.name.replace("Viatura_PC_", "").replace(".", "_")
         for im in {n.image for m in o.data.materials if m and m.node_tree for n in m.node_tree.nodes if n.type == "TEX_IMAGE" and n.image}:
             im.pack()
@@ -468,12 +468,13 @@ else:
 
 # ------------------------------------------------------------------ carros dos moradores: menos poligonos
 removidos = 0
-carro_esq = bpy.data.objects.get("Vizinho_Esq_Carro")
-if carro_esq:
-    for o in list(carro_esq.children_recursive) + [carro_esq]:
-        bpy.data.objects.remove(o, do_unlink=True)
-    removidos = 1
-for nome in ("Carro_Rua_Vermelho", "Vizinho_A_Carro", "Vizinho_C_Carro"):
+for nome in ("Vizinho_Esq_Carro", "Vizinho_A_Carro", "Vizinho_C_Carro"):    # garagens dos vizinhos ficam vazias
+    carro = bpy.data.objects.get(nome)
+    if carro:
+        for o in list(carro.children_recursive) + [carro]:
+            bpy.data.objects.remove(o, do_unlink=True)
+        removidos += 1
+for nome in ("Carro_Rua_Vermelho",):
     c = bpy.data.objects.get(nome)
     if not c: continue
     for o in c.children_recursive:
@@ -491,6 +492,6 @@ def tris(raiz):
         e = o.evaluated_get(dg); m = e.to_mesh(); t += sum(len(p.vertices) - 2 for p in m.polygons); e.to_mesh_clear()
     return t
 say("viatura (%s): ~%d triangulos" % ("viatura_pronta.glb" if os.path.exists(MODELO_PRONTO) else "modelo do usuario" if USAR_MODELO else "procedural", tris(VTR)))
-say("carros de moradores: %d removido (garagem do vizinho da esquerda); restantes: %s" % (removidos, ", ".join(
+say("carros de moradores: %d removidos das garagens; restantes: %s" % (removidos, ", ".join(
     "%s ~%d" % (n, tris(bpy.data.objects[n])) for n in ("Carro_Rua_Vermelho", "Vizinho_A_Carro", "Vizinho_C_Carro") if bpy.data.objects.get(n))))
 bpy.ops.wm.save_mainfile()

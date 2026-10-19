@@ -1,17 +1,17 @@
 A CASA EM SILENCIO - VERSAO VR OTIMIZADA
 
 ANTES (cena de render): ~920.000 tris de geometria + ~15.000.000 tris de grama instanciada
-DEPOIS: 389277 tris | 135 malhas | 327 slots de material (~draw calls) | 46 luzes
+DEPOIS: 355783 tris | 135 malhas | 323 slots de material (~draw calls) | 46 luzes
 
 Triangulos por colecao:
   07c_Grama_Vegetacao                   81790
   07_Rua_Condominio                     52684
   07b_Casas_Vizinhas                    51612
-  10b_Carros_Moradores                  48909
   08_Vestigios                          42564
   02_Sala                               32568
   04_Cozinha                            18344
   06_Jardim                             17956
+  10b_Carros_Moradores                  15415
   03_Jantar                             12756
   07d_Postes_Fiacao                     10088
   10_Viatura_PMERJ                       8966
@@ -24,16 +24,16 @@ Etapas:
   - Neblina volumetrica removida (em VR use fog do motor).
   - Cobogo 3D (~60 mil tris) trocado por placa com textura alfa (2 tris).
   - Grama instanciada removida de 8 gramados; subdivisao=1, remesh 0.16 m, decimate 35% na folhagem.
-  - Modificadores aplicados em 1877 objetos; textos e fios convertidos em malha.
+  - Modificadores aplicados em 1711 objetos; textos e fios convertidos em malha.
   - Bake de 3 materiais procedurais em texturas de imagem.
   - 32 materiais com texturas CC0 convertidos para UV + PNG (cor, rugosidade, normal).
   - UVs em caixa (escala real em metros) aplicadas em todas as malhas.
   - Grama: 6381 tufos em cartoes cruzados com alfa (25524 tris) no lugar de ~15 milhoes de tris.
-  - Colisao: 1213 caixas orientadas preparadas.
-  - 1754 objetos estaticos unidos em 1 malha por colecao (menos draw calls).
+  - Colisao: 1121 caixas orientadas preparadas.
+  - 1588 objetos estaticos unidos em 1 malha por colecao (menos draw calls).
   - Exportado: casa_em_silencio_VR.glb
   - Exportado: casa_em_silencio_VR.fbx
-  - Colisao: 1213 caixas, 14556 tris -> colisao.glb / colisao.fbx
+  - Colisao: 1121 caixas, 13452 tris -> colisao.glb / colisao.fbx
 
 Proximos passos no motor (Unity/Unreal):
   - Iluminacao: marcar a geometria estatica como Static e fazer bake de lightmaps
