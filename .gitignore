@@ -27,3 +27,9 @@ desktop.ini
 01_Cena_Render_Cycles/modelos/guardados/
 06_Audio/backup_vozes_antigas/
 06_Audio/testes_agressor/
+
+# copias antigas soltas na raiz (nao fazem parte do projeto)
+/casa-em-silencio.html
+/casa_em_silencio.blend
+/casa_em_silencio.py
+/previa_Camera_*.png
