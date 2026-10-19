@@ -161,7 +161,54 @@ def usar_modelo_usuario():
         % (dims.x, dims.y, dims.z, sum(len(pl.vertices) - 2 for pl in ob.data.polygons), z_giro,
            (", emblema da grade apagado (%d px)" % apagados) if apagados else ""))
 
-if USAR_MODELO:
+# Se existir  modelos/viatura_pronta.glb  (carro ja em metros, frente para +X - ex.: a viatura exportada do projeto
+# Busca e Apreensao), ele tem prioridade. O giroflex que vier no arquivo e descartado: fica o nosso, no teto.
+# Para voltar: tire o arquivo e rode o atualizar_tudo.ps1.
+MODELO_PRONTO = os.path.join(os.path.dirname(bpy.data.filepath), "modelos", "viatura_pronta.glb")
+
+def usar_viatura_pronta():
+    for m in M.values(): m.use_fake_user = True     # guarda os materiais da viatura antiga para poder voltar a ela
+    for o in list(VTR.children_recursive):          # fica so com o nosso giroflex, a antena e as luzes dos farois
+        if not o.name.startswith(MANTER):
+            bpy.data.objects.remove(o, do_unlink=True)
+    antes = set(bpy.data.objects)
+    bpy.ops.import_scene.gltf(filepath=MODELO_PRONTO)
+    novos = [o for o in bpy.data.objects if o not in antes]
+    for o in [o for o in novos if o.name.startswith("Giroflex_")]:     # o giroflex do arquivo sai; fica o nosso
+        novos.remove(o); bpy.data.objects.remove(o, do_unlink=True)
+    bpy.context.view_layer.update()
+    malhas = [o for o in novos if o.type == "MESH"]
+    for o in malhas:
+        mw = o.matrix_world.copy()
+        for c in list(o.users_collection): c.objects.unlink(o)
+        COL.objects.link(o)
+        o.parent = VTR; o.matrix_parent_inverse = Matrix.Identity(4); o.matrix_basis = mw
+        o["detalhado"] = True
+        o.name = "Viatura_PMERJ_" + o.name.replace("Viatura_PC_", "").replace(".", "_")
+        for im in {n.image for m in o.data.materials if m and m.node_tree for n in m.node_tree.nodes if n.type == "TEX_IMAGE" and n.image}:
+            im.pack()
+    for o in novos:
+        if o.type != "MESH": bpy.data.objects.remove(o, do_unlink=True)
+    bpy.context.view_layer.update()
+    corpo = next(o for o in VTR.children if o.name.endswith("Carroceria"))
+    def teto(x, ys=(0, -.25, .25, -.45, .45)):      # ponto mais alto do teto sob a base do giroflex (0,34 x 1,3 m)
+        z = 0
+        for y in ys:
+            for dx in (-.15, 0, .15):
+                ok, lc, _, _ = corpo.ray_cast(Vector((x + dx, y, 5)), Vector((0, 0, -1)))
+                if ok: z = max(z, lc.z)
+        return z
+    x_giro = -.3                                     # meio do teto deste carro
+    z_giro = teto(x_giro)
+    frente = max((corpo.matrix_basis @ Vector(c)).x for c in corpo.bound_box)
+    x_ant = -1.15
+    mover_equipamentos(dx_giro=x_giro - (-.1), dz_giro=z_giro - 1.66, antena=(x_ant, .25, teto(x_ant, ys=(.25,)) + .22), farol_x=frente + .03)
+    say("viatura pronta no lugar da viatura: %d pecas, %d triangulos, nosso giroflex a %.2f m do chao"
+        % (len(malhas), sum(len(pl.vertices) - 2 for o in malhas for pl in o.data.polygons), z_giro))
+
+if os.path.exists(MODELO_PRONTO):
+    usar_viatura_pronta()
+elif USAR_MODELO:
     usar_modelo_usuario()
 else:
     mover_equipamentos()            # giroflex, antena e farois de volta ao lugar original
@@ -443,7 +490,7 @@ def tris(raiz):
         if o.type != "MESH" or o.hide_render: continue
         e = o.evaluated_get(dg); m = e.to_mesh(); t += sum(len(p.vertices) - 2 for p in m.polygons); e.to_mesh_clear()
     return t
-say("viatura (%s): ~%d triangulos" % ("modelo do usuario" if USAR_MODELO else "procedural", tris(VTR)))
+say("viatura (%s): ~%d triangulos" % ("viatura_pronta.glb" if os.path.exists(MODELO_PRONTO) else "modelo do usuario" if USAR_MODELO else "procedural", tris(VTR)))
 say("carros de moradores: %d removido (garagem do vizinho da esquerda); restantes: %s" % (removidos, ", ".join(
     "%s ~%d" % (n, tris(bpy.data.objects[n])) for n in ("Carro_Rua_Vermelho", "Vizinho_A_Carro", "Vizinho_C_Carro") if bpy.data.objects.get(n))))
 bpy.ops.wm.save_mainfile()
