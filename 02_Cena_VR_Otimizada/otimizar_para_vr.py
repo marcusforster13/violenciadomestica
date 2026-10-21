@@ -303,6 +303,17 @@ def box_uv(ob):
             l[uvl].uv = (u / t, v / t)
     bm.to_mesh(me); bm.free()
 
+# um so canal de UV, sempre "UVMap": a cena original usa "Float2" e os modelos importados "UVMap"; com nomes
+# diferentes o join por colecao poe a UV dos modelos num 2o canal e o canal exportado fica zerado.
+for ob in scene.objects:
+    if ob.type != "MESH" or not ob.data.uv_layers:
+        continue
+    lys = ob.data.uv_layers
+    fica = next((l.name for l in lys if l.active_render), lys[0].name)
+    for nome in [l.name for l in lys if l.name != fica]:
+        lys.remove(lys[nome])
+    lys[fica].name = "UVMap"; lys.active = lys["UVMap"]; lys["UVMap"].active_render = True
+
 for ob in scene.objects:
     if ob.type == "MESH" and ob.name != "Cobogo_Placa" and not ob.get("uv_proprio"):     # modelos importados mantem a UV deles
         box_uv(ob)
