@@ -293,7 +293,7 @@ def box_uv(ob):
     mats = me.materials
     for f in bm.faces:
         mn = mats[f.material_index].name if f.material_index < len(mats) and mats[f.material_index] else ""
-        if mn in UV_NATIVE and had:
+        if (mn in UV_NATIVE or mn.startswith("Carro_UV_")) and had:      # carro da rua (modelo pronto): mantem a UV
             continue
         t = MAT_TILE.get(mn, 1.0)
         n = f.normal; ax = max(range(3), key=lambda i: abs(n[i]))

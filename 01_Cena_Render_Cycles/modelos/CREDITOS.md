@@ -1,0 +1,3 @@
+# Creditos de modelos
+
+- `carros/hatch.glb` (carro da rua): This work is based on "Generic passenger car pack" (https://sketchfab.com/3d-models/generic-passenger-car-pack-20f9af9b8a404d5cb022ac6fe87f21f5) by Comrade1280 (https://sketchfab.com/comrade1280) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
