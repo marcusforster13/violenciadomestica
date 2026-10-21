@@ -1,7 +1,7 @@
 A CASA EM SILENCIO - VERSAO VR OTIMIZADA
 
 ANTES (cena de render): ~920.000 tris de geometria + ~15.000.000 tris de grama instanciada
-DEPOIS: 355783 tris | 135 malhas | 323 slots de material (~draw calls) | 46 luzes
+DEPOIS: 365463 tris | 135 malhas | 323 slots de material (~draw calls) | 46 luzes
 
 Triangulos por colecao:
   07c_Grama_Vegetacao                   81790
@@ -9,10 +9,10 @@ Triangulos por colecao:
   07b_Casas_Vizinhas                    51612
   08_Vestigios                          42564
   02_Sala                               32568
+  03_Jantar                             22436
   04_Cozinha                            18344
   06_Jardim                             17956
   10b_Carros_Moradores                  15415
-  03_Jantar                             12756
   07d_Postes_Fiacao                     10088
   10_Viatura_PMERJ                       8966
   01_Estrutura                           5094

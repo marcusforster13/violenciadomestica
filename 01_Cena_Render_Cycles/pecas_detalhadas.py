@@ -199,19 +199,77 @@ def contorno_garfo():
 
 FACA = [(-.006, -.1), (.006, -.1), (.0072, -.095), (.0072, -.006), (.0052, .0), (.0066, .07), (.0058, .095), (.003, .107),
         (0, .11), (-.0085, .104), (-.0092, .09), (-.0092, .002), (-.0072, -.006), (-.0072, -.095)]
+# talheres modelados pelo usuario: se existirem modelos/talher_garfo.glb e modelos/talher_faca.glb, entram no lugar
+# dos de contorno (deitados, mesma posicao, ~20 cm, aco escovado, simplificados para o Quest)
+import os
+PASTA_MOD = os.path.join(os.path.dirname(bpy.data.filepath), "modelos")
+MAX_TRIS_TALHER = 2500
+
+def malha_glb(arquivo, nome, comprimento, ponta):
+    """Importa o .glb e devolve a malha: eixo maior -> Y (cabo em -Y), mais fino -> Z (deitado), centrada.
+    ponta="larga": a ponta mais larga vai para +Y (dentes do garfo); "fina": a ponta mais fina vai para +Y (lamina)."""
+    caminho = os.path.join(PASTA_MOD, arquivo)
+    if not os.path.exists(caminho):
+        return None
+    antes = set(bpy.data.objects)
+    bpy.ops.import_scene.gltf(filepath=caminho)
+    novos = [o for o in bpy.data.objects if o not in antes]
+    bpy.context.view_layer.update()
+    fonte = next(o for o in novos if o.type == "MESH")
+    vs = [fonte.matrix_world @ v.co for v in fonte.data.vertices]
+    ext = [max(v[i] for v in vs) - min(v[i] for v in vs) for i in range(3)]
+    eixo_y, eixo_x, eixo_z = sorted(range(3), key=lambda i: -ext[i])          # maior, medio, menor
+    R = Matrix.Identity(3)
+    for linha, eixo in enumerate((eixo_x, eixo_y, eixo_z)):
+        R[linha] = Vector([1.0 if j == eixo else 0.0 for j in range(3)])
+    p = [R @ v for v in vs]
+    y0, y1 = min(v.y for v in p), max(v.y for v in p)
+    def faixa(a, b, idx):                 # extensao no eixo idx dos vertices com y entre a e b
+        sel = [v[idx] for v in p if a <= v.y <= b]
+        return max(sel) - min(sel) if sel else 0
+    L = y1 - y0
+    topo_x, base_x = faixa(y1 - .15 * L, y1, 0), faixa(y0, y0 + .15 * L, 0)
+    topo_z, base_z = faixa(y1 - .15 * L, y1, 2), faixa(y0, y0 + .15 * L, 2)
+    virar = (topo_x < base_x) if ponta == "larga" else (topo_z > base_z)
+    if virar:
+        R = Matrix.Rotation(math.pi, 3, "X") @ R                         # gira 180 graus (nao espelha)
+    if R.determinant() < 0:
+        R = Matrix.Diagonal((-1, 1, 1)) @ R
+    s = comprimento / L
+    M4 = Matrix.Scale(s, 4) @ R.to_4x4() @ fonte.matrix_world
+    me = fonte.data.copy(); me.name = nome
+    me.transform(M4)
+    c = [(min(v.co[i] for v in me.vertices) + max(v.co[i] for v in me.vertices)) / 2 for i in range(3)]
+    me.transform(Matrix.Translation((-c[0], -c[1] - .005, -c[2])))      # mesmo centro do talher antigo (y -0,10..0,11)
+    tris = sum(len(pl.vertices) - 2 for pl in me.polygons)
+    if tris > MAX_TRIS_TALHER:                                           # simplifica para o Quest
+        tmp = bpy.data.objects.new("_tmp_talher", me); bpy.context.scene.collection.objects.link(tmp)
+        d = tmp.modifiers.new("Simplificar", "DECIMATE"); d.ratio = MAX_TRIS_TALHER / tris
+        dg = bpy.context.evaluated_depsgraph_get()
+        me2 = bpy.data.meshes.new_from_object(tmp.evaluated_get(dg)); me2.name = nome
+        bpy.data.objects.remove(tmp, do_unlink=True); bpy.data.meshes.remove(me)
+        me = me2
+    me.materials.clear()
+    for pl in me.polygons:
+        pl.use_smooth = True
+    for o in novos:
+        bpy.data.objects.remove(o, do_unlink=True)
+    return me
+
 for i in (1, 2):
     ob = bpy.data.objects.get("Garfo_%d" % i)
     if not ob:
         continue
     for c in list(ob.children):
         bpy.data.objects.remove(c, do_unlink=True)
-    trocar(ob, chapa(ob.name, contorno_garfo(), .0028))
+    trocar(ob, malha_glb("talher_garfo.glb", ob.name, .20, "larga") or chapa(ob.name, contorno_garfo(), .0028))
     ob.data.materials.clear(); ob.data.materials.append(M_TALHER)
     nome_faca = "Faca_Mesa_%d" % i
     velho = bpy.data.objects.get(nome_faca)
     if velho:
         bpy.data.objects.remove(velho, do_unlink=True)
-    fme = chapa(nome_faca, FACA, .0024); fme.materials.append(M_TALHER)
+    fme = malha_glb("talher_faca.glb", nome_faca, .21, "fina") or chapa(nome_faca, FACA, .0024)
+    fme.materials.append(M_TALHER)
     fo = bpy.data.objects.new(nome_faca, fme)
     for c in ob.users_collection:
         c.objects.link(fo)
