@@ -278,6 +278,194 @@ for i in (1, 2):
     fo["detalhado"] = True
     feitos += [ob.name, nome_faca]
 
+# ---------------- prato feito: bife e batata frita (modelos/comida.glb do usuario)
+# comida.glb traz o bife (malha achatada) e uma batata (palito). O bife recebe a textura da vista de cima de
+# modelos/bife_referencia.png; a batata, uma textura dourada gerada aqui. Em cada prato: arroz e feijao atras,
+# bife na frente a esquerda e ~10 batatas espalhadas na frente a direita (de quem esta sentado, em -Y).
+import random
+import numpy as np
+COMIDA = os.path.join(PASTA_MOD, "comida.glb")
+
+def alinhar(me, comprimento):
+    """Eixo principal (PCA) -> X, eixo mais fino -> Z; escala pelo comprimento; centrado em XY com a base em z=0."""
+    co = np.array([v.co[:] for v in me.vertices]); co -= co.mean(0)
+    w, V = np.linalg.eigh(np.cov(co.T))
+    R = V[:, ::-1].T                                     # linhas: maior, medio, menor variancia
+    if np.linalg.det(R) < 0:
+        R[1] *= -1
+    me.transform(Matrix.Translation(-Vector(np.array([v.co[:] for v in me.vertices]).mean(0))))
+    me.transform(Matrix([list(R[0]) + [0], list(R[1]) + [0], list(R[2]) + [0], [0, 0, 0, 1]]))
+    xs = [v.co.x for v in me.vertices]
+    me.transform(Matrix.Scale(comprimento / (max(xs) - min(xs)), 4))
+    c = [(min(v.co[i] for v in me.vertices) + max(v.co[i] for v in me.vertices)) / 2 for i in range(2)]
+    me.transform(Matrix.Translation((-c[0], -c[1], -min(v.co.z for v in me.vertices))))
+    return me
+
+F_LADO = .22                                             # faixa de baixo do atlas do bife = vista lateral
+
+def textura_bife():
+    """Atlas do bife a partir da referencia: em cima (v de F_LADO a 1) a vista de cima (metade esquerda da imagem),
+    embaixo (v de 0 a F_LADO) a vista lateral (metade direita). Devolve (imagem, mascara da carne na vista de cima)."""
+    img = bpy.data.images.get("Bife_Grelhado_Cor")
+    if img:
+        bpy.data.images.remove(img)
+    ref = bpy.data.images.load(os.path.join(PASTA_MOD, "bife_referencia.png"))
+    W, H = ref.size
+    px4 = np.array(ref.pixels[:], np.float32).reshape(H, W, 4)
+    def recorte(x0, x1):                                  # fundo branco ou transparente fora; borda = cor media
+        p = px4[:, x0:x1]
+        carne = (p[..., :3].min(-1) < .82) & (p[..., 3] > .5)
+        ys, xs = np.where(carne)
+        rec = p[ys.min():ys.max() + 1, xs.min():xs.max() + 1, :3].copy()
+        mk = carne[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+        rec[~mk] = rec[mk].mean(0)
+        return rec, mk
+    def redim(a, h, w):                                   # vizinho mais proximo
+        return a[(np.arange(h) * a.shape[0] // h)[:, None], (np.arange(w) * a.shape[1] // w)[None, :]]
+    cima, mk = recorte(0, W // 2)
+    lado, mk_lado = recorte(W // 2, W)
+    lado = lado[mk_lado.any(1)]                           # so as linhas com carne
+    S = 1024; hl = int(S * F_LADO)
+    atlas = np.ones((S, S, 4), np.float32)
+    atlas[:hl, :, :3] = redim(lado, hl, S)
+    atlas[hl:, :, :3] = redim(cima, S - hl, S)
+    img = bpy.data.images.new("Bife_Grelhado_Cor", S, S, alpha=False)
+    img.pixels.foreach_set(atlas.ravel()); img.scale(512, 512); img.pack()
+    bpy.data.images.remove(ref)
+    return img, mk
+
+def uv_como_modelado(me, mk):
+    """O bife foi modelado sobre a vista de cima da referencia: a silhueta da malha no plano dos 2 eixos maiores
+    e a mesma da imagem. Faces de cima/baixo: projecao nesse plano (bbox da malha -> recorte da vista de cima), com o
+    espelhamento/troca de eixos em que os vertices caem dentro da carne. Faces da borda: vista lateral (u = mesma
+    posicao horizontal, v = altura no eixo fino)."""
+    co = np.array([v.co[:] for v in me.vertices])
+    ext = co.max(0) - co.min(0); a, b, c = sorted(range(3), key=lambda i: -ext[i])
+    n = (co - co.min(0)) / np.maximum(ext, 1e-9)
+    h, w = mk.shape; melhor = None
+    for troca in (False, True):
+        for fu in (False, True):
+            for fv in (False, True):
+                u = n[:, b if troca else a]; v = n[:, a if troca else b]
+                u = 1 - u if fu else u; v = 1 - v if fv else v
+                dentro = mk[np.clip((v * (h - 1)).round().astype(int), 0, h - 1), np.clip((u * (w - 1)).round().astype(int), 0, w - 1)].mean()
+                if melhor is None or dentro > melhor[0]:
+                    melhor = (dentro, u.copy(), v.copy())
+    _, U, V = melhor
+    uv = me.uv_layers.get("UVMap") or me.uv_layers.new(name="UVMap")
+    lados = 0
+    for pl in me.polygons:
+        borda = abs(pl.normal[c]) < .5                    # normal quase paralela ao plano da silhueta
+        lados += borda
+        for li in pl.loop_indices:
+            vi = me.loops[li].vertex_index
+            uv.data[li].uv = (float(U[vi]), float(n[vi, c]) * F_LADO * .98 + .002) if borda else (float(U[vi]), F_LADO + float(V[vi]) * (1 - F_LADO))
+    print("[DETALHE] textura do bife: %.0f%% dos vertices dentro da carne; %d faces da borda com a vista lateral" % (melhor[0] * 100, lados))
+
+def textura_batata(enc):
+    """Recorte da batata da referencia em que a malha foi modelada (modelos/batata_encaixe.json); fundo -> cor media."""
+    img = bpy.data.images.get("Batata_Frita_Cor")
+    if img:
+        bpy.data.images.remove(img)
+    ref = bpy.data.images.load(os.path.join(PASTA_MOD, enc["imagem"]))
+    W, H = ref.size
+    px4 = np.array(ref.pixels[:], np.float32).reshape(H, W, 4)
+    x, y, w, h = enc["x"], enc["y"], enc["w"], enc["h"]
+    rec = px4[y:y + h, x:x + w].copy()
+    r, g, b = rec[..., 0], rec[..., 1], rec[..., 2]
+    frita = (r > .75) & (g > .5) & (b < .55) & (r - b > .3) & (rec[..., 3] > .5)
+    rec[~frita, :3] = rec[frita, :3].mean(0); rec[..., 3] = 1
+    img = bpy.data.images.new("Batata_Frita_Cor", w, h, alpha=False)
+    img.pixels.foreach_set(rec.ravel()); img.scale(256, 256); img.pack()
+    bpy.data.images.remove(ref)
+    return img
+
+def uv_batata(me, enc):
+    """Mesma projecao do encaixe: plano (a, b) -> pixels do recorte."""
+    co = np.array([v.co[:] for v in me.vertices])[:, [enc["a"], enc["b"]]]
+    if enc["troca"]:
+        co = co[:, ::-1]
+    Q = co * np.array([enc["fu"], enc["fv"]]) * enc["s"] - np.array(enc["min"])
+    uv = me.uv_layers.get("UVMap") or me.uv_layers.new(name="UVMap")
+    for l in me.loops:
+        q = Q[l.vertex_index]
+        uv.data[l.index].uv = (float(q[0] / enc["w"]), float(q[1] / enc["h"]))
+
+def mat_imagem(nome, img, rough):
+    m = bpy.data.materials.get(nome) or bpy.data.materials.new(nome)
+    nt = m.node_tree; b = nt.nodes.get("Principled BSDF")
+    for n in [n for n in nt.nodes if n.type == "TEX_IMAGE"]:
+        nt.nodes.remove(n)
+    t = nt.nodes.new("ShaderNodeTexImage"); t.image = img
+    nt.links.new(t.outputs["Color"], b.inputs["Base Color"])
+    b.inputs["Roughness"].default_value = rough
+    m.diffuse_color = (*[img.pixels[i] for i in (0, 1, 2)], 1)
+    return m
+
+for o in [o for o in bpy.data.objects if o.name.startswith(("Bife_Prato_", "Batatas_Prato_"))]:
+    bpy.data.objects.remove(o, do_unlink=True)
+if os.path.exists(COMIDA):
+    antes = set(bpy.data.objects)
+    bpy.ops.import_scene.gltf(filepath=COMIDA)
+    novos = [o for o in bpy.data.objects if o not in antes]
+    bpy.context.view_layer.update()
+    malhas = sorted((o for o in novos if o.type == "MESH"), key=lambda o: -len(o.data.polygons))
+    def copia_mundo(o):
+        me = o.data.copy(); me.transform(o.matrix_world); return me
+    img_bife, mk_bife = textura_bife()
+    me_bife = copia_mundo(malhas[0])                     # o maior e o bife
+    uv_como_modelado(me_bife, mk_bife)                   # a textura e projetada no plano em que o bife foi modelado
+    me_bife = alinhar(me_bife, .12)                      # ~12 x 8 cm, deitado
+    import json
+    enc_bat = json.load(open(os.path.join(PASTA_MOD, "batata_encaixe.json")))
+    me_bat = copia_mundo(malhas[1])
+    uv_batata(me_bat, enc_bat)                           # textura da batata em que ela foi modelada
+    me_bat = alinhar(me_bat, 1.0)                        # palito com comprimento 1, escalado em cada batata
+    for o in novos:
+        bpy.data.objects.remove(o, do_unlink=True)
+    M_BIFE = mat_imagem("Bife_Grelhado", img_bife, .55)
+    M_BATATA = mat_imagem("Batata_Frita", textura_batata(enc_bat), .6)
+    me_bife.materials.clear(); me_bife.materials.append(M_BIFE)
+    for p in me_bife.polygons:
+        p.use_smooth = True
+    for i in (1, 2):
+        prato = bpy.data.objects.get("Prato_%d" % i)
+        if not prato:
+            continue
+        P = prato.location
+        piso = P.z - .0003                                  # fundo do prato
+        rr = random.Random(40 + i)
+        # arroz e feijao para tras, um pouco menores
+        for nome, dx, dy, esc in (("Arroz_%d" % i, -.03, .042, .72), ("Feijao_%d" % i, .045, .04, .78)):
+            a = bpy.data.objects.get(nome)
+            if a:
+                a.location = (P.x + dx, P.y + dy, a.location.z); a.scale = (esc, esc, 1)
+        bife = bpy.data.objects.new("Bife_Prato_%d" % i, me_bife if i == 1 else me_bife.copy())
+        for c in prato.users_collection: c.objects.link(bife)
+        bife.parent = prato.parent; bife.matrix_parent_inverse = prato.matrix_parent_inverse.copy()
+        bife.location = (P.x - .035, P.y - .032, piso); bife.rotation_euler = (0, 0, rr.uniform(.35, .6))
+        bife["detalhado"] = True
+        # batatas: um monte espalhado, umas por cima das outras
+        LY = max(v.co.y for v in me_bat.vertices) - min(v.co.y for v in me_bat.vertices)     # grossura do palito original
+        LZ = max(v.co.z for v in me_bat.vertices) - min(v.co.z for v in me_bat.vertices)
+        bm = bmesh.new()
+        for k in range(13):
+            L = rr.uniform(.045, .068); g = rr.uniform(.0065, .0085)
+            cam = 0 if k < 6 else (1 if k < 10 else 2)
+            T = (Matrix.Translation((.05 + rr.uniform(-.026, .022), -.035 + rr.uniform(-.03, .03), cam * .0068))
+                 @ Matrix.Rotation(rr.uniform(-.12, .12), 4, "X") @ Matrix.Rotation(rr.uniform(0, math.pi), 4, "Z")
+                 @ Matrix.Diagonal((L, g / LY, g / LZ, 1)))
+            tmp = me_bat.copy(); tmp.transform(T); bm.from_mesh(tmp); bpy.data.meshes.remove(tmp)
+        me = bpy.data.meshes.new("Batatas_Prato_%d" % i); bm.to_mesh(me); bm.free()
+        me.materials.append(M_BATATA)
+        for p in me.polygons:
+            p.use_smooth = True
+        bat = bpy.data.objects.new("Batatas_Prato_%d" % i, me)
+        for c in prato.users_collection: c.objects.link(bat)
+        bat.parent = prato.parent; bat.matrix_parent_inverse = prato.matrix_parent_inverse.copy()
+        bat.location = (P.x, P.y, piso); bat["detalhado"] = True
+        feitos += [bife.name, bat.name]
+
 print("[DETALHE] %d pecas remodeladas: %s" % (len(feitos), ", ".join(feitos)))
 if bpy.app.background:
     bpy.ops.wm.save_mainfile()

@@ -1,5 +1,5 @@
 {
- "gerado_em": "2026-10-21 11:46",
+ "gerado_em": "2026-10-21 12:33",
  "qualidade": "padrao",
  "lightmaps": {
   "01_Estrutura_Estatico": {
@@ -20,7 +20,7 @@
   },
   "03_Jantar_Estatico": {
    "lm": "lightmaps/LM_03_Jantar.png",
-   "max": 0.4634
+   "max": 0.46401
   },
   "04_Cozinha_Estatico": {
    "lm": "lightmaps/LM_04_Cozinha.png",

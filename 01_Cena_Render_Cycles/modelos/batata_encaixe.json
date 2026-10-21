@@ -1,0 +1,18 @@
+{
+ "a": 1,
+ "b": 2,
+ "troca": false,
+ "fu": 1,
+ "fv": 1,
+ "s": 355.81178067067594,
+ "x": 420,
+ "y": 142,
+ "min": [
+  -651.4774398784213,
+  163.0170091282927
+ ],
+ "w": 170,
+ "h": 135,
+ "imagem": "prato_referencia.png",
+ "obs": "encaixe da batata de comida.glb na vista de cima de prato_referencia.png (silhueta da malha comparada com a imagem)"
+}
