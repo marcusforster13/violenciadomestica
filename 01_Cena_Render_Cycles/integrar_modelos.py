@@ -15,7 +15,7 @@ O que o script faz:
   - religa materiais pelo nome (ex.: "Madeira_Freijo.001" -> "Madeira_Freijo"), entao as texturas CC0 da cena valem
   - so reintegra se o .glb mudou (guarda a data do arquivo no proprio .blend)
 """
-import bpy, os, json, time, shutil, re
+import bpy, os, json, time, shutil, re, math
 from mathutils import Matrix
 
 try:
@@ -105,8 +105,13 @@ else:
             for pl in alvo.data.polygons:
                 pl.use_smooth = True
             alvo.name = alvo.data.name = nomes[0]
+            alvo.rotation_mode = "XYZ"              # o glTF importa em quaternion: sem isso o giro e ignorado
             if lugar:
                 alvo.location = lugar[0]; alvo.rotation_euler = (0, 0, lugar[1])
+            if "posicao" in info:                   # posicao/giro explicitos (ex.: encostar na parede)
+                alvo.location = info["posicao"]
+            if "giro_z" in info:
+                alvo.rotation_euler = (0, 0, math.radians(info["giro_z"]))
             alvo["detalhado"] = True                # suavizar_objetos.py nao subdivide
             novos = [alvo]
             say("%s: %d -> %d triangulos" % (arq, tris, sum(len(pl.vertices) - 2 for pl in alvo.data.polygons)))

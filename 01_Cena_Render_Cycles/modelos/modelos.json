@@ -1,5 +1,6 @@
 {
   "livros3.glb": {"substitui": "Estante", "colecao": "02_Sala"},
   "malacerta.glb": {"substitui": ["V_Mala_Base", "V_Mala_Tampa_Dobradica", "V_Mala_Nova"], "colecao": "08_Vestigios"},
-  "hidrante.glb": {"substitui": "Hidrante", "colecao": "07_Rua_Condominio", "no_lugar": true, "max_tris": 5000}
+  "hidrante.glb": {"substitui": "Hidrante", "colecao": "07_Rua_Condominio", "no_lugar": true, "max_tris": 5000},
+  "ar_condicionado.glb": {"substitui": ["Ar_Condicionado", "Ar_Condicionado_Suporte", "Ar_Condicionado_Suporte.001", "Ar_Condicionado_Ventilador"], "colecao": "01_Estrutura", "no_lugar": true, "max_tris": 6000, "posicao": [6.44, 1.483, 1.96], "giro_z": 90}
 }
