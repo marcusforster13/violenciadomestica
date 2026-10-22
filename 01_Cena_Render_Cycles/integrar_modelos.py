@@ -16,7 +16,7 @@ O que o script faz:
   - so reintegra se o .glb mudou (guarda a data do arquivo no proprio .blend)
 """
 import bpy, os, json, time, shutil, re, math
-from mathutils import Matrix
+from mathutils import Matrix, Vector
 
 try:
     AQUI = os.path.dirname(os.path.abspath(__file__))
@@ -62,6 +62,12 @@ else:
     for arq, caminho, mtime, info in pendentes:
         nomes = info["substitui"] if isinstance(info["substitui"], list) else [info["substitui"]]
         lugar = None
+        copias = []                                 # "copias_em": base (x, y, z do chao) de cada objeto antigo listado
+        for nome in info.get("copias_em", []):
+            o = bpy.data.objects.get(nome)
+            if o:
+                pts = [o.matrix_world @ Vector(c) for c in o.bound_box]
+                copias.append((nome, Vector((o.matrix_world.translation.x, o.matrix_world.translation.y, min(p.z for p in pts)))))
         for nome in nomes:                          # aceita um nome ou uma lista de nomes
             alvo = bpy.data.objects.get(nome)
             if alvo:
@@ -117,7 +123,19 @@ else:
             if any(n.type == "TEX_IMAGE" for sl in alvo.material_slots if sl.material and sl.material.node_tree for n in sl.material.node_tree.nodes):
                 alvo["uv_proprio"] = True           # tem textura: a versao VR nao refaz a UV
             novos = [alvo]
-            say("%s: %d -> %d triangulos" % (arq, tris, sum(len(pl.vertices) - 2 for pl in alvo.data.polygons)))
+            for k, (nome_c, pos) in enumerate(copias):          # uma copia (mesma malha) em cada lugar antigo
+                ob = alvo if k == 0 else alvo.copy()
+                if k:
+                    col.objects.link(ob)
+                ob.location = pos; ob.name = nome_c
+                if k: novos.append(ob)
+            say("%s: %d -> %d triangulos%s" % (arq, tris, sum(len(pl.vertices) - 2 for pl in alvo.data.polygons),
+                                              (" (x %d copias)" % len(copias)) if copias else ""))
+        if "luzes" in info:                         # luzes do objeto antigo: nova altura e sem sombra (nao ficam presas no modelo)
+            for nome in info["luzes"]["nomes"]:
+                l = bpy.data.objects.get(nome)
+                if l and l.type == "LIGHT":
+                    l.location.z = info["luzes"]["z"]; l.data.use_shadow = False
         for m in [m for m in bpy.data.materials if m.users == 0 and m not in mats_antes]:
             bpy.data.materials.remove(m)
         estado[arq] = mtime
