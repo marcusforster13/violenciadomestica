@@ -16,6 +16,7 @@ O que o script faz:
   - so reintegra se o .glb mudou (guarda a data do arquivo no proprio .blend)
 """
 import bpy, os, json, time, shutil, re
+from mathutils import Matrix
 
 try:
     AQUI = os.path.dirname(os.path.abspath(__file__))
@@ -60,9 +61,12 @@ else:
 
     for arq, caminho, mtime, info in pendentes:
         nomes = info["substitui"] if isinstance(info["substitui"], list) else [info["substitui"]]
+        lugar = None
         for nome in nomes:                          # aceita um nome ou uma lista de nomes
             alvo = bpy.data.objects.get(nome)
             if alvo:
+                if lugar is None:                   # para "no_lugar": posicao e giro do objeto antigo
+                    lugar = (alvo.matrix_world.translation.copy(), alvo.matrix_world.to_euler().z)
                 apagar_hierarquia(alvo)
         antes = set(bpy.data.objects)
         mats_antes = set(bpy.data.materials)
@@ -81,6 +85,31 @@ else:
                     existente = bpy.data.materials.get(base(m.name))
                     if existente and existente not in (m,) and existente in mats_antes:
                         slot.material = existente; religados += 1
+        if info.get("no_lugar"):
+            # modelo feito na origem (base no chao): vira 1 objeto, no lugar do antigo, simplificado se precisar
+            malhas = [o for o in novos if o.type == "MESH"]
+            for o in malhas:
+                o.data = o.data.copy(); o.data.transform(o.matrix_world); o.parent = None; o.matrix_world = Matrix.Identity(4)
+            for o in [o for o in novos if o.type != "MESH"]:
+                bpy.data.objects.remove(o, do_unlink=True)
+            alvo = malhas[0]
+            with bpy.context.temp_override(active_object=alvo, selected_objects=malhas, selected_editable_objects=malhas):
+                bpy.ops.object.join()
+            tris = sum(len(pl.vertices) - 2 for pl in alvo.data.polygons)
+            limite = info.get("max_tris")
+            if limite and tris > limite:
+                d = alvo.modifiers.new("Simplificar", "DECIMATE"); d.ratio = limite / tris; d.use_collapse_triangulate = True
+                dg = bpy.context.evaluated_depsgraph_get()
+                me = bpy.data.meshes.new_from_object(alvo.evaluated_get(dg))
+                alvo.modifiers.remove(d); velho = alvo.data; alvo.data = me; bpy.data.meshes.remove(velho)
+            for pl in alvo.data.polygons:
+                pl.use_smooth = True
+            alvo.name = alvo.data.name = nomes[0]
+            if lugar:
+                alvo.location = lugar[0]; alvo.rotation_euler = (0, 0, lugar[1])
+            alvo["detalhado"] = True                # suavizar_objetos.py nao subdivide
+            novos = [alvo]
+            say("%s: %d -> %d triangulos" % (arq, tris, sum(len(pl.vertices) - 2 for pl in alvo.data.polygons)))
         for m in [m for m in bpy.data.materials if m.users == 0 and m not in mats_antes]:
             bpy.data.materials.remove(m)
         estado[arq] = mtime

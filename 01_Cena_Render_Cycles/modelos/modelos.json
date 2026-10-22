@@ -1,4 +1,5 @@
 {
-  "livros3.glb": { "substitui": "Estante", "colecao": "02_Sala" },
-  "malacerta.glb": { "substitui": ["V_Mala_Base", "V_Mala_Tampa_Dobradica", "V_Mala_Nova"], "colecao": "08_Vestigios" }
+  "livros3.glb": {"substitui": "Estante", "colecao": "02_Sala"},
+  "malacerta.glb": {"substitui": ["V_Mala_Base", "V_Mala_Tampa_Dobradica", "V_Mala_Nova"], "colecao": "08_Vestigios"},
+  "hidrante.glb": {"substitui": "Hidrante", "colecao": "07_Rua_Condominio", "no_lugar": true, "max_tris": 5000}
 }
