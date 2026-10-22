@@ -2,5 +2,7 @@
   "livros3.glb": {"substitui": "Estante", "colecao": "02_Sala"},
   "malacerta.glb": {"substitui": ["V_Mala_Base", "V_Mala_Tampa_Dobradica", "V_Mala_Nova"], "colecao": "08_Vestigios"},
   "hidrante.glb": {"substitui": "Hidrante", "colecao": "07_Rua_Condominio", "no_lugar": true, "max_tris": 5000},
-  "ar_condicionado.glb": {"substitui": ["Ar_Condicionado", "Ar_Condicionado_Suporte", "Ar_Condicionado_Suporte.001", "Ar_Condicionado_Ventilador"], "colecao": "01_Estrutura", "no_lugar": true, "max_tris": 6000, "posicao": [6.44, 1.483, 1.96], "giro_z": 90}
+  "ar_condicionado.glb": {"substitui": ["Ar_Condicionado", "Ar_Condicionado_Suporte", "Ar_Condicionado_Suporte.001", "Ar_Condicionado_Ventilador"], "colecao": "01_Estrutura", "no_lugar": true, "max_tris": 6000, "posicao": [6.44, 1.483, 1.96], "giro_z": 90},
+  "livros_chao.glb": {"substitui": ["V_Livro_Caido_1", "V_Livro_Caido_2", "V_Livro_Caido_3", "V_Livro_Caido_4"], "colecao": "08_Vestigios"},
+  "roupas_mala.glb": {"substitui": ["V_Roupa_1", "V_Roupa_2", "V_Roupa_3", "V_Roupa_4", "V_Roupa_5", "V_Roupa_6", "V_Roupa_7"], "colecao": "08_Vestigios", "juntar": true, "max_tris": 8000}
 }

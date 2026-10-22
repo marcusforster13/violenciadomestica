@@ -85,8 +85,9 @@ else:
                     existente = bpy.data.materials.get(base(m.name))
                     if existente and existente not in (m,) and existente in mats_antes:
                         slot.material = existente; religados += 1
-        if info.get("no_lugar"):
-            # modelo feito na origem (base no chao): vira 1 objeto, no lugar do antigo, simplificado se precisar
+        if info.get("no_lugar") or info.get("juntar"):
+            # "no_lugar": modelo feito na origem (base no chao) vai para o lugar do antigo; "juntar": ja esta no lugar.
+            # Nos dois casos vira 1 objeto, simplificado se precisar
             malhas = [o for o in novos if o.type == "MESH"]
             for o in malhas:
                 o.data = o.data.copy(); o.data.transform(o.matrix_world); o.parent = None; o.matrix_world = Matrix.Identity(4)
@@ -106,13 +107,15 @@ else:
                 pl.use_smooth = True
             alvo.name = alvo.data.name = nomes[0]
             alvo.rotation_mode = "XYZ"              # o glTF importa em quaternion: sem isso o giro e ignorado
-            if lugar:
+            if lugar and info.get("no_lugar"):
                 alvo.location = lugar[0]; alvo.rotation_euler = (0, 0, lugar[1])
             if "posicao" in info:                   # posicao/giro explicitos (ex.: encostar na parede)
                 alvo.location = info["posicao"]
             if "giro_z" in info:
                 alvo.rotation_euler = (0, 0, math.radians(info["giro_z"]))
             alvo["detalhado"] = True                # suavizar_objetos.py nao subdivide
+            if any(n.type == "TEX_IMAGE" for sl in alvo.material_slots if sl.material and sl.material.node_tree for n in sl.material.node_tree.nodes):
+                alvo["uv_proprio"] = True           # tem textura: a versao VR nao refaz a UV
             novos = [alvo]
             say("%s: %d -> %d triangulos" % (arq, tris, sum(len(pl.vertices) - 2 for pl in alvo.data.polygons)))
         for m in [m for m in bpy.data.materials if m.users == 0 and m not in mats_antes]:

@@ -466,6 +466,29 @@ if os.path.exists(COMIDA):
         bat.location = (P.x, P.y, piso); bat["detalhado"] = True
         feitos += [bife.name, bat.name]
 
+# ---------------- livros caidos no chao: copias de livros da estante (modelos/livros3.glb), deitados e sem se cruzar
+# (centros a mais de 0,42 m = diagonal de um livro, entao nenhum gira por cima do outro)
+DE_ESTANTE = ["Livro.002", "Livro.011", "Livro.017", "Livro.005"]       # capas de cores diferentes
+CAIDOS = [((-4.95, 2.32), 1.4), ((-5.32, 2.55), 2.75), ((-5.18, 1.95), 1.95), ((-4.62, 2.05), .55)]
+for i, (nome_fonte, ((x, y), giro)) in enumerate(zip(DE_ESTANTE, CAIDOS)):
+    ob = bpy.data.objects.get("V_Livro_Caido_%d" % (i + 1)); fonte = bpy.data.objects.get(nome_fonte)
+    if not (ob and fonte) or ob.get("modelo_usuario"):     # livros remodelados pelo usuario ficam como estao
+        continue
+    me = fonte.data.copy(); me.name = ob.name
+    me.transform(Matrix.Diagonal((*fonte.scale, 1)))
+    me.transform(Matrix.Rotation(math.pi / 2, 4, "Y"))           # lombada deitada: a espessura vira a altura
+    c = [(min(v.co[k] for v in me.vertices) + max(v.co[k] for v in me.vertices)) / 2 for k in range(2)]
+    me.transform(Matrix.Translation((-c[0], -c[1], -min(v.co.z for v in me.vertices))))
+    velho = ob.data; ob.data = me
+    if velho.users == 0:
+        bpy.data.meshes.remove(velho)
+    for md in list(ob.modifiers):
+        ob.modifiers.remove(md)
+    ob.parent = None; ob.rotation_mode = "XYZ"
+    ob.location = (x, y, .001); ob.rotation_euler = (0, 0, giro); ob.scale = (1, 1, 1)
+    ob["detalhado"] = True
+    feitos.append(ob.name)
+
 print("[DETALHE] %d pecas remodeladas: %s" % (len(feitos), ", ".join(feitos)))
 if bpy.app.background:
     bpy.ops.wm.save_mainfile()
