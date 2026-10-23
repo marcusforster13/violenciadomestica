@@ -121,9 +121,16 @@ YF = -P / 2 + E / 2                      # parede da frente (rua, -Y)
 JX, JZ0, JZ1 = 1.3, 1.05, 2.15           # vao da janela: x -1,3..1,3 / z 1,05..2,15
 caixa("GuaritaC_Frente_Baixo", (L, E, JZ0), (0, YF, JZ0 / 2), M["parede"])
 caixa("GuaritaC_Frente_Cima", (L, E, H - JZ1), (0, YF, (JZ1 + H) / 2), M["parede"])
+# porta na parede leste: vao entre o balcao da janela (y < -0,76) e a mesa do operador (y > 0,42), livre dos dois lados
+PY0, PY1, PZ = -.72, .18, 2.08          # vao da porta: y -0,72..0,18 / z 0..2,08
 for s in (-1, 1):
     caixa("GuaritaC_Frente_Lado", (L / 2 - JX, E, JZ1 - JZ0), (s * (JX + L / 2) / 2, YF, (JZ0 + JZ1) / 2), M["parede"])
-    caixa("GuaritaC_Lateral", (E, P - 2 * E, H), (s * (L / 2 - E / 2), 0, H / 2), M["parede"])
+caixa("GuaritaC_Lateral", (E, P - 2 * E, H), (-(L / 2 - E / 2), 0, H / 2), M["parede"])
+y0, y1 = -P / 2 + E, P / 2 - E
+xl_ = L / 2 - E / 2
+caixa("GuaritaC_Lateral_Porta_Sul", (E, PY0 - y0, H), (xl_, (y0 + PY0) / 2, H / 2), M["parede"])
+caixa("GuaritaC_Lateral_Porta_Norte", (E, y1 - PY1, H), (xl_, (PY1 + y1) / 2, H / 2), M["parede"])
+caixa("GuaritaC_Lateral_Porta_Verga", (E, PY1 - PY0, H - PZ), (xl_, (PY0 + PY1) / 2, (PZ + H) / 2), M["parede"])
 caixa("GuaritaC_Fundo", (L, E, H), (0, P / 2 - E / 2, H / 2), M["parede"])
 caixa("GuaritaC_Piso", (L - 2 * E, P - 2 * E, .03), (0, 0, .015), M["piso"])
 caixa("GuaritaC_Teto", (L - 2 * E, P - 2 * E, .02), (0, 0, H - .01), M["teto"])
@@ -142,10 +149,25 @@ caixa("GuaritaC_Balcao_Interno", (2.8, .42, .04), (0, YF + E / 2 + .21, JZ0 - .0
 caixa("GuaritaC_Livro_Ocorrencias", (.32, .24, .03), (-.7, YF + .3, JZ0 + .015), M["caneca"])
 caixa("GuaritaC_Interfone", (.12, .08, .2), (.95, YF + .2, JZ0 + .1), M["preto"])
 
-# porta lateral de aco (lado leste, por fora)
-caixa("GuaritaC_Porta", (.04, .9, 2.08), (L / 2 + .02, .35, 1.04), M["porta"])
-caixa("GuaritaC_Porta_Batente", (.05, 1.0, .05), (L / 2 + .02, .35, 2.1), M["aluminio"])
-cilindro("GuaritaC_Porta_Macaneta", .018, .14, (L / 2 + .07, -.02, 1.02), M["cromo"], rot=(PI / 2, 0, 0), seg=10)
+# porta lateral de aco (lado leste): folha de verdade no vao, macaneta dos dois lados, batentes por dentro e por fora.
+# A folha fica presa na dobradica (GuaritaC_Porta_Dobradica, no canto sul do vao) e abre PARA FORA (giro -90 graus):
+# o site (web/porta_guarita.js) abre e fecha com um clique / gatilho e libera a passagem quando aberta.
+xf = L / 2 - E / 2                       # meio da parede
+dob = bpy.data.objects.new("GuaritaC_Porta_Dobradica", None); C_GUA.objects.link(dob)
+dob.location = ORIG + Vector((L / 2 - .005, PY0 + .01, 0))     # eixo na face de fora, junto ao batente sul
+def peca_porta(nome, tam, loc_mundo_local, mat_, forma=caixa, **kw):
+    o = forma(nome, tam, loc_mundo_local, mat_, **kw) if forma is caixa else forma(nome, *tam, loc_mundo_local, mat_, **kw)
+    o.parent = dob; o.location = o.location - dob.location           # a dobradica nao tem giro: so desloca
+    return o
+LF = PY1 - PY0 - .02                     # largura da folha
+peca_porta("GuaritaC_Porta_Folha", (.04, LF, PZ - .02), (xf, (PY0 + PY1) / 2, (PZ - .02) / 2 + .005), M["porta"])
+for lado, dx in (("Ext", .07), ("Int", -.07)):           # macanetas perto da borda livre (lado norte)
+    peca_porta("GuaritaC_Porta_Macaneta_" + lado, (.018, .14), (xf + dx, PY1 - .12, 1.02), M["cromo"], forma=cilindro, rot=(PI / 2, 0, 0), seg=10)
+    peca_porta("GuaritaC_Porta_Espelho_" + lado, (.012, .05, .18), (xf + dx * .45, PY1 - .1, 1.02), M["cromo"])
+for lado, xb in (("Ext", L / 2 + .015), ("Int", L / 2 - E - .015)):   # batentes (guarnicoes) em volta do vao
+    caixa("GuaritaC_Porta_Batente_Topo_" + lado, (.03, PY1 - PY0 + .12, .06), (xb, (PY0 + PY1) / 2, PZ + .03), M["aluminio"])
+    for yb in (PY0 - .03, PY1 + .03):
+        caixa("GuaritaC_Porta_Batente_Lado_" + lado, (.03, .06, PZ), (xb, yb, PZ / 2), M["aluminio"])
 
 # ------------------------------------------------------------------ 2. parede de monitores (2 x 3) e mesa do operador
 YM = P / 2 - E - .05                     # face da parede do fundo, por dentro
@@ -208,11 +230,13 @@ cilindro("GuaritaC_Relogio", .14, .03, (xo, .55, 2.25), M["papel"], rot=(0, PI /
 cilindro("GuaritaC_Relogio_Aro", .155, .025, (xo - .002, .55, 2.25), M["preto"], rot=(0, PI / 2, 0), seg=24)
 caixa("GuaritaC_Relogio_Ponteiro", (.006, .01, .1), (xo + .02, .55, 2.29), M["preto"])
 caixa("GuaritaC_Relogio_Ponteiro2", (.006, .075, .01), (xo + .02, .58, 2.25), M["preto"])
-caixa("GuaritaC_Quadro_Avisos", (.02, .7, .5), (xl, .25, 1.75), M["cortica"])
+# quadro de avisos na parede oeste (a leste agora tem a porta), acima do rack e do balcao
+caixa("GuaritaC_Quadro_Avisos", (.02, .7, .5), (xo, -.75, 1.75), M["cortica"])
 for j, (dy, dz) in enumerate(((-.18, .08), (.05, .1), (.2, -.06), (-.05, -.12))):
-    caixa("GuaritaC_Aviso_Papel", (.006, .16, .2), (xl - .013, .25 + dy, 1.75 + dz), M["papel"])
-cilindro("GuaritaC_Extintor", .075, .5, (xl - .09, -.75, .45), M["extintor"], seg=16)
-cilindro("GuaritaC_Extintor_Valvula", .025, .08, (xl - .09, -.75, .74), M["preto"], seg=10)
+    caixa("GuaritaC_Aviso_Papel", (.006, .16, .2), (xo + .013, -.75 + dy, 1.75 + dz), M["papel"])
+# extintor na parede leste, entre a porta (ate y 0,18) e a mesa (a partir de y 0,42)
+cilindro("GuaritaC_Extintor", .075, .5, (xl - .09, .3, .45), M["extintor"], seg=16)
+cilindro("GuaritaC_Extintor_Valvula", .025, .08, (xl - .09, .3, .74), M["preto"], seg=10)
 
 # luz interna fria e fraca (sala de monitoramento)
 for o in [o for o in bpy.data.objects if o.name == "GuaritaC_Luz_Interna"]:

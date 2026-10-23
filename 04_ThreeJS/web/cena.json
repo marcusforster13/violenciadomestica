@@ -1,26 +1,26 @@
 {
- "gerado_em": "2026-10-23 10:36",
+ "gerado_em": "2026-10-23 11:01",
  "qualidade": "padrao",
  "lightmaps": {
   "01_Estrutura_Estatico": {
    "lm": "lightmaps/LM_01_Estrutura.png",
-   "max": 0.3772
+   "max": 0.37726
   },
   "Porta_Quarto": {
    "lm": "lightmaps/LM_01_Estrutura.png",
-   "max": 0.3772
+   "max": 0.37726
   },
   "Macaneta": {
    "lm": "lightmaps/LM_01_Estrutura.png",
-   "max": 0.3772
+   "max": 0.37726
   },
   "02_Sala_Estatico": {
    "lm": "lightmaps/LM_02_Sala.png",
-   "max": 0.65535
+   "max": 0.65557
   },
   "03_Jantar_Estatico": {
    "lm": "lightmaps/LM_03_Jantar.png",
-   "max": 2.35879
+   "max": 2.41113
   },
   "04_Cozinha_Estatico": {
    "lm": "lightmaps/LM_04_Cozinha.png",
@@ -36,55 +36,55 @@
   },
   "07_Rua_Condominio_Estatico": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 1.97207
+   "max": 1.98494
   },
   "Portao_Folha_Esq_Travessa": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 1.97207
+   "max": 1.98494
   },
   "Portao_Folha_Esq_Travessa001": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 1.97207
+   "max": 1.98494
   },
   "Portao_Folha_Esq_Travessa002": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 1.97207
+   "max": 1.98494
   },
   "Portao_Folha_Esq_Montante": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 1.97207
+   "max": 1.98494
   },
   "Portao_Folha_Esq_Montante001": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 1.97207
+   "max": 1.98494
   },
   "Portao_Folha_Esq_Barras": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 1.97207
+   "max": 1.98494
   },
   "Portao_Folha_Dir_Travessa": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 1.97207
+   "max": 1.98494
   },
   "Portao_Folha_Dir_Travessa001": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 1.97207
+   "max": 1.98494
   },
   "Portao_Folha_Dir_Travessa002": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 1.97207
+   "max": 1.98494
   },
   "Portao_Folha_Dir_Montante": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 1.97207
+   "max": 1.98494
   },
   "Portao_Folha_Dir_Montante001": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 1.97207
+   "max": 1.98494
   },
   "Portao_Folha_Dir_Barras": {
    "lm": "lightmaps/LM_07_Rua_Condominio.png",
-   "max": 1.97207
+   "max": 1.98494
   },
   "07b_Casas_Vizinhas_Estatico": {
    "lm": "lightmaps/LM_07b_Casas_Vizinhas.png",
@@ -96,7 +96,27 @@
   },
   "07e_Guarita_Estatico": {
    "lm": "lightmaps/LM_07e_Guarita.png",
-   "max": 4.80773
+   "max": 4.75759
+  },
+  "GuaritaC_Porta_Folha": {
+   "lm": "lightmaps/LM_07e_Guarita.png",
+   "max": 4.75759
+  },
+  "GuaritaC_Porta_Macaneta_Ext": {
+   "lm": "lightmaps/LM_07e_Guarita.png",
+   "max": 4.75759
+  },
+  "GuaritaC_Porta_Espelho_Ext": {
+   "lm": "lightmaps/LM_07e_Guarita.png",
+   "max": 4.75759
+  },
+  "GuaritaC_Porta_Macaneta_Int": {
+   "lm": "lightmaps/LM_07e_Guarita.png",
+   "max": 4.75759
+  },
+  "GuaritaC_Porta_Espelho_Int": {
+   "lm": "lightmaps/LM_07e_Guarita.png",
+   "max": 4.75759
   },
   "V_Cadeira_4_Pe": {
    "lm": "lightmaps/LM_08_Vestigios.png",
@@ -424,7 +444,7 @@
   },
   "10b_Carros_Moradores_Estatico": {
    "lm": "lightmaps/LM_10b_Carros_Moradores.png",
-   "max": 1.51291
+   "max": 1.5129
   }
  },
  "lightmap_ganho": 3.14159,

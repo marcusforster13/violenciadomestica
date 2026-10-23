@@ -388,7 +388,7 @@ say("Grama: %d tufos em cartoes cruzados com alfa (%d tris) no lugar de ~15 milh
 # Sai como objeto "Colisao" (colecao 99_Colisao, fora do render) e em colisao.fbx / colisao.glb.
 COL_FORA = {"07c_Grama_Vegetacao", "09_Luzes_Cameras", "12_CFTV"}
 COL_PULAR = ("Fio_", "Cabo_", "Ramal_", "Travessia_", "Forro_Ripado", "_Folhas", "_Copa", "Galhos", "Grama_Cartao",
-             "Giroflex_Lente", "Adesivo", "Placa_Texto", "Numero_", "Faixa_Central", "LED", "Cortina")
+             "Giroflex_Lente", "Adesivo", "Placa_Texto", "Numero_", "Faixa_Central", "LED", "Cortina", "GuaritaC_Porta_Folha")
 caixas = []
 for ob in scene.objects:
     if ob.type != "MESH" or not ob.users_collection:
@@ -406,7 +406,7 @@ say("Colisao: %d caixas orientadas preparadas." % len(caixas))
 
 # ------------------------------------------------------------------ 7. juntar geometria estatica por colecao
 INTERATIVO_COL = {"08_Vestigios", "10_Viatura_PMERJ", "09_Luzes_Cameras", "12_CFTV"}
-INTERATIVO_PAI = ("Porta_Quarto_Dobradica", "Portao_Folha", "Viatura_PMERJ", "V_")
+INTERATIVO_PAI = ("Porta_Quarto_Dobradica", "Portao_Folha", "Viatura_PMERJ", "V_", "GuaritaC_Porta_Dobradica")
 
 def interativo(ob):
     if any(c.name in INTERATIVO_COL for c in ob.users_collection):

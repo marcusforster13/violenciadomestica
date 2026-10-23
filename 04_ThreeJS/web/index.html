@@ -334,6 +334,7 @@ el.addEventListener('pointermove', e => { if (!drag) return; const dx = e.client
 el.addEventListener('pointerup', e => {
   if (drag && drag.m < 6) {
     ray.setFromCamera(new THREE.Vector2(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1), camera);
+    if (window.__porta?.clique(ray)) { drag = null; return; }      // porta da guarita
     if (window.__trein?.clique(ray)) { drag = null; return; }
     const h = hotspots.visible ? ray.intersectObjects(hitMeshes, false) : [];
     if (h.length) showPanel(h[0].object.userData.index); else panel.visible = false;
@@ -361,6 +362,7 @@ for (const i of [0, 1]) {
   c.addEventListener('selectstart', () => {
     mirar(c);
     window.__som?.desbloquear();                     // gatilho do Quest tambem libera o audio
+    if (window.__porta?.clique(ray)) return;          // porta da guarita
     if (window.__trein?.gatilho(ray, c)) return;
     if (window.__trein?.painelAberto()) return;      // menu aberto: gatilho fora dos botoes nao teleporta
     const h = hotspots.visible ? ray.intersectObjects(hitMeshes, false) : [];
@@ -444,6 +446,7 @@ renderer.setAnimationLoop(() => {
   window.__trein?.quadro();
   window.__som?.quadro(dt);
   window.__cftv?.quadro(t);
+  window.__porta?.quadro(dt);
   renderer.render(scene, camera);
 });
 
@@ -453,6 +456,7 @@ let somMudo = false;
 addEventListener('keydown', e => { if (e.code === 'KeyM' && window.__som) { somMudo = !somMudo; window.__som.mudo(somMudo); } });
 
 /* ---------- central de monitoramento da guarita (telas com as cameras ao vivo) ---------- */
+import('./porta_guarita.js').then(m => m.iniciarPorta({ scene, colisao: () => alvosCol })).catch(e => console.warn('Porta da guarita nao carregou:', e));
 import('./cftv.js').then(m => m.iniciarCFTV({ scene, camera, renderer, CFG })).catch(e => console.warn('CFTV não carregou:', e));
 
 /* ---------- motor do treinamento (fase 2) ---------- */
