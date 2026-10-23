@@ -67,7 +67,8 @@ else:
             o = bpy.data.objects.get(nome)
             if o:
                 pts = [o.matrix_world @ Vector(c) for c in o.bound_box]
-                copias.append((nome, Vector((o.matrix_world.translation.x, o.matrix_world.translation.y, min(p.z for p in pts)))))
+                copias.append((nome, Vector((o.matrix_world.translation.x, o.matrix_world.translation.y, min(p.z for p in pts))),
+                               o.matrix_world.to_euler().z))
         for nome in nomes:                          # aceita um nome ou uma lista de nomes
             alvo = bpy.data.objects.get(nome)
             if alvo:
@@ -123,11 +124,11 @@ else:
             if any(n.type == "TEX_IMAGE" for sl in alvo.material_slots if sl.material and sl.material.node_tree for n in sl.material.node_tree.nodes):
                 alvo["uv_proprio"] = True           # tem textura: a versao VR nao refaz a UV
             novos = [alvo]
-            for k, (nome_c, pos) in enumerate(copias):          # uma copia (mesma malha) em cada lugar antigo
+            for k, (nome_c, pos, giro) in enumerate(copias):    # uma copia (mesma malha) em cada lugar antigo, com o giro dele
                 ob = alvo if k == 0 else alvo.copy()
                 if k:
                     col.objects.link(ob)
-                ob.location = pos; ob.name = nome_c
+                ob.location = pos; ob.rotation_mode = "XYZ"; ob.rotation_euler = (0, 0, giro); ob.name = nome_c
                 if k: novos.append(ob)
             say("%s: %d -> %d triangulos%s" % (arq, tris, sum(len(pl.vertices) - 2 for pl in alvo.data.polygons),
                                               (" (x %d copias)" % len(copias)) if copias else ""))

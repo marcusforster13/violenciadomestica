@@ -1,15 +1,15 @@
 A CASA EM SILENCIO - VERSAO VR OTIMIZADA
 
 ANTES (cena de render): ~920.000 tris de geometria + ~15.000.000 tris de grama instanciada
-DEPOIS: 387017 tris | 129 malhas | 339 slots de material (~draw calls) | 46 luzes
+DEPOIS: 388220 tris | 129 malhas | 343 slots de material (~draw calls) | 46 luzes
 
 Triangulos por colecao:
   07c_Grama_Vegetacao                   81790
-  07_Rua_Condominio                     65939
+  07_Rua_Condominio                     67527
   07b_Casas_Vizinhas                    51612
   08_Vestigios                          48584
   02_Sala                               32568
-  03_Jantar                             27836
+  03_Jantar                             27451
   04_Cozinha                            18344
   06_Jardim                             17956
   01_Estrutura                          10580
@@ -24,16 +24,16 @@ Etapas:
   - Neblina volumetrica removida (em VR use fog do motor).
   - Cobogo 3D (~60 mil tris) trocado por placa com textura alfa (2 tris).
   - Grama instanciada removida de 8 gramados; subdivisao=1, remesh 0.16 m, decimate 35% na folhagem.
-  - Modificadores aplicados em 1620 objetos; textos e fios convertidos em malha.
+  - Modificadores aplicados em 1610 objetos; textos e fios convertidos em malha.
   - Bake de 3 materiais procedurais em texturas de imagem.
   - 32 materiais com texturas CC0 convertidos para UV + PNG (cor, rugosidade, normal).
   - UVs em caixa (escala real em metros) aplicadas em todas as malhas.
   - Grama: 6381 tufos em cartoes cruzados com alfa (25524 tris) no lugar de ~15 milhoes de tris.
-  - Colisao: 1071 caixas orientadas preparadas.
-  - 1503 objetos estaticos unidos em 1 malha por colecao (menos draw calls).
+  - Colisao: 1066 caixas orientadas preparadas.
+  - 1493 objetos estaticos unidos em 1 malha por colecao (menos draw calls).
   - Exportado: casa_em_silencio_VR.glb
   - Exportado: casa_em_silencio_VR.fbx
-  - Colisao: 1071 caixas, 12852 tris -> colisao.glb / colisao.fbx
+  - Colisao: 1066 caixas, 12792 tris -> colisao.glb / colisao.fbx
 
 Proximos passos no motor (Unity/Unreal):
   - Iluminacao: marcar a geometria estatica como Static e fazer bake de lightmaps
