@@ -4,9 +4,9 @@
 #     -> 04_ThreeJS\web         (WebXR: cena.glb, lightmaps, cena.json)
 #   07_Personagens\rocketbox      -> 04_ThreeJS\web\personagens (personagens animados)
 #
-# Uso:  .\atualizar_tudo.ps1            (padrao: ~6 min no total)
+# Uso:  .\atualizar_tudo.ps1            (luz em qualidade ALTA, a que vai para o site: ~30-60 min)
+#       .\atualizar_tudo.ps1 padrao     (luz media, so para conferir: ~6 min)
 #       .\atualizar_tudo.ps1 rapido     (teste: ~3 min no total)
-#       .\atualizar_tudo.ps1 alta       (qualidade maxima: ~30-60 min)
 $ErrorActionPreference = "Stop"
 $B = "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe"
 $D = $PSScriptRoot
@@ -36,7 +36,8 @@ Select-String -Path "$D\02_Cena_VR_Otimizada\vr_log.txt" -Pattern '^\[VR\] (TOTA
 
 Write-Host "2/3  Gerando versao three.js (bake de lightmaps)..."
 Push-Location "$D\04_ThreeJS"
-& $B -b "$D\02_Cena_VR_Otimizada\casa_em_silencio_VR.blend" --python "pipeline_threejs.py" -- $args *> pipeline_log.txt
+$Q = if ($args.Count) { $args } else { @("alta") }      # o site sempre vai com a luz em qualidade alta
+& $B -b "$D\02_Cena_VR_Otimizada\casa_em_silencio_VR.blend" --python "pipeline_threejs.py" -- $Q *> pipeline_log.txt
 Pop-Location
 Select-String -Path "$D\04_ThreeJS\pipeline_log.txt" -Pattern '^\[THREE\]' | ForEach-Object { $_.Line }
 

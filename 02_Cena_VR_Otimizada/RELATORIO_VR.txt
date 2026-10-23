@@ -1,13 +1,14 @@
 A CASA EM SILENCIO - VERSAO VR OTIMIZADA
 
 ANTES (cena de render): ~920.000 tris de geometria + ~15.000.000 tris de grama instanciada
-DEPOIS: 406105 tris | 120 malhas | 356 slots de material (~draw calls) | 46 luzes
+DEPOIS: 448447 tris | 121 malhas | 387 slots de material (~draw calls) | 46 luzes
 
 Triangulos por colecao:
   07c_Grama_Vegetacao                   81790
-  07_Rua_Condominio                     73055
-  07b_Casas_Vizinhas                    51612
+  07_Rua_Condominio                     73583
   08_Vestigios                          50616
+  07b_Casas_Vizinhas                    48204
+  07e_Guarita                           43664
   03_Jantar                             37716
   02_Sala                               32568
   04_Cozinha                            18344
@@ -17,23 +18,24 @@ Triangulos por colecao:
   10_Viatura_PMERJ                       8966
   10b_Carros_Moradores                   6808
   05_Varanda                             4140
-  07e_Guarita                            1850
+  07f_Ripas_Vizinhos                     3408
   12_CFTV                                  16
 
 Etapas:
   - Neblina volumetrica removida (em VR use fog do motor).
   - Cobogo 3D (~60 mil tris) trocado por placa com textura alfa (2 tris).
   - Grama instanciada removida de 8 gramados; subdivisao=1, remesh 0.16 m, decimate 35% na folhagem.
-  - Modificadores aplicados em 1606 objetos; textos e fios convertidos em malha.
+  - Modificadores aplicados em 1579 objetos; textos e fios convertidos em malha.
   - Bake de 3 materiais procedurais em texturas de imagem.
   - 32 materiais com texturas CC0 convertidos para UV + PNG (cor, rugosidade, normal).
   - UVs em caixa (escala real em metros) aplicadas em todas as malhas.
   - Grama: 6381 tufos em cartoes cruzados com alfa (25524 tris) no lugar de ~15 milhoes de tris.
-  - Colisao: 1072 caixas orientadas preparadas.
-  - 1498 objetos estaticos unidos em 1 malha por colecao (menos draw calls).
+  - Colisao: 1070 caixas orientadas preparadas.
+  - 8 ripados de vizinhos numa colecao propria (lightmap separado).
+  - 1471 objetos estaticos unidos em 1 malha por colecao (menos draw calls).
   - Exportado: casa_em_silencio_VR.glb
   - Exportado: casa_em_silencio_VR.fbx
-  - Colisao: 1072 caixas, 12864 tris -> colisao.glb / colisao.fbx
+  - Colisao: 1070 caixas, 12840 tris -> colisao.glb / colisao.fbx
 
 Proximos passos no motor (Unity/Unreal):
   - Iluminacao: marcar a geometria estatica como Static e fazer bake de lightmaps

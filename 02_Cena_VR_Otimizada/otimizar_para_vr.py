@@ -404,6 +404,21 @@ for ob in scene.objects:
     caixas.append([ob.matrix_world @ Vector(c) for c in ob.bound_box])
 say("Colisao: %d caixas orientadas preparadas." % len(caixas))
 
+# ------------------------------------------------------------------ 6b. ripados dos vizinhos com lightmap proprio
+# Ripas finas dividindo o lightmap unico das casas vizinhas ficavam com 1-2 pixels cada: umas pegavam luz e outras a
+# sombra do vao, e o portao aparecia listrado de claro e quase preto sem a lanterna. Numa colecao propria (e lightmap
+# de 1024 no pipeline_threejs.py) cada ripa ganha resolucao suficiente.
+col_ripas = bpy.data.collections.get("07f_Ripas_Vizinhos") or bpy.data.collections.new("07f_Ripas_Vizinhos")
+if col_ripas.name not in scene.collection.children:
+    scene.collection.children.link(col_ripas)
+n_ripas = 0
+for ob in list(scene.objects):
+    if ob.type == "MESH" and ob.name.startswith("Vizinho_") and ("_Portao_Garagem_Ripa" in ob.name or ob.name.split(".")[0].endswith("_Ripado")):
+        for c in list(ob.users_collection):
+            c.objects.unlink(ob)
+        col_ripas.objects.link(ob); n_ripas += 1
+say("%d ripados de vizinhos numa colecao propria (lightmap separado)." % n_ripas)
+
 # ------------------------------------------------------------------ 7. juntar geometria estatica por colecao
 INTERATIVO_COL = {"08_Vestigios", "10_Viatura_PMERJ", "09_Luzes_Cameras", "12_CFTV"}
 INTERATIVO_PAI = ("Porta_Quarto_Dobradica", "Portao_Folha", "Viatura_PMERJ", "V_", "GuaritaC_Porta_Dobradica")

@@ -84,6 +84,14 @@ else:
         novos = [o for o in bpy.data.objects if o not in antes]
         for o in [o for o in novos if any(o.name.startswith(pre) for pre in info.get("sem_partes", []))]:
             novos.remove(o); bpy.data.objects.remove(o, do_unlink=True)      # partes do arquivo que a cena nao usa
+        if info.get("max_textura"):                 # texturas grandes demais para o Quest: reduz mantendo a proporcao
+            lim = info["max_textura"]
+            for im in {n.image for o in novos if o.type == "MESH" for sl in o.material_slots if sl.material and sl.material.node_tree
+                       for n in sl.material.node_tree.nodes if n.type == "TEX_IMAGE" and n.image}:
+                w, h = im.size
+                if max(w, h) > lim:
+                    f = lim / max(w, h); im.scale(max(1, int(w * f)), max(1, int(h * f))); im.pack()
+                    say("%s: textura %s reduzida de %dx%d para %dx%d" % (arq, im.name, w, h, im.size[0], im.size[1]))
         col = bpy.data.collections.get(info.get("colecao", "")) or bpy.context.scene.collection
         religados = 0
         for o in novos:

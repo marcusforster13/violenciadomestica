@@ -76,7 +76,10 @@ M = {
 }
 
 # ------------------------------------------------------------------ limpeza (idempotente)
-for o in [o for o in bpy.data.objects if o.name.startswith(("GuaritaC_", "CFTV_")) or o.name in ("Guarita_Corpo", "Guarita_Janela")]:
+# pecas trocadas por modelos do usuario (integrar_modelos.py, marcadas com "modelo_usuario") ficam como estao
+USUARIO = {o.get("modelo_usuario") for o in bpy.data.objects if o.get("modelo_usuario")}
+for o in [o for o in bpy.data.objects if (o.name.startswith(("GuaritaC_", "CFTV_")) and not o.get("modelo_usuario"))
+          or o.name in ("Guarita_Corpo", "Guarita_Janela")]:
     bpy.data.objects.remove(o, do_unlink=True)
 
 GU = bpy.data.objects.get("Guarita_Portaria")
@@ -189,16 +192,19 @@ for i, (xc, cam) in enumerate(((-.48, 3), (.48, 2))):
     caixa("GuaritaC_Monitor_Haste", (.04, .03, .2), (xc, YM - .18, .88), M["preto"])
     caixa("GuaritaC_Monitor_Pe", (.22, .16, .015), (xc, YM - .2, .787), M["preto"])
     tela("CFTV_Tela_%d_c%d" % (7 + i, cam), .52, .3, (xc, YM - .222, 1.06))
-caixa("GuaritaC_Teclado", (.44, .15, .02), (0, YM - .5, .79), M["preto"])
-caixa("GuaritaC_Mouse", (.06, .1, .025), (.32, YM - .5, .79), M["preto"])
-caixa("GuaritaC_Joystick_Base", (.3, .18, .05), (-.48, YM - .52, .805), M["preto"])
-cilindro("GuaritaC_Joystick_Haste", .015, .12, (-.4, YM - .52, .89), M["preto"], seg=10)
-cilindro("GuaritaC_Joystick_Bola", .028, .05, (-.4, YM - .52, .96), M["preto"], seg=12, r2=.018)
-for j in range(6):                       # botoes das cameras no joystick
-    caixa("GuaritaC_Joystick_Botao", (.025, .025, .006), (-.6 + (j % 3) * .035, YM - .49 - (j // 3) * .04, .833), M["led_verde" if j == 2 else "cromo"])
-caixa("GuaritaC_Radio_HT", (.06, .035, .14), (.85, YM - .45, .85), M["preto"])
-cilindro("GuaritaC_Radio_Antena", .006, .16, (.865, YM - .45, 1.0), M["preto"], seg=8)
-caixa("GuaritaC_Radio_LED", (.012, .004, .008), (.84, YM - .4685, .9), M["led_verde"])
+if "teclado_mouse.glb" not in USUARIO:           # teclado e mouse remodelados pelo usuario substituem estes dois
+    caixa("GuaritaC_Teclado", (.44, .15, .02), (0, YM - .5, .79), M["preto"])
+    caixa("GuaritaC_Mouse", (.06, .1, .025), (.32, YM - .5, .79), M["preto"])
+if "consola_ptz.glb" not in USUARIO:             # o console PTZ remodelado pelo usuario substitui o joystick
+    caixa("GuaritaC_Joystick_Base", (.3, .18, .05), (-.48, YM - .52, .805), M["preto"])
+    cilindro("GuaritaC_Joystick_Haste", .015, .12, (-.4, YM - .52, .89), M["preto"], seg=10)
+    cilindro("GuaritaC_Joystick_Bola", .028, .05, (-.4, YM - .52, .96), M["preto"], seg=12, r2=.018)
+    for j in range(6):                       # botoes das cameras no joystick
+        caixa("GuaritaC_Joystick_Botao", (.025, .025, .006), (-.6 + (j % 3) * .035, YM - .49 - (j // 3) * .04, .833), M["led_verde" if j == 2 else "cromo"])
+if "radio_ht.glb" not in USUARIO:                # o radio remodelado pelo usuario substitui estes tres
+    caixa("GuaritaC_Radio_HT", (.06, .035, .14), (.85, YM - .45, .85), M["preto"])
+    cilindro("GuaritaC_Radio_Antena", .006, .16, (.865, YM - .45, 1.0), M["preto"], seg=8)
+    caixa("GuaritaC_Radio_LED", (.012, .004, .008), (.84, YM - .4685, .9), M["led_verde"])
 caixa("GuaritaC_Telefone", (.18, .2, .06), (1.05, YM - .35, .81), M["preto"])
 cilindro("GuaritaC_Caneca", .04, .1, (.62, YM - .62, .83), M["caneca"], seg=16)
 
@@ -217,12 +223,13 @@ for s in (-1, 1):
 
 # rack com o gravador (NVR), no canto oeste
 rx, ry = -L / 2 + E + .26, -.15
-caixa("GuaritaC_Rack", (.48, .5, .95), (rx, ry, .475), M["preto"])
-for j, z in enumerate((.82, .7, .58)):
-    caixa("GuaritaC_Rack_Equip", (.44, .02, .08), (rx, ry - .255, z), M["mesa"])
-    for n in range(4):
-        caixa("GuaritaC_Rack_LED", (.012, .004, .012), (rx - .15 + n * .03, ry - .267, z), M["led_azul" if n == 0 else "led_verde"])
-caixa("GuaritaC_Rack_Switch_LED", (.012, .004, .012), (rx + .17, ry - .267, .82), M["led_verm"])
+if "rack_cftv.glb" not in USUARIO:               # o rack remodelado pelo usuario substitui gabinete, equipamentos e LEDs
+    caixa("GuaritaC_Rack", (.48, .5, .95), (rx, ry, .475), M["preto"])
+    for j, z in enumerate((.82, .7, .58)):
+        caixa("GuaritaC_Rack_Equip", (.44, .02, .08), (rx, ry - .255, z), M["mesa"])
+        for n in range(4):
+            caixa("GuaritaC_Rack_LED", (.012, .004, .012), (rx - .15 + n * .03, ry - .267, z), M["led_azul" if n == 0 else "led_verde"])
+    caixa("GuaritaC_Rack_Switch_LED", (.012, .004, .012), (rx + .17, ry - .267, .82), M["led_verm"])
 
 # parede oeste: relogio; parede leste: extintor e quadro de avisos
 xo, xl = -L / 2 + E + .01, L / 2 - E - .01

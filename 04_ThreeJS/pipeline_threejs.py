@@ -194,7 +194,7 @@ say("%d materiais trocados por PBR com texturas CC0" % n_pbr)
 SEM_LIGHTMAP = {"07c_Grama_Vegetacao", "09_Luzes_Cameras", "99_Colisao", "12_CFTV"}
 # niveis:  rapido (teste, ~2 min) | padrao (~5 min) | alta (~30-60 min)
 ALTA = "alta" in ARGS
-RES = {"07_Rua_Condominio": 2048, "07b_Casas_Vizinhas": 2048, "01_Estrutura": 1024,
+RES = {"07_Rua_Condominio": 2048, "07b_Casas_Vizinhas": 2048, "01_Estrutura": 1024, "07f_Ripas_Vizinhos": 1024,
        "10b_Carros_Moradores": 1024, "10_Viatura_PMERJ": 1024}
 RES_PADRAO = 512
 AMOSTRAS = 16 if RAPIDO else (384 if ALTA else 128)
