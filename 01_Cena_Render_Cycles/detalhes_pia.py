@@ -44,8 +44,9 @@ def apagar(nome):
             bpy.data.objects.remove(c, do_unlink=True)
         bpy.data.objects.remove(o, do_unlink=True)
 
-for o in [o for o in bpy.data.objects if o.name.startswith("Pia_")]:
-    bpy.data.objects.remove(o, do_unlink=True)
+USUARIO = {o.get("modelo_usuario") for o in bpy.data.objects if o.get("modelo_usuario")}
+for o in [o for o in bpy.data.objects if o.name.startswith("Pia_") and not o.get("modelo_usuario")]:
+    bpy.data.objects.remove(o, do_unlink=True)      # pecas trocadas por modelos do usuario ficam como estao
 for n in ("Cuba_Inox", "Torneira", "Torneira_Bica"):
     apagar(n)
 
@@ -165,8 +166,11 @@ for i in range(seg):
 me = bpy.data.meshes.new("Pia_Detergente"); me.from_pydata(vs, [], fs)
 bm = bmesh.new(); bm.from_mesh(me); bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-6)
 bmesh.ops.recalc_face_normals(bm, faces=bm.faces); bm.to_mesh(me); bm.free()
-det = novo("Pia_Detergente", me, DET); det.location = (5.86, 1.86, .92); det.rotation_euler = (0, 0, .4)
-cil("Pia_Detergente_Tampa", .013, .022, (5.86, 1.86, 1.115), DET_T, seg=20)
+if "detergente.glb" in USUARIO:                  # o detergente remodelado pelo usuario substitui frasco e tampa
+    bpy.data.meshes.remove(me)
+else:
+    det = novo("Pia_Detergente", me, DET); det.location = (5.86, 1.86, .92); det.rotation_euler = (0, 0, .4)
+    cil("Pia_Detergente_Tampa", .013, .022, (5.86, 1.86, 1.115), DET_T, seg=20)
 
 print("[PIA] cuba de embutir, ralo, torneira gourmet, esponja e detergente prontos")
 if bpy.app.background:
