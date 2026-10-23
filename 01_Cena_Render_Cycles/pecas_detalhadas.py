@@ -114,7 +114,7 @@ GARRAFA = [(0, .004), (.010, .0055), (.022, .003), (.031, 0), (.0352, .003), (.0
            (.0132, .248), (.0115, .249), (0, .249)]
 for nome in ["V_Garrafa_1", "V_Garrafa_2", "V_Garrafa_3", "V_Garrafa_4", "V_Garrafa_Chao"]:
     ob = bpy.data.objects.get(nome)
-    if not ob:
+    if not ob or ob.get("modelo_usuario"):          # garrafa remodelada pelo usuario fica como esta
         continue
     limpar_filhos(ob)
     trocar(ob, malha_revolucao(nome, GARRAFA, 40))

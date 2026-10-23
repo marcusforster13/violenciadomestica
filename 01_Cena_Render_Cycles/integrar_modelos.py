@@ -67,8 +67,11 @@ else:
             o = bpy.data.objects.get(nome)
             if o:
                 pts = [o.matrix_world @ Vector(c) for c in o.bound_box]
-                copias.append((nome, Vector((o.matrix_world.translation.x, o.matrix_world.translation.y, min(p.z for p in pts))),
-                               o.matrix_world.to_euler().z))
+                if info.get("copias_pela_origem"):  # a origem do antigo ja e a base do modelo: usa posicao e giro completos
+                    copias.append((nome, o.matrix_world.translation.copy(), o.matrix_world.to_euler()))
+                else:
+                    copias.append((nome, Vector((o.matrix_world.translation.x, o.matrix_world.translation.y, min(p.z for p in pts))),
+                                   (0, 0, o.matrix_world.to_euler().z)))
         for nome in nomes:                          # aceita um nome ou uma lista de nomes
             alvo = bpy.data.objects.get(nome)
             if alvo:
@@ -79,6 +82,8 @@ else:
         mats_antes = set(bpy.data.materials)
         bpy.ops.import_scene.gltf(filepath=caminho)
         novos = [o for o in bpy.data.objects if o not in antes]
+        for o in [o for o in novos if any(o.name.startswith(pre) for pre in info.get("sem_partes", []))]:
+            novos.remove(o); bpy.data.objects.remove(o, do_unlink=True)      # partes do arquivo que a cena nao usa
         col = bpy.data.collections.get(info.get("colecao", "")) or bpy.context.scene.collection
         religados = 0
         for o in novos:
@@ -128,7 +133,7 @@ else:
                 ob = alvo if k == 0 else alvo.copy()
                 if k:
                     col.objects.link(ob)
-                ob.location = pos; ob.rotation_mode = "XYZ"; ob.rotation_euler = (0, 0, giro); ob.name = nome_c
+                ob.location = pos; ob.rotation_mode = "XYZ"; ob.rotation_euler = giro; ob.name = nome_c
                 if k: novos.append(ob)
             say("%s: %d -> %d triangulos%s" % (arq, tris, sum(len(pl.vertices) - 2 for pl in alvo.data.polygons),
                                               (" (x %d copias)" % len(copias)) if copias else ""))
