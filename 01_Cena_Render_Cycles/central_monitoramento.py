@@ -234,10 +234,11 @@ if "rack_cftv.glb" not in USUARIO:               # o rack remodelado pelo usuari
 
 # parede oeste: relogio; parede leste: extintor e quadro de avisos
 xo, xl = -L / 2 + E + .01, L / 2 - E - .01
-cilindro("GuaritaC_Relogio", .14, .03, (xo, .55, 2.25), M["papel"], rot=(0, PI / 2, 0), seg=24)
-cilindro("GuaritaC_Relogio_Aro", .155, .025, (xo - .002, .55, 2.25), M["preto"], rot=(0, PI / 2, 0), seg=24)
-caixa("GuaritaC_Relogio_Ponteiro", (.006, .01, .1), (xo + .02, .55, 2.29), M["preto"])
-caixa("GuaritaC_Relogio_Ponteiro2", (.006, .075, .01), (xo + .02, .58, 2.25), M["preto"])
+if "relogio_parede.glb" not in USUARIO:          # o relogio remodelado pelo usuario substitui estas pecas
+    cilindro("GuaritaC_Relogio", .14, .03, (xo, .55, 2.25), M["papel"], rot=(0, PI / 2, 0), seg=24)
+    cilindro("GuaritaC_Relogio_Aro", .155, .025, (xo - .002, .55, 2.25), M["preto"], rot=(0, PI / 2, 0), seg=24)
+    caixa("GuaritaC_Relogio_Ponteiro", (.006, .01, .1), (xo + .02, .55, 2.29), M["preto"])
+    caixa("GuaritaC_Relogio_Ponteiro2", (.006, .075, .01), (xo + .02, .58, 2.25), M["preto"])
 # quadro de avisos na parede oeste (a leste agora tem a porta), acima do rack e do balcao
 caixa("GuaritaC_Quadro_Avisos", (.02, .7, .5), (xo, -.75, 1.75), M["cortica"])
 for j, (dy, dz) in enumerate(((-.18, .08), (.05, .1), (.2, -.06), (-.05, -.12))):

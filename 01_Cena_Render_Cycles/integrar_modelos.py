@@ -119,6 +119,11 @@ else:
                 o.data = o.data.copy(); o.data.transform(o.matrix_world); o.parent = None; o.matrix_world = Matrix.Identity(4)
             for o in [o for o in novos if o.type != "MESH"]:
                 bpy.data.objects.remove(o, do_unlink=True)
+            for o in malhas:                         # todas com o mesmo canal de UV: sem isso o join perde a UV
+                lys = o.data.uv_layers                 # (ex.: mostrador do relogio sem os numeros)
+                if not lys:
+                    lys.new(name="UVMap")
+                lys[0].name = "UVMap"
             alvo = malhas[0]
             with bpy.context.temp_override(active_object=alvo, selected_objects=malhas, selected_editable_objects=malhas):
                 bpy.ops.object.join()
