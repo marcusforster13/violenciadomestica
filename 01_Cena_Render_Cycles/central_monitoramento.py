@@ -210,16 +210,17 @@ cilindro("GuaritaC_Caneca", .04, .1, (.62, YM - .62, .83), M["caneca"], seg=16)
 
 # cadeira do operador (de costas para a janela)
 cx, cy = .05, YM - 1.05
-cilindro("GuaritaC_Cadeira_Coluna", .025, .38, (cx, cy, .24), M["cromo"], seg=12)
-for j in range(5):
-    a = j * 2 * PI / 5 + .3
-    caixa("GuaritaC_Cadeira_Pe", (.3, .04, .03), (cx + math.cos(a) * .15, cy + math.sin(a) * .15, .06), M["preto"], rot=(0, 0, a))
-    cilindro("GuaritaC_Cadeira_Rodinha", .025, .03, (cx + math.cos(a) * .29, cy + math.sin(a) * .29, .03), M["preto"], rot=(PI / 2, 0, a), seg=10)
-caixa("GuaritaC_Cadeira_Assento", (.5, .48, .08), (cx, cy, .48), M["tecido"])
-caixa("GuaritaC_Cadeira_Encosto", (.46, .07, .6), (cx, cy - .26, .86), M["tecido"], rot=(-.12, 0, 0))
-for s in (-1, 1):
-    caixa("GuaritaC_Cadeira_Braco", (.05, .3, .04), (cx + s * .27, cy - .02, .68), M["preto"])
-    caixa("GuaritaC_Cadeira_Braco_Haste", (.03, .03, .18), (cx + s * .27, cy - .02, .58), M["preto"])
+if "cadeira_operador.glb" not in USUARIO:        # a cadeira remodelada pelo usuario substitui estas pecas
+    cilindro("GuaritaC_Cadeira_Coluna", .025, .38, (cx, cy, .24), M["cromo"], seg=12)
+    for j in range(5):
+        a = j * 2 * PI / 5 + .3
+        caixa("GuaritaC_Cadeira_Pe", (.3, .04, .03), (cx + math.cos(a) * .15, cy + math.sin(a) * .15, .06), M["preto"], rot=(0, 0, a))
+        cilindro("GuaritaC_Cadeira_Rodinha", .025, .03, (cx + math.cos(a) * .29, cy + math.sin(a) * .29, .03), M["preto"], rot=(PI / 2, 0, a), seg=10)
+    caixa("GuaritaC_Cadeira_Assento", (.5, .48, .08), (cx, cy, .48), M["tecido"])
+    caixa("GuaritaC_Cadeira_Encosto", (.46, .07, .6), (cx, cy - .26, .86), M["tecido"], rot=(-.12, 0, 0))
+    for s in (-1, 1):
+        caixa("GuaritaC_Cadeira_Braco", (.05, .3, .04), (cx + s * .27, cy - .02, .68), M["preto"])
+        caixa("GuaritaC_Cadeira_Braco_Haste", (.03, .03, .18), (cx + s * .27, cy - .02, .58), M["preto"])
 
 # rack com o gravador (NVR), no canto oeste
 rx, ry = -L / 2 + E + .26, -.15

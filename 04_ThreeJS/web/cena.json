@@ -1,5 +1,5 @@
 {
- "gerado_em": "2026-10-23 15:32",
+ "gerado_em": "2026-10-26 12:09",
  "qualidade": "alta",
  "lightmaps": {
   "01_Estrutura_Estatico": {
@@ -20,7 +20,7 @@
   },
   "03_Jantar_Estatico": {
    "lm": "lightmaps/LM_03_Jantar.png",
-   "max": 2.27091
+   "max": 2.27047
   },
   "04_Cozinha_Estatico": {
    "lm": "lightmaps/LM_04_Cozinha.png",
@@ -96,27 +96,27 @@
   },
   "07e_Guarita_Estatico": {
    "lm": "lightmaps/LM_07e_Guarita.png",
-   "max": 3.42114
+   "max": 3.75892
   },
   "GuaritaC_Porta_Folha": {
    "lm": "lightmaps/LM_07e_Guarita.png",
-   "max": 3.42114
+   "max": 3.75892
   },
   "GuaritaC_Porta_Macaneta_Ext": {
    "lm": "lightmaps/LM_07e_Guarita.png",
-   "max": 3.42114
+   "max": 3.75892
   },
   "GuaritaC_Porta_Espelho_Ext": {
    "lm": "lightmaps/LM_07e_Guarita.png",
-   "max": 3.42114
+   "max": 3.75892
   },
   "GuaritaC_Porta_Macaneta_Int": {
    "lm": "lightmaps/LM_07e_Guarita.png",
-   "max": 3.42114
+   "max": 3.75892
   },
   "GuaritaC_Porta_Espelho_Int": {
    "lm": "lightmaps/LM_07e_Guarita.png",
-   "max": 3.42114
+   "max": 3.75892
   },
   "07f_Ripas_Vizinhos_Estatico": {
    "lm": "lightmaps/LM_07f_Ripas_Vizinhos.png",

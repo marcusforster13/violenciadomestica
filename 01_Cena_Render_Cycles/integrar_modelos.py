@@ -105,6 +105,12 @@ else:
                     existente = bpy.data.materials.get(base(m.name))
                     if existente and existente not in (m,) and existente in mats_antes:
                         slot.material = existente; religados += 1
+        for nome_m, valores in info.get("ajustes_material", {}).items():   # depois de religar: ajusta o material final
+            for m in {sl.material for o in novos if o.type == "MESH" for sl in o.material_slots if sl.material and base(sl.material.name) == nome_m}:
+                bsdf = next((n for n in m.node_tree.nodes if n.type == "BSDF_PRINCIPLED"), None)
+                for k, v in valores.items():
+                    if bsdf and k in bsdf.inputs: bsdf.inputs[k].default_value = v
+                say("%s: material %s ajustado %s" % (arq, m.name, valores))
         if info.get("no_lugar") or info.get("juntar"):
             # "no_lugar": modelo feito na origem (base no chao) vai para o lugar do antigo; "juntar": ja esta no lugar.
             # Nos dois casos vira 1 objeto, simplificado se precisar
