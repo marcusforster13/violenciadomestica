@@ -255,8 +255,9 @@ if raiz and not raiz.get("modelo_usuario"):
     else:
         ti = nt.nodes.new("ShaderNodeTexImage"); ti.name = "Folha_Img"; ti.image = img
         nt.links.new(ti.outputs["Color"], fb.inputs["Base Color"])
-        bp = nt.nodes.new("ShaderNodeBump"); bp.inputs["Strength"].default_value = .35
-        nt.links.new(ti.outputs["Color"], bp.inputs["Height"]); nt.links.new(bp.outputs["Normal"], fb.inputs["Normal"])
+    # sem relevo (Bump): o exportador glTF levava a imagem colorida como normal map e a folha ficava escura na lanterna
+    for n in [n for n in nt.nodes if n.type == "BUMP"]:
+        nt.nodes.remove(n)
     caule_m = mat("Caule_Costela", "#2f5a2a", .45)
     for c in list(raiz.children):
         if c.name.startswith("Vaso_Barro"):
