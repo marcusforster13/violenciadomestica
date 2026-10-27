@@ -225,29 +225,34 @@ if not protegido("V_Bebida_Derramada"):
 raiz = bpy.data.objects.get("Costela_de_Adao")
 if raiz and not raiz.get("modelo_usuario"):
     SALA = raiz.users_collection[0]
-    folha_m = mat("Folha_Costela", "#1a3a1f", .4)
+    folha_m = mat("Folha_Costela", "#2f6b34", .72)
     fb = folha_m.node_tree.nodes.get("Principled BSDF")
+    fb.inputs["Roughness"].default_value = .72          # folha fosca: a lanterna mostra a cor em vez de virar reflexo
+    if "Specular IOR Level" in fb.inputs:
+        fb.inputs["Specular IOR Level"].default_value = .3
     if "Subsurface Weight" in fb.inputs:
         fb.inputs["Subsurface Weight"].default_value = 0.0
     # textura da folha gerada: nervura central, nervuras laterais na direcao dos recortes, bordas mais escuras
     import numpy as np
-    img = bpy.data.images.get("textura_folha_costela")
+    img = bpy.data.images.get("textura_folha_costela_v2")
     if not img:
         H, W = 512, 256
         yy, xx = np.mgrid[0:H, 0:W]; u = 1 - yy / (H - 1); v = xx / (W - 1); d = np.abs(v - .5) * 2
-        base = np.array(lin("#1f4a24"))[None, None, :] * (1 - .25 * d[..., None] ** 2)
+        base = np.array(lin("#3f8a42"))[None, None, :] * (1 - .3 * d[..., None] ** 2)       # verde de folha viva
         base = base * (1 + .1 * u[..., None])
-        veia = (((u + d * .22 * np.sin(np.pi * np.minimum(u, .92))) * 11) % 1 < .045) & (d > .04)
-        base = np.where(veia[..., None], base * 1.35 + .01, base)
-        nerv = d < .025
-        base = np.where(nerv[..., None], np.array(lin("#7f9e4c"))[None, None, :], base)
+        veia = (((u + d * .22 * np.sin(np.pi * np.minimum(u, .92))) * 11) % 1 < .06) & (d > .04)
+        base = np.where(veia[..., None], base * 1.7 + .02, base)                            # nervuras laterais visiveis
+        nerv = d < .03
+        base = np.where(nerv[..., None], np.array(lin("#b8d27e"))[None, None, :], base)
         base = base * (1 + np.random.default_rng(3).normal(0, .04, (H, W, 1)))
         srgb = np.where(base <= .0031308, base * 12.92, 1.055 * np.clip(base, 0, 1) ** (1 / 2.4) - .055)
         rgba = np.ones((H, W, 4), np.float32); rgba[..., :3] = np.clip(srgb, 0, 1)
-        img = bpy.data.images.new("textura_folha_costela", W, H, alpha=False)
+        img = bpy.data.images.new("textura_folha_costela_v2", W, H, alpha=False)
         img.pixels.foreach_set(np.flipud(rgba).ravel()); img.pack()
     nt = folha_m.node_tree
-    if not nt.nodes.get("Folha_Img"):
+    if nt.nodes.get("Folha_Img"):
+        nt.nodes["Folha_Img"].image = img                  # troca pela textura nova
+    else:
         ti = nt.nodes.new("ShaderNodeTexImage"); ti.name = "Folha_Img"; ti.image = img
         nt.links.new(ti.outputs["Color"], fb.inputs["Base Color"])
         bp = nt.nodes.new("ShaderNodeBump"); bp.inputs["Strength"].default_value = .35
