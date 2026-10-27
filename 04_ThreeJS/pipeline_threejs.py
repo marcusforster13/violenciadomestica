@@ -249,6 +249,10 @@ for col in bpy.data.collections:
     bpy.ops.object.bake(type="DIFFUSE", pass_filter={"DIRECT", "INDIRECT"}, margin=6, use_clear=True)
     px = np.empty(res * res * 4, np.float32); img.pixels.foreach_get(px)
     rgb = px.reshape(res, res, 4)[..., :3]
+    nan = int((~np.isfinite(rgb)).any(-1).sum())
+    if nan:                                            # pixel invalido do Cycles: sem isso o "max" vira NaN e o site nao abre
+        say("lightmap %s: %d pixels invalidos zerados" % (col.name, nan))
+        rgb = np.nan_to_num(rgb, nan=0.0, posinf=0.0, neginf=0.0)
     rgb = np.stack([blur(rgb[..., c]) for c in range(3)], -1)
     vmax = float(max(np.percentile(rgb, 99.7), 1e-3))
     enc = np.clip(rgb / vmax, 0, 1) ** (1 / 2.2)

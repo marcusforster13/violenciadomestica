@@ -150,7 +150,8 @@ for i, (x, dy) in enumerate(((-JX / 2 + .05, -.02), (JX / 2 - .05, .02))):
     caixa("GuaritaC_Folha_Montante", (.035, .03, JZ1 - JZ0 - .06), (x + (JX / 2 + .03) * (1 if i == 0 else -1), yj + dy, (JZ0 + JZ1) / 2), M["aluminio"])
 caixa("GuaritaC_Balcao_Interno", (2.8, .42, .04), (0, YF + E / 2 + .21, JZ0 - .02), M["mesa"])
 caixa("GuaritaC_Livro_Ocorrencias", (.32, .24, .03), (-.7, YF + .3, JZ0 + .015), M["caneca"])
-caixa("GuaritaC_Interfone", (.12, .08, .2), (.95, YF + .2, JZ0 + .1), M["preto"])
+if "interfone_portaria.glb" not in USUARIO:      # o interfone remodelado pelo usuario substitui esta caixa
+    caixa("GuaritaC_Interfone", (.12, .08, .2), (.95, YF + .2, JZ0 + .1), M["preto"])
 
 # porta lateral de aco (lado leste): folha de verdade no vao, macaneta dos dois lados, batentes por dentro e por fora.
 # A folha fica presa na dobradica (GuaritaC_Porta_Dobradica, no canto sul do vao) e abre PARA FORA (giro -90 graus):
@@ -244,8 +245,9 @@ caixa("GuaritaC_Quadro_Avisos", (.02, .7, .5), (xo, -.75, 1.75), M["cortica"])
 for j, (dy, dz) in enumerate(((-.18, .08), (.05, .1), (.2, -.06), (-.05, -.12))):
     caixa("GuaritaC_Aviso_Papel", (.006, .16, .2), (xo + .013, -.75 + dy, 1.75 + dz), M["papel"])
 # extintor na parede leste, entre a porta (ate y 0,18) e a mesa (a partir de y 0,42)
-cilindro("GuaritaC_Extintor", .075, .5, (xl - .09, .3, .45), M["extintor"], seg=16)
-cilindro("GuaritaC_Extintor_Valvula", .025, .08, (xl - .09, .3, .74), M["preto"], seg=10)
+if "extintor_guarita.glb" not in USUARIO:        # o extintor remodelado pelo usuario substitui estas duas pecas
+    cilindro("GuaritaC_Extintor", .075, .5, (xl - .09, .3, .45), M["extintor"], seg=16)
+    cilindro("GuaritaC_Extintor_Valvula", .025, .08, (xl - .09, .3, .74), M["preto"], seg=10)
 
 # luz interna fria e fraca (sala de monitoramento)
 for o in [o for o in bpy.data.objects if o.name == "GuaritaC_Luz_Interna"]:
