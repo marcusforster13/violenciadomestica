@@ -50,15 +50,21 @@ export async function iniciarAudio({ scene, camera, renderer }) {
     listener.context.resume?.().catch(() => { });
     if (pronto) ligar();
   }
-  for (const ev of ['pointerdown', 'keydown', 'touchstart']) addEventListener(ev, desbloquear, { passive: true });
+  // no Quest o feixe do controle conta como toque: o navegador so libera o audio no SOLTAR (pointerup/touchend/click),
+  // por isso escuta todos; o clique em "Entrar no VR" tambem libera
+  for (const ev of ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'click', 'keydown'])
+    addEventListener(ev, desbloquear, { passive: true, capture: true });
   renderer.xr.addEventListener('sessionstart', desbloquear);
   bt.onclick = desbloquear;
   if (navigator.userActivation?.hasBeenActive) desbloquear();     // ja houve clique antes deste modulo carregar
 
-  await Promise.all(Object.entries(arquivos).filter(([n]) => DEF[n] || n.startsWith('fala_')).map(([n, url]) =>
+  // primeiro o ambiente e os sons da cena (o som comeca logo apos o 1o clique); as falas carregam depois, em segundo plano
+  const carregar = lista => Promise.all(lista.map(([n, url]) =>
     loader.loadAsync(url).then(b => { buffers[n] = b; ganho[n] = normalizar(b); }).catch(() => console.warn('som nao carregou:', url))));
+  await carregar(Object.entries(arquivos).filter(([n]) => DEF[n]));
   pronto = true;
   if (gesto) ligar();
+  carregar(Object.entries(arquivos).filter(([n]) => !DEF[n] && n.startsWith('fala_')));
 
   // normaliza cada arquivo para ~-20 dB RMS sem passar de 0,95 de pico (arquivos baixos ficam audiveis)
   function normalizar(b) {
