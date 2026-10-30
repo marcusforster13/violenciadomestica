@@ -353,6 +353,13 @@ else:
 m_card = alpha_clip_mat("Grama_Cartao", np_to_image("grama_cartao", tex_grama_cartao()), .6)
 
 DENS_CARTOES = 6   # tufos por m2
+# areas cobertas onde o gramado passa por baixo do piso: sem tufos (a grama atravessava o piso da guarita)
+SEM_GRAMA = []
+for nm_ in ("GuaritaC_Piso",):
+    o_ = bpy.data.objects.get(nm_)
+    if o_:
+        cs_ = [o_.matrix_world @ Vector(c) for c in o_.bound_box]
+        SEM_GRAMA.append((min(c.x for c in cs_) - .3, max(c.x for c in cs_) + .3, min(c.y for c in cs_) - .3, max(c.y for c in cs_) + .3))
 total_cards = 0
 for nm in lawns:
     ob = bpy.data.objects.get(nm)
@@ -372,7 +379,10 @@ for nm in lawns:
         vs_ = [v.co for v in f.verts]
         u, v = rnd.random(), rnd.random()
         p = (vs_[0] * (1 - u) + vs_[1] * u) * (1 - v) + (vs_[3] * (1 - u) + vs_[2] * u) * v if len(vs_) == 4 else vs_[0]
-        w = rnd.uniform(.28, .45); h = rnd.uniform(.12, .22); a0 = rnd.random() * PI
+        pw = ob.matrix_world @ p
+        if any(x0 < pw.x < x1 and y0 < pw.y < y1 for x0, x1, y0, y1 in SEM_GRAMA):
+            continue
+        w =rnd.uniform(.28, .45); h = rnd.uniform(.12, .22); a0 = rnd.random() * PI
         for a in (a0, a0 + PI / 2):
             d = Vector((math.cos(a), math.sin(a), 0)) * w / 2
             q = [bm.verts.new(p - d), bm.verts.new(p + d), bm.verts.new(p + d + Vector((0, 0, h))), bm.verts.new(p - d + Vector((0, 0, h)))]
@@ -382,6 +392,7 @@ for nm in lawns:
     total_cards += n
     bm.to_mesh(me); bm.free()
 say("Grama: %d tufos em cartoes cruzados com alfa (%d tris) no lugar de ~15 milhoes de tris." % (total_cards, total_cards * 4))
+say("Grama: sem tufos em %d area(s) coberta(s) (piso da guarita)" % len(SEM_GRAMA))
 
 # ------------------------------------------------------------------ 6b. malha de colisao simplificada
 # Uma caixa orientada (OBB) por objeto relevante: paredes, pisos, moveis, carros, postes, troncos.

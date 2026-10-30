@@ -1,10 +1,10 @@
 A CASA EM SILENCIO - VERSAO VR OTIMIZADA
 
 ANTES (cena de render): ~920.000 tris de geometria + ~15.000.000 tris de grama instanciada
-DEPOIS: 486751 tris | 112 malhas | 415 slots de material (~draw calls) | 46 luzes
+DEPOIS: 486715 tris | 112 malhas | 415 slots de material (~draw calls) | 46 luzes
 
 Triangulos por colecao:
-  07c_Grama_Vegetacao                   81790
+  07c_Grama_Vegetacao                   81754
   07_Rua_Condominio                     78003
   07e_Guarita                           68302
   08_Vestigios                          49874
@@ -30,6 +30,7 @@ Etapas:
   - 32 materiais com texturas CC0 convertidos para UV + PNG (cor, rugosidade, normal).
   - UVs em caixa (escala real em metros) aplicadas em todas as malhas.
   - Grama: 6381 tufos em cartoes cruzados com alfa (25524 tris) no lugar de ~15 milhoes de tris.
+  - Grama: sem tufos em 1 area(s) coberta(s) (piso da guarita)
   - Colisao: 1081 caixas orientadas preparadas.
   - 8 ripados de vizinhos numa colecao propria (lightmap separado).
   - 1470 objetos estaticos unidos em 1 malha por colecao (menos draw calls).
