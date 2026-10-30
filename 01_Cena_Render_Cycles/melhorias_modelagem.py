@@ -51,6 +51,53 @@ for ob in bpy.data.objects:
     n["estofados" if estofado else "quinas"] += 1
 
 print("[MODELAGEM] quinas chanfradas em %d pecas, %d estofados arredondados" % (n["quinas"], n["estofados"]))
+
+# sacadas das casas vizinhas: o guarda-corpo de vidro so tinha a frente; fecha as duas laterais ate a fachada
+import bmesh
+from mathutils import Vector, Matrix
+
+
+def _caixa_mundo(nome, ref, centro, tam, cilindro=False):
+    if bpy.data.objects.get(nome):
+        return 0
+    bm = bmesh.new()
+    if cilindro:      # corrimao ao longo de Y
+        bmesh.ops.create_cone(bm, cap_ends=True, segments=10, radius1=tam[0], radius2=tam[0], depth=tam[1],
+                              matrix=Matrix.Rotation(1.5708, 4, "X"))
+    else:
+        bmesh.ops.create_cube(bm, size=1.0, matrix=Matrix.Diagonal(Vector(tam).to_4d()))
+    me = bpy.data.meshes.new(nome); bm.to_mesh(me); bm.free()
+    for m in ref.data.materials:
+        me.materials.append(m)
+    ob = bpy.data.objects.new(nome, me)
+    ref.users_collection[0].objects.link(ob)
+    ob.matrix_world = Matrix.Translation(centro)
+    if ref.parent:
+        ob.parent = ref.parent; ob.matrix_parent_inverse = ref.parent.matrix_world.inverted()
+    return 1
+
+
+def _bb(o):
+    cs = [o.matrix_world @ Vector(c) for c in o.bound_box]
+    return Vector([min(c[i] for c in cs) for i in range(3)]), Vector([max(c[i] for c in cs) for i in range(3)])
+
+
+laterais = 0
+for vidro in [o for o in bpy.data.objects if o.name.endswith("_Sacada_Vidro")]:
+    base = vidro.name[:-len("_Sacada_Vidro")]
+    piso, corr = bpy.data.objects.get(base + "_Sacada_Piso"), bpy.data.objects.get(base + "_Sacada_Corrimao")
+    if not piso:
+        continue
+    v0, v1 = _bb(vidro); p0, p1 = _bb(piso)
+    yv = (v0.y + v1.y) / 2
+    yf = p1.y if abs(p1.y - yv) > abs(p0.y - yv) else p0.y          # fachada: lado do piso oposto ao vidro
+    prof = abs(yf - yv); ym = (yf + yv) / 2; e = v1.y - v0.y
+    for lado, x in (("E", v0.x + e / 2), ("D", v1.x - e / 2)):
+        laterais += _caixa_mundo(base + "_Sacada_Vidro_Lado_" + lado, vidro, Vector((x, ym, (v0.z + v1.z) / 2)), (e, prof, v1.z - v0.z))
+        if corr:
+            c0, c1 = _bb(corr)
+            _caixa_mundo(base + "_Sacada_Corrimao_Lado_" + lado, corr, Vector((x, ym, (c0.z + c1.z) / 2)), ((c1.z - c0.z) / 2, prof), cilindro=True)
+print("[MODELAGEM] sacadas: %d vidros laterais novos (guarda-corpo fechado ate a fachada)" % laterais)
 if bpy.app.background:
     bpy.ops.wm.save_mainfile()
     print("[MODELAGEM] cena principal salva")

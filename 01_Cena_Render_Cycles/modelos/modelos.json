@@ -21,5 +21,6 @@
   "controle_remoto.glb": {"substitui": "V_Controle_Remoto", "colecao": "08_Vestigios", "no_lugar": true, "posicao": [-4.1, -0.6, 0.0], "giro_z": 22.92},
   "relogio_parede.glb": {"substitui": ["GuaritaC_Relogio", "GuaritaC_Relogio_Aro", "GuaritaC_Relogio_Ponteiro", "GuaritaC_Relogio_Ponteiro2"], "colecao": "07e_Guarita", "no_lugar": true, "posicao": [39.015, -14.05, 2.4], "giro_z": 90, "max_textura": 1024, "sem_partes": ["Vidro frontal"]},
   "interfone_portaria.glb": {"substitui": "GuaritaC_Interfone", "colecao": "07e_Guarita", "no_lugar": true, "posicao": [41.45, -15.64, 1.2]},
-  "extintor_guarita.glb": {"substitui": ["GuaritaC_Extintor", "GuaritaC_Extintor_Valvula"], "colecao": "07e_Guarita", "no_lugar": true, "posicao": [41.88, -14.3, 0.18], "giro_z": -90}
+  "extintor_guarita.glb": {"substitui": ["GuaritaC_Extintor", "GuaritaC_Extintor_Valvula"], "colecao": "07e_Guarita", "no_lugar": true, "posicao": [41.88, -14.3, 0.18], "giro_z": -90},
+  "livro_ocorrencias.glb": {"substitui": "GuaritaC_Livro_Ocorrencias", "colecao": "07e_Guarita", "no_lugar": true, "posicao": [39.8, -15.54, 1.2], "giro_z": 90}
 }
