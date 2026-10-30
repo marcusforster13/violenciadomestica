@@ -208,7 +208,8 @@ if "radio_ht.glb" not in USUARIO:                # o radio remodelado pelo usuar
     cilindro("GuaritaC_Radio_Antena", .006, .16, (.865, YM - .45, 1.0), M["preto"], seg=8)
     caixa("GuaritaC_Radio_LED", (.012, .004, .008), (.84, YM - .4685, .9), M["led_verde"])
 caixa("GuaritaC_Telefone", (.18, .2, .06), (1.05, YM - .35, .81), M["preto"])
-cilindro("GuaritaC_Caneca", .04, .1, (.62, YM - .62, .83), M["caneca"], seg=16)
+if "copo_guarita.glb" not in USUARIO:          # o copo de vidro do usuario substitui a caneca
+    cilindro("GuaritaC_Caneca", .04, .1, (.62, YM - .62, .83), M["caneca"], seg=16)
 
 # cadeira do operador (de costas para a janela)
 cx, cy = .05, YM - 1.05
@@ -242,9 +243,10 @@ if "relogio_parede.glb" not in USUARIO:          # o relogio remodelado pelo usu
     caixa("GuaritaC_Relogio_Ponteiro", (.006, .01, .1), (xo + .02, .55, 2.29), M["preto"])
     caixa("GuaritaC_Relogio_Ponteiro2", (.006, .075, .01), (xo + .02, .58, 2.25), M["preto"])
 # quadro de avisos na parede oeste (a leste agora tem a porta), acima do rack e do balcao
-caixa("GuaritaC_Quadro_Avisos", (.02, .7, .5), (xo, -.75, 1.75), M["cortica"])
-for j, (dy, dz) in enumerate(((-.18, .08), (.05, .1), (.2, -.06), (-.05, -.12))):
-    caixa("GuaritaC_Aviso_Papel", (.006, .16, .2), (xo + .013, -.75 + dy, 1.75 + dz), M["papel"])
+if "quadro_avisos.glb" not in USUARIO:           # o quadro remodelado pelo usuario substitui a cortica e os papeis
+    caixa("GuaritaC_Quadro_Avisos", (.02, .7, .5), (xo, -.75, 1.75), M["cortica"])
+    for j, (dy, dz) in enumerate(((-.18, .08), (.05, .1), (.2, -.06), (-.05, -.12))):
+        caixa("GuaritaC_Aviso_Papel", (.006, .16, .2), (xo + .013, -.75 + dy, 1.75 + dz), M["papel"])
 # extintor na parede leste, entre a porta (ate y 0,18) e a mesa (a partir de y 0,42)
 if "extintor_guarita.glb" not in USUARIO:        # o extintor remodelado pelo usuario substitui estas duas pecas
     cilindro("GuaritaC_Extintor", .075, .5, (xl - .09, .3, .45), M["extintor"], seg=16)
