@@ -58,9 +58,14 @@
     ], "erros": [
       { "id": "abordagem_sem_verbalizar", "texto": "Abordar sem se identificar ou sem ordem clara", "pontos": -3 },
       { "id": "faca_sem_luva", "texto": "Pegar a faca sem luvas", "pontos": -4 },
-      { "id": "perdeu_agressor", "texto": "Deixar o agressor fugir sem tentar contê-lo", "pontos": -4 }
+      { "id": "perdeu_agressor", "texto": "Deixar o agressor fugir sem tentar contê-lo", "pontos": -4 },
+      { "id": "sem_advertencia", "texto": "Usar o taser ou a arma sem advertência verbal antes", "pontos": -2, "base": "Portaria Interministerial 4.226/2010" },
+      { "id": "taser_desproporcional", "texto": "Usar o taser sem risco real (sem faca na mão nem avanço sobre a vítima)", "pontos": -6, "base": "Lei 13.060/2014" },
+      { "id": "disparo_sem_alvo", "texto": "Disparo de arma de fogo sem atingir o alvo (risco a terceiros)", "pontos": -3 }
     ], "falhas_graves": [
-      { "id": "disparo_fuga", "texto": "Disparar contra pessoa desarmada em fuga", "pontos": -20, "base": "Lei 13.060/2014, art. 2º, parágrafo único, I" }
+      { "id": "disparo_fuga", "texto": "Disparar contra pessoa desarmada em fuga", "pontos": -20, "base": "Lei 13.060/2014, art. 2º, parágrafo único, I" },
+      { "id": "disparo_injustificado", "texto": "Disparo de arma de fogo sem agressão letal iminente", "pontos": -20, "base": "Lei 13.060/2014; Portaria Interministerial 4.226/2010" },
+      { "id": "forca_contra_contido", "texto": "Usar taser ou arma contra pessoa rendida, contida ou que não oferece risco", "pontos": -20, "base": "Lei 13.060/2014" }
     ]},
     { "id": "F4", "nome": "Atendimento à vítima", "acoes": [
       { "id": "acionar_samu", "texto": "Acionar SAMU (192) com lesão visível", "pontos": 6, "base": "LMP art. 11, II" },

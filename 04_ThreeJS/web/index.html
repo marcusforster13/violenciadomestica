@@ -47,7 +47,8 @@
     <dt>Clique</dt><dd>abrir um vestígio</dd>
     <dt>F · G · H · L</dt><dd>lanterna · giroflex · marcadores · luz pré-calculada</dd>
     <dt>I · C · N · M</dt><dd>inverter o olhar · alternar céu · colisão · som liga/desliga</dd>
-    <dt>VR</dt><dd>gatilho teleporta / usa · grip liga a lanterna · Y ou B abre o menu do treinamento · analógicos andam e giram</dd>
+    <dt>Q</dt><dd>segurar: roleta de equipamentos (taser, pistola, algemas…)</dd>
+    <dt>VR</dt><dd>gatilho teleporta / usa / dispara · A ou X (segurar): roleta de equipamentos · grip liga a lanterna · Y ou B abre o menu do treinamento · analógicos andam e giram</dd>
   </dl>
   <label>Exposição <input id="exp" type="range" min="0.2" max="3" step="0.05" value="1"></label>
   <label>Luz pré-calculada <input id="lmg" type="range" min="0" max="3" step="0.05" value="1"></label>
@@ -354,7 +355,7 @@ function desktopMove(dt) {
 const reticulo = new THREE.Mesh(new THREE.RingGeometry(.18, .24, 32).rotateX(-Math.PI / 2),
   new THREE.MeshBasicMaterial({ color: 0xf0a340, transparent: true, opacity: .8, depthWrite: false, fog: false }));
 reticulo.visible = false; scene.add(reticulo);
-const cmf = new XRControllerModelFactory(), tmpM = new THREE.Matrix4(), controles = [];
+const cmf = new XRControllerModelFactory(), tmpM = new THREE.Matrix4(), controles = [], grips = [];
 for (const i of [0, 1]) {
   const c = renderer.xr.getController(i);
   const linha = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(0, 0, -1)]), new THREE.LineBasicMaterial({ color: 0xf0a340 }));
@@ -372,11 +373,11 @@ for (const i of [0, 1]) {
     const p = alvoTeleporte(c);
     if (p) { camera.getWorldPosition(V1); rig.position.x += p.x - V1.x; rig.position.z += p.z - V1.z; rig.position.y = p.y; }
   });
-  c.addEventListener('connected', e => { c.userData.mao = e.data.handedness; });
+  c.addEventListener('connected', e => { c.userData.mao = e.data.handedness; if (grips[i]) grips[i].userData.mao = e.data.handedness; });
   // grip (qualquer mao) = lanterna, sempre. O menu do treinamento fica nos botoes Y/B (ver vrMove).
   c.addEventListener('squeezestart', () => { window.__som?.desbloquear(); setLanterna(!lantOn, c); });
   rig.add(c); controles.push(c);
-  const grip = renderer.xr.getControllerGrip(i); grip.add(cmf.createControllerModel(grip)); rig.add(grip);
+  const grip = renderer.xr.getControllerGrip(i); grip.add(cmf.createControllerModel(grip)); rig.add(grip); grips[i] = grip;
 }
 function mirar(c) { mirarEm(ray, c); }
 function mirarEm(r, c) { tmpM.identity().extractRotation(c.matrixWorld); r.ray.origin.setFromMatrixPosition(c.matrixWorld); r.ray.direction.set(0, 0, -1).applyMatrix4(tmpM); return r; }
@@ -397,6 +398,8 @@ function vrMove(dt) {
     if (yb && !botoesAntes[k]) window.__trein?.menu();
     botoesAntes[k] = yb;
     const x = gp.axes[2] ?? gp.axes[0] ?? 0, y = gp.axes[3] ?? gp.axes[1] ?? 0;
+    // botao A (direito) ou X (esquerdo) segurado = roleta de equipamentos; o analogico dessa mao escolhe (nao anda nem gira)
+    if (window.__trein?.roleta?.(src.handedness, !!gp.buttons[4]?.pressed, x, y)) continue;
     if (src.handedness === 'left' && Math.hypot(x, y) > .15) {
       viewer().getWorldDirection(V2); V2.y = 0; V2.normalize();
       mover((V2.x * -y - V2.z * x) * 2.5 * dt, (V2.z * -y + V2.x * x) * 2.5 * dt);
@@ -461,7 +464,7 @@ import('./cftv.js').then(m => m.iniciarCFTV({ scene, camera, renderer, CFG })).c
 
 /* ---------- motor do treinamento (fase 2) ---------- */
 import('./treinamento.js').then(m => m.iniciar({
-  scene, camera, rig, renderer, hotspots, setLanterna,
+  scene, camera, rig, renderer, hotspots, setLanterna, controles, grips,
   lanternaLigada: () => lantOn, colisao: () => alvosCol,
   setYaw: y => { yaw = y; pitch = 0; }
 })).catch(e => console.error('Treinamento não carregou:', e));

@@ -3,8 +3,8 @@
   Le treinamento/cenario_vd_01.json (fases, acoes, pontos, falhas graves, vestigios, variacoes, dialogos, radio).
 
   Controles
-    Computador: clique = usar ferramenta / interagir / botoes   T = ferramentas   R = radio   K = checklist
-    Quest:      gatilho = usar ferramenta / botoes / teleporte
+    Computador: clique = usar ferramenta / interagir / botoes   T = ferramentas   R = radio   K = checklist   Q (segurar) = roleta de equipamentos
+    Quest:      gatilho = usar ferramenta / botoes / teleporte   A ou X (segurar) = roleta de equipamentos, escolhe com o analogico
                 grip (qualquer mao) = lanterna   botao Y ou B = menu do treinamento
   Variacoes forcadas pela URL (para o instrutor):  ?v=agressor:agressivo,faca:pia,vitima:retrata
 */
@@ -518,14 +518,287 @@ export async function iniciar(ctx) {
     if (S.fitas.filter(f => dentro(new THREE.Vector3(...f.a)) || dentro(new THREE.Vector3(...f.b))).length >= 2) registrar('isolar_local');
   }
 
+  /* ================= uso da forca: taser (DEI) e pistola =================
+     Avaliacao (Lei 13.060/2014, Portaria Interministerial 4.226/2010): o taser so e justificado diante de risco real
+     (faca na mao ou agressor avancando sobre a vitima); a pistola so diante de agressao letal iminente (faca a menos de 6 m).
+     Contra quem ja esta rendido, algemado, caido ou nao oferece risco: falha grave. Sem advertencia verbal antes: desconto. */
+  const suave = (seg, passo) => new Promise(fim => {          // interpola de 0 a 1 em 'seg' segundos (setTimeout: funciona com a aba oculta)
+    const t0 = performance.now(), f = () => { const e = Math.min(1, (performance.now() - t0) / (seg * 1000)); passo(e * e * (3 - 2 * e)); e < 1 ? setTimeout(f, 16) : fim(); }; f();
+  });
+  function ruido(dur, corte, vol, pulso = 0) {                 // som sintetico: estalo (tiro, sondas) ou zumbido pulsado (descarga do taser)
+    try {
+      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+      const n = Math.floor(AC.sampleRate * dur), b = AC.createBuffer(1, n, AC.sampleRate), d = b.getChannelData(0);
+      for (let i = 0; i < n; i++) {
+        const t = i / AC.sampleRate, env = pulso ? (Math.sin(t * 2 * Math.PI * pulso) > 0 ? 1 : .15) * Math.min(1, (dur - t) * 3) : Math.pow(1 - i / n, 3.2);
+        d[i] = (Math.random() * 2 - 1) * env;
+      }
+      const s = AC.createBufferSource(); s.buffer = b;
+      const f = AC.createBiquadFilter(); f.type = pulso ? 'bandpass' : 'lowpass'; f.frequency.value = corte;
+      const g = AC.createGain(); g.gain.value = vol; s.connect(f).connect(g).connect(AC.destination); s.start();
+    } catch (e) { }
+  }
+  const somOu = (n, sintetico) => window.__som?.tocar(n) || sintetico();
+  const controle = mao => (ctx.controles || []).find(c => c.userData.mao === mao);
+  function mostrarControle(c, visivel) {                       // no Quest o modelo do controle some enquanto a mao segura a arma
+    const i = (ctx.controles || []).indexOf(c); if (i >= 0 && ctx.grips?.[i]) ctx.grips[i].visible = visivel;
+  }
+  const gl = new GLTFLoader();
+  // pistola (mesmo modelo do cassino): cano para -Z, boca em (0, 0, -0,15)
+  const pistola = new THREE.Group(); pistola.visible = false;
+  gl.loadAsync('modelos/pistola.glb').then(g => pistola.add(g.scene)).catch(() => { });
+  // taser do autor (taser/ = controlador e regras do pacote TaserVR): raiz no centro da empunhadura, frente para +Z
+  const taser = new THREE.Group(); taser.visible = false; let taserItem = null;
+  Promise.all([gl.loadAsync('modelos/taser.glb'), import('./taser/TaserVRController.mjs')]).then(([g, m]) => {
+    taserItem = new m.TaserVRController(g, { capacity: 2, onUse: e => descargaTaser(e) });     // 2 cartuchos, como o modelo de dois disparos
+    taserItem.root.position.set(0, 0, 0); taserItem.root.rotation.set(0, Math.PI, 0); taser.add(taserItem.root);
+  }).catch(e => console.warn('Taser não carregou:', e));
+  // mira laser do taser (ponto vermelho) e fios das sondas
+  const laser = new THREE.Mesh(new THREE.SphereGeometry(.012, 8, 6), new THREE.MeshBasicMaterial({ color: 0xff2020, toneMapped: false, fog: false }));
+  laser.visible = false; scene.add(laser);
+  const feixe = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(0, 0, -1)]),
+    new THREE.LineBasicMaterial({ color: 0xff3030, transparent: true, opacity: .35, toneMapped: false, fog: false }));
+  feixe.visible = false; scene.add(feixe);
+  const fios = [], matFio = new THREE.LineBasicMaterial({ color: 0xd8d8d8, transparent: true, opacity: .85 });
+  function fio(a, b) {
+    const pts = [], meio = a.clone().lerp(b, .5).setY((a.y + b.y) / 2 - .12 * a.distanceTo(b) / 5);     // fio fino com uma barriga
+    for (let k = 0; k <= 12; k++) { const t = k / 12; pts.push(a.clone().lerp(meio, t).lerp(meio.clone().lerp(b, t), t)); }
+    const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), matFio); scene.add(l); fios.push(l);
+    setTimeout(() => { scene.remove(l); l.geometry.dispose(); fios.splice(fios.indexOf(l), 1); }, 9000);
+  }
+  // clarao e capsula da pistola, marca de tiro e poca de sangue
+  const clarao = new THREE.PointLight(0xffc880, 0, 8, 2); clarao.position.set(0, 0, -.17); pistola.add(clarao);
+  const bocaFogo = new THREE.Mesh(new THREE.SphereGeometry(.03, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffd28a, transparent: true, opacity: .9, toneMapped: false, fog: false }));
+  bocaFogo.position.set(0, 0, -.17); bocaFogo.visible = false; pistola.add(bocaFogo);
+  const marcas = [], matMarca = new THREE.MeshBasicMaterial({ color: 0x080808 }), geoMarca = new THREE.CircleGeometry(.012, 10);
+  function marcaTiro(h) {
+    if (!h?.face) return;
+    const m = marcas.length > 30 ? marcas.shift() : new THREE.Mesh(geoMarca, matMarca), n = h.face.normal.clone().transformDirection(h.object.matrixWorld);
+    m.position.copy(h.point).addScaledVector(n, .004); m.lookAt(h.point.clone().add(n)); scene.add(m); marcas.push(m);
+  }
+  const matSangue = new THREE.MeshBasicMaterial({ color: 0x4a0606, transparent: true, opacity: .85, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3 });
+  function pocaSangue(n) {
+    const m = new THREE.Mesh(new THREE.CircleGeometry(1, 20), matSangue); m.rotation.x = -Math.PI / 2;
+    m.position.set(n.position.x + Math.sin(n.rotation.y) * .5, .012, n.position.z + Math.cos(n.rotation.y) * .5); m.scale.setScalar(.05); scene.add(m);
+    suave(6, e => m.scale.setScalar(.05 + .4 * e));
+  }
+
+  // quem segura a arma: no Quest, o controle direito (o raio do controle coincide com o cano); no computador, a camera
+  function empunhar() {
+    for (const [obj, k] of [[taser, 'taser'], [pistola, 'pistola']]) {
+      const on = S.ferramenta === k;
+      if (obj.parent) mostrarControle(obj.parent, true);
+      const pai = renderer.xr.isPresenting ? (controle('right') || ctx.controles?.[0] || camera) : camera;
+      if (on) { pai.add(obj); obj.position.set(...(pai === camera ? [.17, -.14, -.38] : [0, 0, -.02])); obj.rotation.set(0, 0, 0); mostrarControle(pai, false); }
+      else obj.parent?.remove(obj);
+      obj.visible = on;
+    }
+    if (taserItem) { taserItem.state.setHeld(S.ferramenta === 'taser'); taserItem.setArmed(S.ferramenta === 'taser'); }
+    laser.visible = feixe.visible = false;
+  }
+  renderer.xr.addEventListener('sessionstart', () => setTimeout(empunhar, 300));
+  renderer.xr.addEventListener('sessionend', () => setTimeout(empunhar, 100));
+  const MIRA = new THREE.Vector3(), BOCA = new THREE.Vector3(), DIR = new THREE.Vector3(), rayF = new THREE.Raycaster(); rayF.firstHitOnly = true;
+  // no computador a arma gira para o ponto clicado; no Quest vale para onde a arma aponta (igual ao raio do controle)
+  function mirarArma(obj, ray) {
+    if (obj.parent === camera) {
+      const h = ray.intersectObjects([...Object.values(npcs).map(n => n.userData.hit), ...ctx.colisao()], false)[0];
+      MIRA.copy(h ? h.point : ray.ray.origin.clone().addScaledVector(ray.ray.direction, 30));
+      obj.lookAt(MIRA); obj.rotateY(Math.PI); obj.updateMatrixWorld(true);
+    }
+  }
+  // o que o disparo atinge primeiro: uma pessoa (antes de qualquer parede) ou o cenario
+  function alvoDisparo(origem, dir, alcance) {
+    rayF.set(origem, dir); rayF.far = alcance;
+    const pessoas = Object.values(npcs).filter(n => n.visible);
+    const hn = rayF.intersectObjects(pessoas.map(n => n.userData.hit), false)[0], hp = rayF.intersectObjects(ctx.colisao(), false)[0];
+    if (hn && (!hp || hn.distance < hp.distance + .3)) return { npc: pessoas.find(n => n.userData.hit === hn.object), ponto: hn.point, dist: hn.distance };
+    return { ponto: hp?.point || origem.clone().addScaledVector(dir, alcance), hit: hp, dist: hp?.distance ?? alcance };
+  }
+  let disparoTaser = null;
+  function usarTaser(ray) {
+    if (!taserItem) return true;
+    const st = taserItem.state;
+    if (st.reloading) return true;
+    if (st.charges <= 0) { taserItem.reload(); legenda('Equipamento', 'Trocando o cartucho do taser…', 1.5); ruido(.05, 2500, .3); return true; }
+    mirarArma(taser, ray); disparoTaser = ray;
+    taserItem.setTrigger(1); setTimeout(() => taserItem?.setTrigger(0), 150);
+    return true;
+  }
+  function descargaTaser({ origin, direction }) {               // chamado pelo TaserState quando o disparo e aceito
+    ruido(.08, 3000, .5);
+    const a = alvoDisparo(origin, direction, 7.6);              // alcance do cartucho: ~7,6 m
+    const desvio = new THREE.Vector3(0, -.28 * Math.min(1, a.dist / 4.5), 0);       // a segunda sonda abre para baixo com a distancia
+    fio(origin, a.ponto); fio(origin, a.ponto.clone().add(desvio));
+    if (!a.npc) return legenda('Equipamento', a.dist >= 7.5 ? 'As sondas não alcançaram: fora do alcance do cartucho (~7 m).' : 'As sondas não atingiram ninguém.', 2.5);
+    avaliarForca('taser', a.npc);
+    ruido(5, 2800, .35, 19);                                    // descarga de 5 s
+    derrubar(a.npc, 'taser');
+  }
+  let ultimoTiro = 0;
+  function usarPistola(ray, c) {
+    const agora = performance.now(); if (agora - ultimoTiro < 280) return true; ultimoTiro = agora;
+    mirarArma(pistola, ray); pistola.updateMatrixWorld(true);
+    bocaFogo.getWorldPosition(BOCA); DIR.set(0, 0, -1).applyQuaternion(pistola.getWorldQuaternion(Q)).normalize();
+    somOu('tiro_pistola', () => ruido(.3, 3200, .9));
+    clarao.intensity = 9; bocaFogo.visible = true; setTimeout(() => { clarao.intensity = 0; bocaFogo.visible = false; }, 70);
+    const rx = pistola.rotation.x; pistola.rotation.x = rx + .22; setTimeout(() => { pistola.rotation.x = rx; }, 130);
+    const a = alvoDisparo(BOCA, DIR, 60);
+    if (!a.npc) { marcaTiro(a.hit); if (S.ativo) registrar('disparo_sem_alvo'); return true; }
+    avaliarForca('pistola', a.npc);
+    if (!a.npc.userData.caido) { derrubar(a.npc, 'pistola'); pocaSangue(a.npc); }
+    return true;
+  }
+  const contem = (pai, filho) => { for (let o = filho; o; o = o.parent) if (o === pai) return true; return false; };
+  function avaliarForca(tipo, n) {
+    if (!S.ativo) return;
+    const ag = npcs.agressor, adv = S.advertencia != null && tempo() - S.advertencia < 60;
+    const nome = tipo === 'taser' ? 'Taser' : 'Disparo de arma de fogo';
+    if (n !== ag) return registrar('forca_contra_contido', `${nome} contra ${n.userData.nome}`);
+    if (S.rendido || S.algemado || ag.userData.caido) return registrar('forca_contra_contido', `${nome} contra o agressor já contido`);
+    camera.getWorldPosition(V);
+    const armado = !!S.faca && contem(ag, S.faca), dist = V.distanceTo(ag.position.clone().setY(V.y));
+    const movendo = !!(ag.userData.destino || ag.userData.rota?.length);
+    const avanca = (S.variacao.reacao === 'volta_casa' && movendo) || (S.avisoAgressor && !S.separado);
+    const foge = S.variacao.reacao === 'foge' && (movendo || ag.userData.noMuro);
+    if (tipo === 'taser') {
+      if (armado || avanca) {
+        legenda('Instrutor', `Uso do taser justificado: ${armado ? 'agressor com faca na mão' : 'risco à vítima'}. Agora algeme (resistência/perigo) e faça a busca pessoal.`, 6);
+        S.log.push({ t: +tempo().toFixed(1), id: 'taser_justificado', extra: armado ? 'faca na mão' : 'avançando' });
+        if (S.variacao.reacao === 'volta_casa' && movendo) registrar('proteger_casa');
+      } else registrar('taser_desproporcional', foge ? 'fuga sem agressão' : 'sem risco atual');
+    } else {
+      if (armado && dist < 6) {
+        legenda('Instrutor', 'Disparo diante de agressão letal iminente (faca a menos de 6 m). Acione o SAMU pelo rádio e preserve o local.', 7);
+        S.log.push({ t: +tempo().toFixed(1), id: 'disparo_justificado', extra: dist.toFixed(1) + ' m' });
+      } else registrar(foge ? 'disparo_fuga' : 'disparo_injustificado', armado ? `faca a ${dist.toFixed(1)} m` : 'sem agressão letal');
+    }
+    if (!adv) registrar('sem_advertencia', nome);
+  }
+  // atingido: tomba rigido (taser: treme durante a descarga), larga a faca e fica contido no chao
+  function derrubar(n, tipo) {
+    const u = n.userData; if (u.caido) return;
+    u.caido = tipo; u.rota = []; u.destino = null; u.aoChegar = null; u.semVirar = true; u.decisao = null;
+    if (u.real) animar(n, 'parada', 1e6, .1);
+    if (S.faca && contem(n, S.faca)) {                         // a faca cai no chao, ao lado
+      scene.attach(S.faca); S.faca.position.set(n.position.x + Math.sin(n.rotation.y + 1.2) * .6, .02, n.position.z + Math.cos(n.rotation.y + 1.2) * .6);
+      S.faca.rotation.set(0, Math.random() * 6, 0); S.faca.scale.setScalar(1);
+    }
+    n.rotation.order = 'YXZ'; const y0 = n.position.y;
+    suave(.45, e => { n.rotation.x = e * Math.PI / 2; n.position.y = y0 + .12 * e; });      // de bruços (o modelo olha para +Z)
+    if (tipo === 'taser') u.tremerAte = performance.now() + 5000;
+    if (n === npcs.agressor) {
+      S.rendido = true; S.contido = tipo; S.abordando = false;
+      setTimeout(() => dica(tipo === 'taser'
+        ? 'Ele está contido no chão. Clique nele para algemar (motivo: resistência ou perigo) e fazer a busca pessoal.'
+        : 'O agressor foi atingido: acione o SAMU pelo rádio, algeme e preserve o local.'), 5200);
+    }
+  }
+  function levantarDoChao(n) {                                       // antes de algemar ou conduzir: volta a ficar de pe
+    const u = n?.userData; if (!u?.caido) return;
+    u.caido = false; u.tremerAte = 0; n.rotation.z = 0;
+    const y0 = n.position.y, x0 = n.rotation.x;
+    suave(.7, e => { n.rotation.x = x0 * (1 - e); n.position.y = y0 * (1 - e); }).then(() => { u.semVirar = false; });
+    if (u.real && !u.algemado) animar(n, 'parada', 1e6, .3);
+  }
+  function advertir() {
+    S.advertencia = tempo(); S.log.push({ t: +tempo().toFixed(1), id: 'advertencia', extra: S.ferramenta });
+    const arma = S.ferramenta === 'pistola';
+    falar('Guarnição', arma ? 'Polícia! Larga a faca e não se mexe, ou eu atiro!' : 'Polícia! Parado! Não se mexe, ou vou usar o taser!', 'm');
+    // com a arma ou o taser apontado, o agressor que nao e agressivo obedece: larga a faca e poe as maos na cabeca
+    const ag = npcs.agressor; if (!ag || !ag.visible || S.rendido || S.algemado || ag.userData.caido || S.variacao.agressor === 'escondido') return;
+    if (camera.getWorldPosition(V).distanceTo(ag.position) > 9 || !['taser', 'pistola'].includes(S.ferramenta)) return;
+    setTimeout(() => {
+      if (S.variacao.agressor === 'agressivo') return dizer(ag, 'Agressor', { texto: 'Ninguém encosta em mim! Sai da minha casa!' }, 'm');
+      if (S.faca && contem(ag, S.faca)) { scene.attach(S.faca); S.faca.position.set(ag.position.x + .4, .02, ag.position.z + .3); S.faca.rotation.set(0, 1, 0); S.faca.scale.setScalar(1); }
+      render(true);
+    }, 1800);
+  }
+
+  /* roleta de equipamentos: segurar Q (computador) ou A / X (Quest), escolher com o mouse ou o analogico e soltar */
+  const ROLETA = [['mao', 'Mão'], ['camera', 'Câmera'], ['placa', 'Placa'], ['fita', 'Fita'], ['algemas', 'Algemas'], ['taser', 'Taser'], ['pistola', 'Pistola'], ['advertir', 'Advertir']];
+  const rcv = document.createElement('canvas'); rcv.width = rcv.height = 512;
+  Object.assign(rcv.style, { position: 'fixed', left: '50%', top: '50%', width: '380px', height: '380px', transform: 'translate(-50%,-50%)', zIndex: 20, pointerEvents: 'none', display: 'none' });
+  document.body.appendChild(rcv);
+  const rtex = new THREE.CanvasTexture(rcv); rtex.colorSpace = THREE.SRGBColorSpace;
+  const roletaVR = new THREE.Mesh(new THREE.PlaneGeometry(.22, .22), new THREE.MeshBasicMaterial({ map: rtex, transparent: true, depthTest: false, toneMapped: false, fog: false }));
+  roletaVR.renderOrder = 1002; roletaVR.visible = false;
+  const R = { aberta: false, sel: null, mao: null, dx: 0, dy: 0 };
+  function desenharRoleta() {
+    const g = rcv.getContext('2d'), C = 256, N = ROLETA.length; g.clearRect(0, 0, 512, 512);
+    for (let i = 0; i < N; i++) {
+      const a0 = -Math.PI / 2 + (i - .5) * 2 * Math.PI / N, a1 = a0 + 2 * Math.PI / N, am = (a0 + a1) / 2;
+      g.beginPath(); g.arc(C, C, 250, a0 + .015, a1 - .015); g.arc(C, C, 92, a1 - .04, a0 + .04, true); g.closePath();
+      const atual = ROLETA[i][0] === S.ferramenta;
+      g.fillStyle = i === R.sel ? 'rgba(240,163,64,.92)' : atual ? 'rgba(240,163,64,.35)' : 'rgba(11,14,22,.86)'; g.fill();
+      g.strokeStyle = 'rgba(240,163,64,.7)'; g.lineWidth = 3; g.stroke();
+      g.fillStyle = i === R.sel ? '#0b0e16' : ROLETA[i][0] === 'pistola' || ROLETA[i][0] === 'taser' ? '#ffd6a0' : '#efe9df';
+      g.font = '600 30px Segoe UI, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText(ROLETA[i][1], C + Math.cos(am) * 172, C + Math.sin(am) * 172);
+    }
+    g.beginPath(); g.arc(C, C, 84, 0, 7); g.fillStyle = 'rgba(11,14,22,.9)'; g.fill();
+    g.fillStyle = '#f0a340'; g.font = '600 22px Segoe UI, sans-serif';
+    g.fillText(R.sel != null ? ROLETA[R.sel][1] : 'Equipamento', C, C - 10);
+    g.fillStyle = '#efe9df'; g.font = '400 18px Segoe UI, sans-serif'; g.fillText('solte para escolher', C, C + 20);
+    rtex.needsUpdate = true;
+  }
+  const setor = (x, y) => (Math.round((Math.atan2(y, x) + Math.PI / 2) / (2 * Math.PI / ROLETA.length)) + ROLETA.length) % ROLETA.length;
+  function abrirRoleta(mao) {
+    R.aberta = true; R.sel = null; R.mao = mao; R.dx = R.dy = 0; fecharPaineis(); desenharRoleta();
+    if (mao) { const c = controle(mao) || camera; c.add(roletaVR); roletaVR.position.set(0, .07, -.16); roletaVR.rotation.set(-.7, 0, 0); roletaVR.visible = true; }
+    else rcv.style.display = 'block';
+  }
+  function fecharRoleta(escolher = true) {
+    if (!R.aberta) return; R.aberta = false; rcv.style.display = 'none'; roletaVR.visible = false; roletaVR.parent?.remove(roletaVR);
+    if (escolher && R.sel != null) escolherEquipamento(ROLETA[R.sel][0]);
+  }
+  function escolherEquipamento(k) {
+    if (k === 'advertir') return advertir();
+    S.ferramenta = k; S.fitaInicio = null; empunhar(); status();
+    legenda('Equipamento', `${FERR[k]} na mão` + (k === 'taser' ? ' — advirta antes de disparar' : k === 'pistola' ? ' — só diante de agressão letal' : ''), 2);
+  }
+  // Quest: chamado a cada quadro pelo index.html (botao A/X e analogico da mesma mao); devolve true enquanto usa o analogico
+  function roletaQuest(mao, apertado, x, y) {
+    if (apertado && !R.aberta) abrirRoleta(mao);
+    if (!R.aberta || R.mao !== mao) return false;
+    if (!apertado) { fecharRoleta(); return true; }
+    if (Math.hypot(x, y) > .5) { const s = setor(x, y); if (s !== R.sel) { R.sel = s; desenharRoleta(); } }
+    return true;
+  }
+  addEventListener('keydown', e => { if (e.code === 'KeyQ' && !e.repeat && e.target.tagName !== 'INPUT') abrirRoleta(null); });
+  addEventListener('keyup', e => { if (e.code === 'KeyQ') fecharRoleta(); });
+  addEventListener('mousemove', e => {
+    if (!R.aberta || R.mao) return;
+    R.dx = Math.max(-120, Math.min(120, R.dx + e.movementX)); R.dy = Math.max(-120, Math.min(120, R.dy + e.movementY));
+    if (Math.hypot(R.dx, R.dy) > 25) { const s = setor(R.dx, R.dy); if (s !== R.sel) { R.sel = s; desenharRoleta(); } }
+  });
+  // a cada quadro: taser (gatilho, cartucho), mira laser no Quest e tremor de quem leva a descarga
+  function quadroArmas(dt, agora) {
+    if (taserItem) {
+      taserItem.update(dt);
+      const st = taserItem.state; if (S.ferramenta === 'taser' && st.held && !st.armed && !st.reloading) taserItem.setArmed(true);
+    }
+    const vr = renderer.xr.isPresenting && S.ferramenta === 'taser' && taserItem && taser.parent !== camera;
+    if (vr) {
+      const { origin, direction } = taserItem.getUseRay(), a = alvoDisparo(origin, direction, 12);
+      laser.position.copy(a.ponto); feixe.position.copy(origin); feixe.lookAt(a.ponto); feixe.scale.set(1, 1, a.dist);
+      feixe.geometry.attributes.position.setXYZ(1, 0, 0, 1); feixe.geometry.attributes.position.needsUpdate = true;
+    }
+    laser.visible = feixe.visible = !!vr;
+    for (const n of Object.values(npcs)) {
+      const u = n.userData; if (!u.tremerAte) continue;
+      if (agora < u.tremerAte) n.rotation.z = (Math.random() - .5) * .07; else { n.rotation.z = 0; u.tremerAte = 0; }
+    }
+  }
+
   /* ================= ferramentas e menus ================= */
-  const FERR = { mao: 'Mão', camera: 'Câmera fotográfica', placa: 'Placa numerada', fita: 'Fita zebrada', algemas: 'Algemas' };
+  const FERR = { mao: 'Mão', camera: 'Câmera fotográfica', placa: 'Placa numerada', fita: 'Fita zebrada', algemas: 'Algemas', taser: 'Taser (DEI)', pistola: 'Pistola' };
   function abrirFerramentas() {
     fecharPaineis();
     menu.mostrar({
       tag: 'Ferramentas', titulo: 'Equipamento', texto: `Em uso: ${FERR[S.ferramenta]} · Luvas: ${S.luvas ? 'calçadas' : 'não'}`,
       botoes: [
-        ...Object.entries(FERR).map(([k, n]) => ({ label: (S.ferramenta === k ? '● ' : '') + n, acao: () => { S.ferramenta = k; S.fitaInicio = null; menu.esconder(); status(); } })),
+        ...Object.entries(FERR).map(([k, n]) => ({ label: (S.ferramenta === k ? '● ' : '') + n, acao: () => { menu.esconder(); escolherEquipamento(k); } })),
         { label: S.luvas ? 'Tirar as luvas' : 'Calçar luvas', acao: () => { S.luvas = !S.luvas; menu.esconder(); status(); } },
         { label: 'Lanterna (liga/desliga)', acao: () => { ctx.setLanterna(!ctx.lanternaLigada(), camera); menu.esconder(); } },
         { label: 'Rádio', acao: abrirRadio },
@@ -642,7 +915,7 @@ export async function iniciar(ctx) {
       ['Resistência à prisão', true], ['Fundado receio de fuga', true], ['Perigo à integridade da vítima ou da guarnição', true], ['Por precaução, sem motivo específico', false]
     ].map(([m, ok]) => ({
       label: m, acao: () => {
-        dialogo.esconder(); S.algemado = true; som('algemas'); colocarAlgemas(npcs.agressor);
+        dialogo.esconder(); S.algemado = true; som('algemas'); levantarDoChao(npcs.agressor); colocarAlgemas(npcs.agressor);
         if (ok) registrar('algemas_justificadas', m); else penalidade(-4, 'Algemas sem justificativa', 'Uso de algemas exige justificativa por escrito (STF SV 11).');
         legenda('Guarnição', 'Algemado. Motivo registrado: ' + m, 3);
       }
@@ -706,8 +979,11 @@ export async function iniciar(ctx) {
   }
 
   /* ================= uso das ferramentas ================= */
-  function usar(ray) {
+  function usar(ray, c) {
     for (const p of paineis) if (p.clique(ray)) return true;
+    // taser e pistola: o gatilho da mao que segura dispara (a outra mao continua interagindo)
+    const arma = S.ferramenta === 'taser' ? taser : S.ferramenta === 'pistola' ? pistola : null;
+    if (arma && (!c || arma.parent === c)) return S.ferramenta === 'taser' ? usarTaser(ray) : usarPistola(ray, c);
     if (!S.ativo) return explorar(ray);
     // personagens
     const npcHits = Object.values(npcs).map(n => n.userData.hit);
@@ -823,8 +1099,8 @@ export async function iniciar(ctx) {
     menu.mostrar({
       tag: 'Treinamento', titulo: 'Ocorrência de violência doméstica',
       texto: 'Aviso de conteúdo: esta simulação trata de violência doméstica. Pause quando precisar.\n\n' +
-        'Computador: clique para usar a ferramenta e falar com as pessoas · T ferramentas · R rádio · K checklist.\n' +
-        'Quest: gatilho usa/clica · botão Y ou B abre as ferramentas · grip liga a lanterna.',
+        'Computador: clique para usar a ferramenta e falar com as pessoas · segure Q para a roleta de equipamentos (taser, pistola…) · T ferramentas · R rádio · K checklist.\n' +
+        'Quest: gatilho usa/clica/dispara · segure A ou X e escolha com o analógico na roleta de equipamentos · Y ou B abre as ferramentas · grip liga a lanterna.',
       botoes: [
         { label: 'Modo treino (objetivos e dicas na tela)', acao: () => { S.modo = 'treino'; comecar(); } },
         { label: 'Modo avaliação (sem dicas)', acao: () => { S.modo = 'avaliacao'; comecar(); } },
@@ -848,7 +1124,8 @@ export async function iniciar(ctx) {
     Object.assign(S, { ativo: true, inicio: performance.now(), fim: 0, feitos: new Map(), erros: [], graves: [], log: [], ferramenta: 'mao', luvas: false,
       identificado: false, socorroOuvido: false, entrou: false, contatoVitima: false, separado: false, algemado: false, desistenciaResolvida: false,
       criancaAchada: false, vestReconhecidos: new Set(), vestFotografados: new Set(), placas: 0, fitas: [], fitaInicio: null, tempoFachada: 0, tempoDentro: 0, avisoAgressor: false,
-      apoio: false, agressorAchado: false, rendido: false, abordando: false, historia: false, capitulo: null, placasVest: new Set(), avisoFotos: false });
+      apoio: false, agressorAchado: false, rendido: false, abordando: false, historia: false, capitulo: null, placasVest: new Set(), avisoFotos: false , advertencia: null, contido: null });
+    empunhar();
     if (ctx.hotspots) ctx.hotspots.visible = false;      // sem marcadores (no modo treino os objetivos guiam)
     criarNPCs();
     montarQuintal();
@@ -969,7 +1246,8 @@ export async function iniciar(ctx) {
     Object.assign(S, { ativo: true, historia: true, modo: 'treino', inicio: performance.now(), fim: 0, feitos: new Map(), erros: [], graves: [], log: [],
       ferramenta: 'mao', luvas: false, entrou: true, identificado: true, contatoVitima: true, separado: false, algemado: false, rendido: false,
       abordando: false, agressorAchado: false, criancaAchada: false, vestReconhecidos: new Set(), vestFotografados: new Set(), placas: 0, fitas: [],
-      fitaInicio: null, desistenciaResolvida: false, apoio: false, capitulo: 'abordagem', placasVest: new Set(), avisoFotos: false });
+      fitaInicio: null, desistenciaResolvida: false, apoio: false, capitulo: 'abordagem', placasVest: new Set(), avisoFotos: false , advertencia: null, contido: null });
+    empunhar();
     status();
     descobrirAgressor();
   }
@@ -1129,7 +1407,7 @@ export async function iniciar(ctx) {
     falarDialogo('Prisão', ops, 'Procedimento com o detido');
   }
   function conduzir() {
-    const ag = npcs.agressor; S.separado = true; registrar('separar_partes');
+    const ag = npcs.agressor; S.separado = true; registrar('separar_partes'); levantarDoChao(ag);
     animar(ag, 'andando', 1e6); ag.userData.vel = 1.3; ag.userData.semVirar = true;
     const p = ag.position, dentro = Math.abs(p.x) < 6.2 && Math.abs(p.z) < 4.3;
     ag.userData.rota = [...(dentro ? [new THREE.Vector3(p.x * .3, 0, 2.6), new THREE.Vector3(0, 0, 5.6)] : [new THREE.Vector3(8.6, 0, 7.6)]),   // de dentro: pela porta da frente
@@ -1254,6 +1532,7 @@ export async function iniciar(ctx) {
     const agora = performance.now(), dt = (agora - ultimo) / 1000; ultimo = agora;
     if (agora > legAte) { leg.visible = false; const hl = document.getElementById('legendaHTML'); if (hl && !hl.hidden) hl.hidden = true; }
     if (guiaFita.grupo) matGuia.opacity = .3 + .25 * Math.sin(agora / 300);      // cones guia pulsando
+    quadroArmas(dt, agora);
     camera.getWorldPosition(V); camera.getWorldDirection(V2);
     for (const n of Object.values(npcs)) {
       n.userData.mixer?.update(dt);
@@ -1306,7 +1585,7 @@ export async function iniciar(ctx) {
   window.__trein = {
     clique: ray => usar(ray),
     apontar, painelAberto: () => paineis.some(p => p.mesh.visible),
-    gatilho: (ray) => usar(ray),
+    gatilho: (ray, c) => usar(ray, c), roleta: roletaQuest,
     menu: () => {
       if (S.ativo) return abrirFerramentas();
       const ag = npcs.agressor;
@@ -1316,7 +1595,7 @@ export async function iniciar(ctx) {
     quadro, estado: S, relatorio,
     // acesso para testes automatizados e para o instrutor
     _t: { comecar, radio, conversarVitima, conversarAgressor, algemar, conversarVizinho, interagirPorta, foto, reconhecer, fita, tocar, encerrar,
-      botoes: () => (dialogo.mesh.visible ? dialogo : menu).botoes, npcs, vest: CEN.vestigios, descobrirAgressor, abordagemClique, objetivos, facaQuintal }
+      botoes: () => (dialogo.mesh.visible ? dialogo : menu).botoes, npcs, taser: () => taserItem, escolherEquipamento, fecharPaineis, vest: CEN.vestigios, descobrirAgressor, abordagemClique, objetivos, facaQuintal }
   };
   return window.__trein;
 }
