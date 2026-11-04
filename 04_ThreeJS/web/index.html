@@ -166,8 +166,19 @@ function mostrarProgresso(msg) {
   const p = Math.min(99, Math.round((progresso.glb * .8 + progresso.lm * .18) * 100));
   $('pct').textContent = p + '%'; $('ldfill').style.width = p + '%'; if (msg) $('ldmsg').textContent = msg;
 }
+// o Vercel manda o arquivo comprimido e sem o tamanho total: pergunta o tamanho real antes (1 byte com Range -> "bytes 0-0/total")
+// (servidor sem Range responde o arquivo inteiro: le so o cabecalho e cancela)
+const totalGlb = await (async () => {
+  const ac = new AbortController();
+  try {
+    const r = await fetch('cena.glb', { headers: { Range: 'bytes=0-0' }, signal: ac.signal });
+    const t = +((r.headers.get('Content-Range') || '').split('/')[1]) || (r.status === 200 && !r.headers.get('Content-Encoding') ? +r.headers.get('Content-Length') : 0);
+    ac.abort(); return t || 0;
+  } catch (e) { return 0; }
+})();
 const gltf = await new GLTFLoader().setDRACOLoader(draco).loadAsync('cena.glb', e => {
-  if (e.total) { progresso.glb = e.loaded / e.total; mostrarProgresso(`Baixando o cenário · ${mb(e.loaded)} de ${mb(e.total)} MB`); }
+  const total = e.total || totalGlb;
+  if (total) { progresso.glb = Math.min(1, e.loaded / total); mostrarProgresso(`Baixando o cenário · ${mb(Math.min(e.loaded, total))} de ${mb(total)} MB`); }
   else mostrarProgresso(`Baixando o cenário · ${mb(e.loaded)} MB`);
 });
 progresso.glb = 1;
