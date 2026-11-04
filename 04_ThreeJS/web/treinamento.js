@@ -414,7 +414,7 @@ export async function iniciar(ctx) {
       else if (va === 'agressivo') animar(a, 'parada'); else animar(a, 'nervoso', 1e6);
       if (S.variacao.faca === 'na_mao') {
         S.faca = faca();
-        if (a.userData.real) { S.faca.scale.setScalar(100); S.faca.rotation.set(0, Math.PI / 2, 0); }   // a mao do Rocketbox esta em centimetros
+        if (a.userData.real) encaixarNaMao(S.faca, a);
         else S.faca.position.set(0, -.3, 0);
         a.userData.bracoD.add(S.faca);
       }
@@ -428,12 +428,40 @@ export async function iniciar(ctx) {
       const n = personagem('vizinho', 'Vizinho', 0x3d6b3a, 1.72); n.position.set(4.2, .1, 14.7); n.rotation.y = Math.PI; npcs.vizinho = n; scene.add(n);
     }
   }
+  // faca empunhada: cabo atravessando o punho fechado (do dedo minimo para o indicador), lamina saindo do lado do polegar.
+  // Calculado pelos ossos da mao do Rocketbox (em centimetros; dedos para +X); a palma e o lado voltado para o quadril
+  function encaixarNaMao(obj, npc) {
+    const mao = npc.userData.bracoD, osso = k => mao.getObjectByName('Bip01_R_Finger' + k);
+    const f1 = osso(1)?.position, f4 = osso(4)?.position;
+    if (!f1 || !f4) { obj.scale.setScalar(100); obj.rotation.set(0, Math.PI / 2, 0); return; }
+    npc.updateMatrixWorld(true);
+    const quadril = mao.worldToLocal((npc.userData.modelo.getObjectByName('Bip01_Pelvis') || npc).getWorldPosition(new THREE.Vector3()));
+    const palma = Math.sign(quadril.y) || 1;
+    const eixo = f1.clone().sub(f4).normalize();                                   // cabo: do minimo para o indicador (lamina para o polegar)
+    const largura = new THREE.Vector3(1, 0, 0).addScaledVector(eixo, -eixo.x).normalize();   // fio da lamina para o lado das pontas dos dedos
+    const esp = new THREE.Vector3().crossVectors(eixo, largura);
+    obj.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(largura, esp, eixo));
+    obj.position.copy(f1).add(f4).multiplyScalar(.5).multiplyScalar(.8).setY(palma * 2.4);     // dentro da mao fechada, junto a palma
+    obj.scale.setScalar(100);
+  }
+  // faca do autor (modelos/faca.glb: cabo na origem, lamina para +Z, deitada); enquanto nao carrega, duas caixas no lugar
+  let facaModelo = null;
+  const facaPronta = new GLTFLoader().loadAsync('modelos/faca.glb').then(g => { facaModelo = g.scene; }).catch(() => { });
+  function vestirFaca(g) {
+    if (!facaModelo) return;
+    g.children.filter(c => c.userData.provisoria).forEach(c => g.remove(c));
+    g.add(realcar(facaModelo.clone()));
+  }
   function faca() {
     const g = new THREE.Group(); g.name = 'Faca';
-    const lam = new THREE.Mesh(new THREE.BoxGeometry(.03, .004, .2), new THREE.MeshStandardMaterial({ color: 0xc8ccd0, metalness: 1, roughness: .25 }));
-    lam.position.z = .14; g.add(lam);
-    const cabo = new THREE.Mesh(new THREE.BoxGeometry(.025, .02, .11), new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: .6 }));
-    g.add(cabo);
+    if (facaModelo) vestirFaca(g);
+    else {
+      const lam = new THREE.Mesh(new THREE.BoxGeometry(.03, .004, .2), new THREE.MeshStandardMaterial({ color: 0xc8ccd0, metalness: 1, roughness: .25 }));
+      lam.position.z = .14; lam.userData.provisoria = true; g.add(lam);
+      const cabo = new THREE.Mesh(new THREE.BoxGeometry(.025, .02, .11), new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: .6 }));
+      cabo.userData.provisoria = true; g.add(cabo);
+      facaPronta.then(() => vestirFaca(g));
+    }
     const hit = new THREE.Mesh(new THREE.SphereGeometry(.25, 8, 6), new THREE.MeshBasicMaterial({ visible: false })); hit.userData.faca = true; g.add(hit);
     g.userData.hit = hit; return g;
   }
@@ -544,14 +572,23 @@ export async function iniciar(ctx) {
     const i = (ctx.controles || []).indexOf(c); if (i >= 0 && ctx.grips?.[i]) ctx.grips[i].visible = visivel;
   }
   const gl = new GLTFLoader();
+  // objeto na mao do policial: leve brilho proprio da cor do material, para nao virar silhueta preta no escuro
+  function realcar(raiz) {
+    raiz.traverse(o => {
+      if (!o.isMesh) return;
+      const ms = [].concat(o.material).map(m => { const c = m.clone(); if (c.emissive && c.color) { c.emissive.copy(c.color).multiplyScalar(.22); c.emissiveIntensity = 1; } return c; });
+      o.material = Array.isArray(o.material) ? ms : ms[0];
+    });
+    return raiz;
+  }
   // pistola (mesmo modelo do cassino): cano para -Z, boca em (0, 0, -0,15)
   const pistola = new THREE.Group(); pistola.visible = false;
-  gl.loadAsync('modelos/pistola.glb').then(g => pistola.add(g.scene)).catch(() => { });
+  gl.loadAsync('modelos/pistola.glb').then(g => pistola.add(realcar(g.scene))).catch(() => { });
   // taser do autor (taser/ = controlador e regras do pacote TaserVR): raiz no centro da empunhadura, frente para +Z
   const taser = new THREE.Group(); taser.visible = false; let taserItem = null;
   Promise.all([gl.loadAsync('modelos/taser.glb'), import('./taser/TaserVRController.mjs')]).then(([g, m]) => {
     taserItem = new m.TaserVRController(g, { capacity: 2, onUse: e => descargaTaser(e) });     // 2 cartuchos, como o modelo de dois disparos
-    taserItem.root.position.set(0, 0, 0); taserItem.root.rotation.set(0, Math.PI, 0); taser.add(taserItem.root);
+    taserItem.root.position.set(0, 0, 0); taserItem.root.rotation.set(0, Math.PI, 0); taser.add(taserItem.root); realcar(taserItem.root);
   }).catch(e => console.warn('Taser não carregou:', e));
   // mira laser do taser (ponto vermelho) e fios das sondas
   const laser = new THREE.Mesh(new THREE.SphereGeometry(.012, 8, 6), new THREE.MeshBasicMaterial({ color: 0xff2020, toneMapped: false, fog: false }));
@@ -560,11 +597,22 @@ export async function iniciar(ctx) {
     new THREE.LineBasicMaterial({ color: 0xff3030, transparent: true, opacity: .35, toneMapped: false, fog: false }));
   feixe.visible = false; scene.add(feixe);
   const fios = [], matFio = new THREE.LineBasicMaterial({ color: 0xd8d8d8, transparent: true, opacity: .85 });
-  function fio(a, b) {
-    const pts = [], meio = a.clone().lerp(b, .5).setY((a.y + b.y) / 2 - .12 * a.distanceTo(b) / 5);     // fio fino com uma barriga
-    for (let k = 0; k <= 12; k++) { const t = k / 12; pts.push(a.clone().lerp(meio, t).lerp(meio.clone().lerp(b, t), t)); }
-    const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), matFio); scene.add(l); fios.push(l);
+  // fio da sonda: sai da boca do taser e termina no ponto atingido; se acertou alguem, a ponta acompanha o corpo (preso nele)
+  function fio(b, npc = null) {
+    const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(Array.from({ length: 13 }, () => new THREE.Vector3())), matFio);
+    l.frustumCulled = false; l.userData.ponta = npc ? npc.worldToLocal(b.clone()) : b.clone(); l.userData.npc = npc;
+    scene.add(l); fios.push(l); curvaFio(l);
     setTimeout(() => { scene.remove(l); l.geometry.dispose(); fios.splice(fios.indexOf(l), 1); }, 9000);
+  }
+  const FA = new THREE.Vector3(), FB = new THREE.Vector3(), FM = new THREE.Vector3(), FP = new THREE.Vector3();
+  function curvaFio(l) {
+    if (taserItem && taser.visible) FA.copy(taserItem.getUseRay().origin); else FA.copy(l.userData.a || FB);
+    l.userData.a = FA.clone();
+    FB.copy(l.userData.ponta); if (l.userData.npc) l.userData.npc.localToWorld(FB);
+    FM.copy(FA).lerp(FB, .5); FM.y -= .12 * FA.distanceTo(FB) / 5;                       // barriga do fio
+    const pos = l.geometry.attributes.position;
+    for (let k = 0; k <= 12; k++) { const t = k / 12; FP.copy(FA).lerp(FM, t).lerp(FM.clone().lerp(FB, t), t); pos.setXYZ(k, FP.x, FP.y, FP.z); }
+    pos.needsUpdate = true;
   }
   // clarao e capsula da pistola, marca de tiro e poca de sangue
   const clarao = new THREE.PointLight(0xffc880, 0, 8, 2); clarao.position.set(0, 0, -.17); pistola.add(clarao);
@@ -589,7 +637,7 @@ export async function iniciar(ctx) {
       const on = S.ferramenta === k;
       if (obj.parent) mostrarControle(obj.parent, true);
       const pai = renderer.xr.isPresenting ? (controle('right') || ctx.controles?.[0] || camera) : camera;
-      if (on) { pai.add(obj); obj.position.set(...(pai === camera ? [.17, -.14, -.38] : [0, 0, -.02])); obj.rotation.set(0, 0, 0); mostrarControle(pai, false); }
+      if (on) { pai.add(obj); obj.position.set(...(pai === camera ? [.2, -.19, -.52] : [0, 0, -.02])); obj.rotation.set(0, pai === camera ? .1 : 0, 0); mostrarControle(pai, false); }
       else obj.parent?.remove(obj);
       obj.visible = on;
     }
@@ -629,11 +677,11 @@ export async function iniciar(ctx) {
     ruido(.08, 3000, .5);
     const a = alvoDisparo(origin, direction, 7.6);              // alcance do cartucho: ~7,6 m
     const desvio = new THREE.Vector3(0, -.28 * Math.min(1, a.dist / 4.5), 0);       // a segunda sonda abre para baixo com a distancia
-    fio(origin, a.ponto); fio(origin, a.ponto.clone().add(desvio));
+    fio(a.ponto, a.npc); fio(a.ponto.clone().add(desvio), a.npc);
     if (!a.npc) return legenda('Equipamento', a.dist >= 7.5 ? 'As sondas não alcançaram: fora do alcance do cartucho (~7 m).' : 'As sondas não atingiram ninguém.', 2.5);
     avaliarForca('taser', a.npc);
     ruido(5, 2800, .35, 19);                                    // descarga de 5 s
-    derrubar(a.npc, 'taser');
+    derrubar(a.npc, 'taser', origin);
   }
   let ultimoTiro = 0;
   function usarPistola(ray, c) {
@@ -646,7 +694,7 @@ export async function iniciar(ctx) {
     const a = alvoDisparo(BOCA, DIR, 60);
     if (!a.npc) { marcaTiro(a.hit); if (S.ativo) registrar('disparo_sem_alvo'); return true; }
     avaliarForca('pistola', a.npc);
-    if (!a.npc.userData.caido) { derrubar(a.npc, 'pistola'); pocaSangue(a.npc); }
+    if (!a.npc.userData.caido) { derrubar(a.npc, 'pistola', BOCA); pocaSangue(a.npc); }
     return true;
   }
   const contem = (pai, filho) => { for (let o = filho; o; o = o.parent) if (o === pai) return true; return false; };
@@ -676,7 +724,7 @@ export async function iniciar(ctx) {
     if (!adv) registrar('sem_advertencia', nome);
   }
   // atingido: tomba rigido (taser: treme durante a descarga), larga a faca e fica contido no chao
-  function derrubar(n, tipo) {
+  function derrubar(n, tipo, origem = null) {
     const u = n.userData; if (u.caido) return;
     u.caido = tipo; u.rota = []; u.destino = null; u.aoChegar = null; u.semVirar = true; u.decisao = null;
     if (u.real) animar(n, 'parada', 1e6, .1);
@@ -685,7 +733,10 @@ export async function iniciar(ctx) {
       S.faca.rotation.set(0, Math.random() * 6, 0); S.faca.scale.setScalar(1);
     }
     n.rotation.order = 'YXZ'; const y0 = n.position.y;
-    suave(.45, e => { n.rotation.x = e * Math.PI / 2; n.position.y = y0 + .12 * e; });      // de bruços (o modelo olha para +Z)
+    // cai para longe de quem disparou: de costas se o atirador esta a frente dele (o modelo olha para +Z), de brucos se esta atras
+    const frente = !origem || Math.sin(n.rotation.y) * (origem.x - n.position.x) + Math.cos(n.rotation.y) * (origem.z - n.position.z) > 0;
+    const ang = frente ? -Math.PI / 2 : Math.PI / 2;
+    suave(.45, e => { n.rotation.x = e * ang; n.position.y = y0 + .12 * e; });
     if (tipo === 'taser') u.tremerAte = performance.now() + 5000;
     if (n === npcs.agressor) {
       S.rendido = true; S.contido = tipo; S.abordando = false;
@@ -725,21 +776,23 @@ export async function iniciar(ctx) {
   roletaVR.renderOrder = 1002; roletaVR.visible = false;
   const R = { aberta: false, sel: null, mao: null, dx: 0, dy: 0 };
   function desenharRoleta() {
+    // mesmo visual dos paineis do treinamento: fundo escuro com borda ambar, botoes ambar claro, realce do apontado, "●" no item em uso
     const g = rcv.getContext('2d'), C = 256, N = ROLETA.length; g.clearRect(0, 0, 512, 512);
+    g.beginPath(); g.arc(C, C, 254, 0, 7); g.fillStyle = 'rgba(11,14,22,.95)'; g.fill();
+    g.strokeStyle = 'rgba(240,163,64,.5)'; g.lineWidth = 3; g.stroke();
+    g.textAlign = 'center'; g.textBaseline = 'middle';
     for (let i = 0; i < N; i++) {
       const a0 = -Math.PI / 2 + (i - .5) * 2 * Math.PI / N, a1 = a0 + 2 * Math.PI / N, am = (a0 + a1) / 2;
-      g.beginPath(); g.arc(C, C, 250, a0 + .015, a1 - .015); g.arc(C, C, 92, a1 - .04, a0 + .04, true); g.closePath();
-      const atual = ROLETA[i][0] === S.ferramenta;
-      g.fillStyle = i === R.sel ? 'rgba(240,163,64,.92)' : atual ? 'rgba(240,163,64,.35)' : 'rgba(11,14,22,.86)'; g.fill();
-      g.strokeStyle = 'rgba(240,163,64,.7)'; g.lineWidth = 3; g.stroke();
-      g.fillStyle = i === R.sel ? '#0b0e16' : ROLETA[i][0] === 'pistola' || ROLETA[i][0] === 'taser' ? '#ffd6a0' : '#efe9df';
-      g.font = '600 30px Segoe UI, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-      g.fillText(ROLETA[i][1], C + Math.cos(am) * 172, C + Math.sin(am) * 172);
+      g.beginPath(); g.arc(C, C, 238, a0 + .03, a1 - .03); g.arc(C, C, 104, a1 - .07, a0 + .07, true); g.closePath();
+      g.fillStyle = 'rgba(240,163,64,.14)'; g.fill();
+      if (i === R.sel) { g.fillStyle = 'rgba(240,163,64,.32)'; g.fill(); }
+      g.strokeStyle = i === R.sel ? '#f0a340' : 'rgba(240,163,64,.55)'; g.lineWidth = i === R.sel ? 3 : 2; g.stroke();
+      g.fillStyle = '#efe9df'; g.font = '600 28px Segoe UI, sans-serif';
+      g.fillText((ROLETA[i][0] === S.ferramenta ? '● ' : '') + ROLETA[i][1], C + Math.cos(am) * 172, C + Math.sin(am) * 172);
     }
-    g.beginPath(); g.arc(C, C, 84, 0, 7); g.fillStyle = 'rgba(11,14,22,.9)'; g.fill();
-    g.fillStyle = '#f0a340'; g.font = '600 22px Segoe UI, sans-serif';
-    g.fillText(R.sel != null ? ROLETA[R.sel][1] : 'Equipamento', C, C - 10);
-    g.fillStyle = '#efe9df'; g.font = '400 18px Segoe UI, sans-serif'; g.fillText('solte para escolher', C, C + 20);
+    g.fillStyle = '#f0a340'; g.font = '500 17px Consolas, monospace'; g.fillText('EQUIPAMENTO', C, C - 26);
+    g.fillStyle = '#efe9df'; g.font = '700 27px Segoe UI, sans-serif'; g.fillText(R.sel != null ? ROLETA[R.sel][1] : FERR[S.ferramenta]?.split(' ')[0] || '', C, C + 4);
+    g.fillStyle = 'rgba(239,233,223,.86)'; g.font = '400 16px Segoe UI, sans-serif'; g.fillText('solte para escolher', C, C + 32);
     rtex.needsUpdate = true;
   }
   const setor = (x, y) => (Math.round((Math.atan2(y, x) + Math.PI / 2) / (2 * Math.PI / ROLETA.length)) + ROLETA.length) % ROLETA.length;
@@ -785,6 +838,7 @@ export async function iniciar(ctx) {
       feixe.geometry.attributes.position.setXYZ(1, 0, 0, 1); feixe.geometry.attributes.position.needsUpdate = true;
     }
     laser.visible = feixe.visible = !!vr;
+    for (const l of fios) curvaFio(l);
     for (const n of Object.values(npcs)) {
       const u = n.userData; if (!u.tremerAte) continue;
       if (agora < u.tremerAte) n.rotation.z = (Math.random() - .5) * .07; else { n.rotation.z = 0; u.tremerAte = 0; }
