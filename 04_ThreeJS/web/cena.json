@@ -416,18 +416,18 @@
   }
  },
  "lightmap_ganho": 3.14159,
- "exposicao": 1.0,
+ "exposicao": 1,
  "env": "env/noite_1k.hdr",
  "env_intensidade": 0.35,
  "cameras": {
   "Camera_Entrada": {
    "pos": [
-    0.0,
+    0,
     1.6,
     6.4
    ],
    "alvo": [
-    0.0,
+    0,
     1.1318,
     -3.589
    ]
@@ -446,7 +446,7 @@
   },
   "Camera_Rua": {
    "pos": [
-    -12.0,
+    -12,
     1.65,
     22.3
    ],
@@ -470,9 +470,9 @@
   },
   "Camera_Vizinhos": {
    "pos": [
-    4.0,
+    4,
     1.65,
-    15.0
+    15
    ],
    "alvo": [
     0.8457,
@@ -564,5 +564,6 @@
    1.6895,
    18.3782
   ]
- }
+ },
+ "glb_bytes": 62750992
 }
