@@ -381,7 +381,7 @@ export async function iniciar(ctx) {
   }
   const AGACHADO = new Set(['escondido', 'rendido', 'algemado_agachado']);
   function animar(npc, nome, segundos = 6, fade = .5) {
-    const u = npc?.userData; if (!u?.real) return;
+    const u = npc?.userData; if (!u?.real || u.caido === 'pistola') return;      // baleado fica caido
     if (u.algemado && !nome.startsWith('algemado'))       // algemado: maos sempre nas costas
       nome = nome === 'andando' || nome === 'correndo' ? 'algemado_andando'
         : AGACHADO.has(nome) || (AGACHADO.has(u.pose) && nome !== 'parada') ? 'algemado_agachado' : 'algemado';
@@ -614,21 +614,106 @@ export async function iniciar(ctx) {
     for (let k = 0; k <= 12; k++) { const t = k / 12; FP.copy(FA).lerp(FM, t).lerp(FM.clone().lerp(FB, t), t); pos.setXYZ(k, FP.x, FP.y, FP.z); }
     pos.needsUpdate = true;
   }
-  // clarao e capsula da pistola, marca de tiro e poca de sangue
-  const clarao = new THREE.PointLight(0xffc880, 0, 8, 2); clarao.position.set(0, 0, -.17); pistola.add(clarao);
-  const bocaFogo = new THREE.Mesh(new THREE.SphereGeometry(.03, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffd28a, transparent: true, opacity: .9, toneMapped: false, fog: false }));
-  bocaFogo.position.set(0, 0, -.17); bocaFogo.visible = false; pistola.add(bocaFogo);
-  const marcas = [], matMarca = new THREE.MeshBasicMaterial({ color: 0x080808 }), geoMarca = new THREE.CircleGeometry(.012, 10);
+  // efeitos da pistola (os mesmos do cassino): clarao em estrela na boca do cano com luz e fumaca, capsula ejetada,
+  // respingo de sangue com mancha na parede atras, poca sob quem caiu, marca de tiro no cenario
+  const GT = new THREE.Vector3(), GN = new THREE.Vector3(), rayS = new THREE.Raycaster(); rayS.firstHitOnly = true;
+  const texFlash = (() => {
+    const cv = document.createElement('canvas'); cv.width = cv.height = 128; const g = cv.getContext('2d');
+    g.translate(64, 64);
+    for (let k = 0; k < 7; k++) {                             // linguas de fogo
+      g.rotate(Math.PI * 2 / 7 + (Math.random() - .5) * .3); const L = 34 + Math.random() * 28;
+      const gr = g.createLinearGradient(0, 0, L, 0); gr.addColorStop(0, 'rgba(255,240,190,1)'); gr.addColorStop(.5, 'rgba(255,170,60,.8)'); gr.addColorStop(1, 'rgba(255,90,20,0)');
+      g.fillStyle = gr; g.beginPath(); g.moveTo(0, -9); g.lineTo(L, 0); g.lineTo(0, 9); g.fill();
+    }
+    const gr = g.createRadialGradient(0, 0, 0, 0, 0, 30); gr.addColorStop(0, 'rgba(255,255,240,1)'); gr.addColorStop(.5, 'rgba(255,200,90,.7)'); gr.addColorStop(1, 'rgba(255,120,30,0)');
+    g.fillStyle = gr; g.beginPath(); g.arc(0, 0, 30, 0, 7); g.fill();
+    const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t;
+  })();
+  const matFlash = new THREE.MeshBasicMaterial({ map: texFlash, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, fog: false, side: THREE.DoubleSide });
+  function criarFlash(tam = .2) {
+    const g = new THREE.Group(), geo = new THREE.PlaneGeometry(tam, tam);
+    const a = new THREE.Mesh(geo, matFlash), b = new THREE.Mesh(geo, matFlash), c = new THREE.Mesh(geo, matFlash);
+    b.rotation.y = Math.PI / 2; b.scale.x = 1.5; c.rotation.x = Math.PI / 2; c.scale.y = 1.5; g.add(a, b, c);
+    const l = new THREE.PointLight(0xffc880, 0, 10, 2); g.add(l); g.userData.luz = l; g.visible = false; return g;
+  }
+  const fumacas = [], geoFum = new THREE.SphereGeometry(.5, 12, 8);
+  function acenderFlash(f) {
+    f.rotation.z = Math.random() * 6.28; f.scale.setScalar(.75 + Math.random() * .6); f.visible = true; f.userData.luz.intensity = 9;
+    setTimeout(() => { f.userData.luz.intensity = 3; }, 40); setTimeout(() => { f.visible = false; f.userData.luz.intensity = 0; }, 85);
+    f.getWorldPosition(GT);
+    const m = new THREE.Mesh(geoFum, new THREE.MeshBasicMaterial({ color: 0xbfbfbf, transparent: true, opacity: .22, depthWrite: false }));
+    m.position.copy(GT); m.scale.setScalar(.04); scene.add(m); fumacas.push({ f: m, t: 0, v: new THREE.Vector3(0, .25, 0), s0: .04, cres: .22, vida: 1.1, op: .22 });
+  }
+  const clarao = criarFlash(); clarao.position.set(0, 0, -.2); pistola.add(clarao);      // a boca do cano fica em (0, 0, -0,15)
+  // capsulas ejetadas e gotas de sangue: pequenas pecas com gravidade e vida curta
+  const soltos = [], geoCaps = new THREE.CylinderGeometry(.0045, .0045, .019, 6), matCaps = new THREE.MeshBasicMaterial({ color: 0xb8923a });
+  const geoGota = new THREE.SphereGeometry(.011, 5, 4), matGota = new THREE.MeshBasicMaterial({ color: 0x6a0505 });
+  function capsula(arm) {
+    const m = new THREE.Mesh(geoCaps, matCaps); arm.getWorldPosition(m.position); m.position.y += .015;
+    const lado = new THREE.Vector3(1, 0, 0).applyQuaternion(arm.getWorldQuaternion(new THREE.Quaternion()));
+    scene.add(m); soltos.push({ m, v: lado.multiplyScalar(1.6 + Math.random()).add(new THREE.Vector3(0, 1.8, 0)), t: 0, vida: 1.1, giro: 20 });
+  }
+  const texSangue = (() => {
+    const cv = document.createElement('canvas'); cv.width = cv.height = 128; const g = cv.getContext('2d');
+    for (let k = 0; k < 26; k++) {
+      const a = Math.random() * 6.28, d = Math.pow(Math.random(), 1.6) * 46, r = 4 + Math.random() * (k < 6 ? 22 : 8);
+      g.fillStyle = `rgba(${95 + Math.random() * 40 | 0},4,4,${.75 + Math.random() * .25})`; g.beginPath(); g.arc(64 + Math.cos(a) * d, 64 + Math.sin(a) * d, r, 0, 7); g.fill();
+    }
+    const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t;
+  })();
+  const manchas = [], geoMancha = new THREE.PlaneGeometry(1, 1);
+  function mancha(ponto, normal, raio) {
+    const m = new THREE.Mesh(geoMancha, new THREE.MeshBasicMaterial({ map: texSangue, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, toneMapped: false, color: 0x9a9a9a }));
+    m.position.copy(ponto).addScaledVector(normal, .007); m.lookAt(ponto.clone().add(normal)); m.rotateZ(Math.random() * 6.28); m.scale.setScalar(raio * 2);
+    scene.add(m); manchas.push(m); if (manchas.length > 36) { const v = manchas.shift(); scene.remove(v); v.material.dispose(); }
+    return m;
+  }
+  function sangue(p, dir) {
+    for (let k = 0; k < 16; k++) {
+      const m = new THREE.Mesh(geoGota, matGota); m.position.copy(p); m.scale.setScalar(.5 + Math.random());
+      const v = dir.clone().multiplyScalar(.8 + Math.random() * 2.6).add(new THREE.Vector3((Math.random() - .5) * 1.6, Math.random() * 1.6, (Math.random() - .5) * 1.6));
+      scene.add(m); soltos.push({ m, v, t: 0, vida: .55 + Math.random() * .3, giro: 0 });
+    }
+    rayS.set(p, GN.copy(dir).normalize()); rayS.far = 3.5;                 // mancha na parede ou no movel atras
+    const h = rayS.intersectObjects(ctx.colisao(), false)[0];
+    if (h?.face) mancha(h.point, GN.copy(h.face.normal).transformDirection(h.object.matrixWorld).clone(), .16 + Math.random() * .2);
+  }
+  function pocaSangue(n, s = 1) {          // s = -1: corpo caido de costas (a poca fica atras dos pes)
+    setTimeout(() => {
+      const m = mancha(new THREE.Vector3(n.position.x + Math.sin(n.rotation.y) * s, .012, n.position.z + Math.cos(n.rotation.y) * s), new THREE.Vector3(0, 1, 0), .06);
+      suave(6, e => { m.scale.setScalar(.12 + .95 * e); });
+    }, 900);
+  }
+  const marcas = [], matMarca = new THREE.MeshBasicMaterial({ color: 0x080808 }), geoMarca = new THREE.CircleGeometry(.014, 10);
   function marcaTiro(h) {
     if (!h?.face) return;
-    const m = marcas.length > 30 ? marcas.shift() : new THREE.Mesh(geoMarca, matMarca), n = h.face.normal.clone().transformDirection(h.object.matrixWorld);
+    const m = marcas.length >= 40 ? marcas.shift() : new THREE.Mesh(geoMarca, matMarca), n = h.face.normal.clone().transformDirection(h.object.matrixWorld);
     m.position.copy(h.point).addScaledVector(n, .004); m.lookAt(h.point.clone().add(n)); scene.add(m); marcas.push(m);
   }
-  const matSangue = new THREE.MeshBasicMaterial({ color: 0x4a0606, transparent: true, opacity: .85, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3 });
-  function pocaSangue(n) {
-    const m = new THREE.Mesh(new THREE.CircleGeometry(1, 20), matSangue); m.rotation.x = -Math.PI / 2;
-    m.position.set(n.position.x + Math.sin(n.rotation.y) * .5, .012, n.position.z + Math.cos(n.rotation.y) * .5); m.scale.setScalar(.05); scene.add(m);
-    suave(6, e => m.scale.setScalar(.05 + .4 * e));
+  function efeitosArmas(dt) {
+    for (let i = fumacas.length - 1; i >= 0; i--) {
+      const o = fumacas[i]; o.t += dt; o.f.position.addScaledVector(o.v, dt); o.f.scale.setScalar(o.s0 + o.t * o.cres); o.f.material.opacity = o.op * Math.max(0, 1 - o.t / o.vida);
+      if (o.t > o.vida) { scene.remove(o.f); o.f.material.dispose(); fumacas.splice(i, 1); }
+    }
+    for (let i = soltos.length - 1; i >= 0; i--) {
+      const o = soltos[i]; o.t += dt; o.v.y -= 9.8 * dt; o.m.position.addScaledVector(o.v, dt); if (o.giro) o.m.rotation.x += o.giro * dt;
+      if (o.m.position.y < .01) { o.m.position.y = .01; o.v.set(0, 0, 0); }
+      if (o.t > o.vida) { scene.remove(o.m); soltos.splice(i, 1); }
+    }
+  }
+  // giro (rotation.y) em que o corpo caido (ombros de 0,6 m) nao entra em nada; tras: queda de costas
+  const rayQ = new THREE.Raycaster(); rayQ.firstHitOnly = true;
+  function direcaoLivre(n, dist, tras = false) {
+    const o = new THREE.Vector3(), d = new THREE.Vector3(), lado = new THREE.Vector3();
+    for (const k of [0, 1, -1, 2, -2, 3, -3, 4, .5, -.5, 1.5, -1.5, 2.5, -2.5, 3.5, -3.5]) {      // de frente primeiro, depois abrindo para os lados
+      const ry = n.rotation.y + k * Math.PI / 4; d.set(Math.sin(ry), 0, Math.cos(ry)).multiplyScalar(tras ? -1 : 1); lado.set(d.z, 0, -d.x);
+      const livre = [.25, .7].every(h => [-.3, 0, .3].every(l => {
+        o.copy(n.position).addScaledVector(lado, l).setY(n.position.y + h); rayQ.set(o, d); rayQ.far = dist;
+        return !rayQ.intersectObjects(ctx.colisao(), false).length;
+      }));
+      if (livre) return ry;
+    }
+    return null;
   }
 
   // quem segura a arma: no Quest, o controle direito (o raio do controle coincide com o cano); no computador, a camera
@@ -683,18 +768,32 @@ export async function iniciar(ctx) {
     ruido(5, 2800, .35, 19);                                    // descarga de 5 s
     derrubar(a.npc, 'taser', origin);
   }
-  let ultimoTiro = 0;
+  let ultimoTiro = 0, municao = 15, recarregando = false;
+  const CARREGADOR = 15;
+  function recarregar() {
+    if (recarregando || municao >= CARREGADOR) return;
+    recarregando = true;
+    const som = window.__som, seg = Math.min(4, (som?.tem('recarregar_pistola') && som.duracao('recarregar_pistola')) || 1.6);
+    if (!som?.tocar('recarregar_pistola')) ruido(.08, 2500, .3);
+    const rx = pistola.rotation.x, rz = pistola.rotation.z;          // a arma inclina enquanto troca o carregador
+    suave(Math.min(.35, seg / 3), e => { pistola.rotation.x = rx + .5 * e; pistola.rotation.z = rz + .35 * e; });
+    setTimeout(() => suave(.3, e => { pistola.rotation.x = rx + .5 * (1 - e); pistola.rotation.z = rz + .35 * (1 - e); }), Math.max(300, seg * 1000 - 320));
+    setTimeout(() => { municao = CARREGADOR; recarregando = false; }, seg * 1000);
+  }
   function usarPistola(ray, c) {
-    const agora = performance.now(); if (agora - ultimoTiro < 280) return true; ultimoTiro = agora;
+    const agora = performance.now(); if (agora - ultimoTiro < 280 || recarregando) return true; ultimoTiro = agora;
+    if (municao <= 0) { ruido(.03, 5000, .25); recarregar(); return true; }        // clique seco e recarga
+    municao--;
     mirarArma(pistola, ray); pistola.updateMatrixWorld(true);
-    bocaFogo.getWorldPosition(BOCA); DIR.set(0, 0, -1).applyQuaternion(pistola.getWorldQuaternion(Q)).normalize();
+    clarao.getWorldPosition(BOCA); DIR.set(0, 0, -1).applyQuaternion(pistola.getWorldQuaternion(Q)).normalize();
     somOu('tiro_pistola', () => ruido(.3, 3200, .9));
-    clarao.intensity = 9; bocaFogo.visible = true; setTimeout(() => { clarao.intensity = 0; bocaFogo.visible = false; }, 70);
+    acenderFlash(clarao); capsula(pistola);
     const rx = pistola.rotation.x; pistola.rotation.x = rx + .22; setTimeout(() => { pistola.rotation.x = rx; }, 130);
     const a = alvoDisparo(BOCA, DIR, 60);
     if (!a.npc) { marcaTiro(a.hit); if (S.ativo) registrar('disparo_sem_alvo'); return true; }
     avaliarForca('pistola', a.npc);
-    if (!a.npc.userData.caido) { derrubar(a.npc, 'pistola', BOCA); pocaSangue(a.npc); }
+    sangue(a.ponto, DIR);
+    if (!a.npc.userData.caido) derrubar(a.npc, 'pistola', BOCA, DIR);
     return true;
   }
   const contem = (pai, filho) => { for (let o = filho; o; o = o.parent) if (o === pai) return true; return false; };
@@ -724,29 +823,50 @@ export async function iniciar(ctx) {
     if (!adv) registrar('sem_advertencia', nome);
   }
   // atingido: tomba rigido (taser: treme durante a descarga), larga a faca e fica contido no chao
-  function derrubar(n, tipo, origem = null) {
+  function derrubar(n, tipo, origem = null, dirTiro = null) {
     const u = n.userData; if (u.caido) return;
     u.caido = tipo; u.rota = []; u.destino = null; u.aoChegar = null; u.semVirar = true; u.decisao = null;
-    if (u.real) animar(n, 'parada', 1e6, .1);
     if (S.faca && contem(n, S.faca)) {                         // a faca cai no chao, ao lado
       scene.attach(S.faca); S.faca.position.set(n.position.x + Math.sin(n.rotation.y + 1.2) * .6, .02, n.position.z + Math.cos(n.rotation.y + 1.2) * .6);
       S.faca.rotation.set(0, Math.random() * 6, 0); S.faca.scale.setScalar(1);
     }
+    if (n === npcs.agressor) { S.rendido = true; S.contido = tipo; S.abordando = false; }
+    if (tipo === 'pistola' && quedaAnimada(n, dirTiro)) {
+      if (n === npcs.agressor) setTimeout(() => dica('O agressor foi atingido: acione o SAMU pelo rádio, preste socorro e preserve o local.'), 3000);
+      return;
+    }
+    if (u.real) { const c = u.caido; u.caido = false; animar(n, 'parada', 1e6, .1); u.caido = c; }
     n.rotation.order = 'YXZ'; const y0 = n.position.y;
     // cai para longe de quem disparou: de costas se o atirador esta a frente dele (o modelo olha para +Z), de brucos se esta atras
     const frente = !origem || Math.sin(n.rotation.y) * (origem.x - n.position.x) + Math.cos(n.rotation.y) * (origem.z - n.position.z) > 0;
     const ang = frente ? -Math.PI / 2 : Math.PI / 2;
     suave(.45, e => { n.rotation.x = e * ang; n.position.y = y0 + .12 * e; });
     if (tipo === 'taser') u.tremerAte = performance.now() + 5000;
+    if (tipo === 'pistola') pocaSangue(n, frente ? -1 : 1);
     if (n === npcs.agressor) {
-      S.rendido = true; S.contido = tipo; S.abordando = false;
       setTimeout(() => dica(tipo === 'taser'
         ? 'Ele está contido no chão. Clique nele para algemar (motivo: resistência ou perigo) e fazer a busca pessoal.'
         : 'O agressor foi atingido: acione o SAMU pelo rádio, algeme e preserve o local.'), 5200);
     }
   }
+  // queda de quem leva tiro, igual ao cassino: em pe, tiro de frente = "Dying Backwards" (cai de costas); senao uma das duas quedas
+  // para a frente. O corpo gira para um lado livre de parede ou movel. Sem a animacao (boneco provisorio), devolve false
+  function quedaAnimada(n, dirTiro) {
+    const u = n.userData; if (!u.real) return false;
+    const deFrente = dirTiro && (Math.sin(n.rotation.y) * dirTiro.x + Math.cos(n.rotation.y) * dirTiro.z) < 0;
+    let queda = ['morrendo_a', 'morrendo_b'].filter(k => u.acoes?.[k]), tras = false, dir = null;
+    if (deFrente && u.acoes?.morrendo_tras) { dir = direcaoLivre(n, 1.8, true); if (dir !== null) { queda = ['morrendo_tras']; tras = true; } }
+    if (dir === null && queda.length) dir = direcaoLivre(n, 2.0);
+    if (dir === null || !queda.length) return false;
+    const r0 = n.rotation.y, dr = Math.atan2(Math.sin(dir - r0), Math.cos(dir - r0));
+    suave(tras ? 1.1 : .45, e => { n.rotation.y = r0 + dr * e; }); setTimeout(() => pocaSangue(n, tras ? -1 : 1), 300);
+    const acao = u.acoes[queda[Math.floor(Math.random() * queda.length)]];
+    clearTimeout(u.volta); acao.reset(); acao.setLoop(THREE.LoopOnce, 1); acao.clampWhenFinished = true; acao.play();
+    u.atual?.crossFadeTo(acao, .15, false); u.atual = acao; u.pose = 'morrendo';
+    return true;
+  }
   function levantarDoChao(n) {                                       // antes de algemar ou conduzir: volta a ficar de pe
-    const u = n?.userData; if (!u?.caido) return;
+    const u = n?.userData; if (!u?.caido || u.caido === 'pistola') return;      // baleado continua no chao
     u.caido = false; u.tremerAte = 0; n.rotation.z = 0;
     const y0 = n.position.y, x0 = n.rotation.x;
     suave(.7, e => { n.rotation.x = x0 * (1 - e); n.position.y = y0 * (1 - e); }).then(() => { u.semVirar = false; });
@@ -839,6 +959,7 @@ export async function iniciar(ctx) {
     }
     laser.visible = feixe.visible = !!vr;
     for (const l of fios) curvaFio(l);
+    efeitosArmas(dt);
     for (const n of Object.values(npcs)) {
       const u = n.userData; if (!u.tremerAte) continue;
       if (agora < u.tremerAte) n.rotation.z = (Math.random() - .5) * .07; else { n.rotation.z = 0; u.tremerAte = 0; }
@@ -1461,6 +1582,7 @@ export async function iniciar(ctx) {
     falarDialogo('Prisão', ops, 'Procedimento com o detido');
   }
   function conduzir() {
+    if (npcs.agressor?.userData.caido === 'pistola') return legenda('Guarnição', 'Ferido por disparo: não conduzir. Aguardar o SAMU no local e preservar a cena.', 5);
     const ag = npcs.agressor; S.separado = true; registrar('separar_partes'); levantarDoChao(ag);
     animar(ag, 'andando', 1e6); ag.userData.vel = 1.3; ag.userData.semVirar = true;
     const p = ag.position, dentro = Math.abs(p.x) < 6.2 && Math.abs(p.z) < 4.3;

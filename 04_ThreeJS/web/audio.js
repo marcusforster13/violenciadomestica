@@ -25,7 +25,9 @@ const DEF = {
   caco_vidro:          { tipo: 'evento', vol: .6 },
   obturador:           { tipo: 'evento', vol: .7 },
   fita_zebrada:        { tipo: 'evento', vol: .6 },
-  algemas:             { tipo: 'evento', vol: .7 }
+  algemas:             { tipo: 'evento', vol: .7 },
+  tiro_pistola:        { tipo: 'evento', vol: .9 },       // mesmas gravacoes do cassino
+  recarregar_pistola:  { tipo: 'evento', vol: .7 }
 };
 
 export async function iniciarAudio({ scene, camera, renderer }) {

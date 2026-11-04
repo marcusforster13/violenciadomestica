@@ -12,15 +12,20 @@ import bpy, os, sys, json
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 RB = os.path.join(AQUI, "rocketbox")
+if not os.path.isdir(RB):        # reaproveita os downloads do projeto anterior (mesma biblioteca, licenca MIT)
+    RB = os.path.normpath(os.path.join(AQUI, "..", "..", "leiseca", "07_Personagens", "rocketbox"))
 WEB = os.path.normpath(os.path.join(AQUI, "..", "04_ThreeJS", "web", "personagens"))
 TMP = os.path.join(AQUI, "_texturas_web")
 os.makedirs(WEB, exist_ok=True); os.makedirs(TMP, exist_ok=True)
 FORCAR = "--forcar" in sys.argv
 
+# papeis da violencia domestica. "animacao+pose" = pose gerada por IK sobre a animacao base;
+# "mixamo:arquivo@quadro" = animacao do Mixamo (pasta mixamo) a partir desse quadro
 PAPEIS = {
     "vitima":   ("Female_Adult_08", {"parada": "f_idle_nervous_01", "falando": "f_gestic_talk_sad_01",
                                      "estressada": "f_gestic_talk_femalestressed_01", "nervosa": "f_gestic_talk_nervous_01",
-                                     "ofegante": "f_idle_breathe_01"}),
+                                     "ofegante": "f_idle_breathe_01",
+                                     "morrendo_a": "mixamo:morte_a@7", "morrendo_b": "mixamo:morte_b@25", "morrendo_tras": "mixamo:morte_sentado@19"}),
     "agressor": ("Male_Adult_01",   {"parada": "m_idle_angry_01", "falando": "m_gestic_talk_neutral_01",
                                      "nervoso": "m_idle_nervous_01", "escondido": "m_crouch_idle",
                                      "rendido": "m_crouch_idle+maos_na_cabeca", "correndo": "m_run_fast_01",
@@ -28,10 +33,25 @@ PAPEIS = {
                                      "algemado_agachado": "m_crouch_idle+maos_nas_costas",
                                      "algemado_andando": "m_walk_fast_01+maos_nas_costas",
                                      "escalando": "m_idle_neutral_01+bracos_para_cima",
-                                     "maos_cabeca": "m_idle_neutral_01+maos_na_cabeca", "levantando": "m_crouch_out"}),
+                                     "maos_cabeca": "m_idle_neutral_01+maos_na_cabeca", "levantando": "m_crouch_out",
+                                     "morrendo_a": "mixamo:morte_a@7", "morrendo_b": "mixamo:morte_b@25", "morrendo_tras": "mixamo:morte_sentado@19"}),      # quedas ao levar um tiro (Mixamo)
     "crianca":  ("Female_Child_01", {"parada": "f_crouch_idle", "ofegante": "f_idle_breathe_01"}),
-    "vizinho":  ("Male_Adult_14",   {"parada": "m_idle_neutral_01", "falando": "m_gestic_talk_neutral_01"}),
+    "vizinho":  ("Male_Adult_14",   {"parada": "m_idle_neutral_01", "falando": "m_gestic_talk_neutral_01",
+                                     "morrendo_a": "mixamo:morte_a@7", "morrendo_b": "mixamo:morte_b@25", "morrendo_tras": "mixamo:morte_sentado@19"}),
 }
+
+MIX = os.path.join(AQUI, "mixamo")      # animacoes do Mixamo baixadas pelo autor (sem malha, 30 qps); fora do repositorio
+def _mapa_mixamo():
+    """Osso do Rocketbox (sufixo de 'Bip01 ...') -> osso do Mixamo. Os dois esqueletos olham para -Y em T-pose."""
+    m = {"Pelvis": "Hips", "Spine": "Spine", "Spine1": "Spine1", "Spine2": "Spine2", "Neck": "Neck", "Head": "Head"}
+    for L, lado in (("L", "Left"), ("R", "Right")):
+        m.update({L + " Clavicle": lado + "Shoulder", L + " UpperArm": lado + "Arm", L + " Forearm": lado + "ForeArm", L + " Hand": lado + "Hand",
+                  L + " Thigh": lado + "UpLeg", L + " Calf": lado + "Leg", L + " Foot": lado + "Foot", L + " Toe0": lado + "ToeBase"})
+        for i, dedo in enumerate(("Thumb", "Index", "Middle", "Ring", "Pinky")):
+            for j, suf in enumerate(("", "1", "2")):
+                m[L + " Finger%d%s" % (i, suf)] = lado + "Hand%s%d" % (dedo, j + 1)
+    return {k: "mixamorig:" + v for k, v in m.items()}
+MAPA_MIXAMO = _mapa_mixamo()
 
 REF_TPOSE = "Female_Adult_08"     # T-pose adulta usada como referencia para as criancas
 
@@ -103,9 +123,127 @@ def pose_bracos(arm, desejado, f, tgt_inv, tipo):
         a = (l1 * l1 - l2 * l2 + dist * dist) / (2 * dist); h = max(0.0, l1 * l1 - a * a) ** .5
         p = (polo - u * polo.dot(u)).normalized()
         return ombro + u * a + p * h
+    if tipo.startswith("sentado"):
+        # sentado no banco do carro: coxas para a frente, canelas para baixo (o site abaixa o personagem ate o banco)
+        for L_ in ("L", "R"):
+            th, ca, ft = osso[L_ + " Thigh"], osso[L_ + " Calf"], osso[L_ + " Foot"]
+            sg = -1 if L_ == "L" else 1
+            M_th, _ = mira(th, ca, desejado[th.parent.name], frente * 1.0 + cima * .06 + lado_r * sg * .12)
+            M_ca, _ = mira(ca, ft, M_th, -cima * .9 + frente * .42)
+            dedo = osso.get(L_ + " Toe0")
+            if dedo: mira(ft, dedo, M_ca, frente * 1.0 - cima * .25)
+        if tipo == "sentado_pernas":
+            return
     for lado, sgn in (("L", -1), ("R", 1)):
         ua, fa, hd = osso[lado + " UpperArm"], osso[lado + " Forearm"], osso[lado + " Hand"]
         lado = lado_r * sgn
+        if tipo in ("sentado_entrega", "sentado_entrega_meio") and sgn < 0:
+            # braco esquerdo estendido pela janela, para a FRENTE e para fora (em direcao ao agente), com a palma para BAIXO:
+            # o documento fica preso em pinca, entre o polegar e o indicador
+            from mathutils import Quaternion
+            import math as _m
+            def fixar(b, M_pai, M):
+                desejado[b.name] = M
+                base = M_pai @ b.parent.matrix_local.inverted() @ b.matrix_local
+                pb = arm.pose.bones[b.name]
+                pb.rotation_quaternion = (base.inverted() @ M).to_quaternion(); pb.keyframe_insert("rotation_quaternion", frame=f)
+            l1 = (ua.matrix_local.inverted() @ fa.matrix_local).translation.length
+            l2 = (fa.matrix_local.inverted() @ hd.matrix_local).translation.length
+            L = l1 + l2
+            ombro = (desejado[ua.parent.name] @ (ua.parent.matrix_local.inverted() @ ua.matrix_local)).translation
+            punho = ombro + lado * L * .55 + frente * L * .75 + cima * L * .36        # a frente do ombro, acima do peitoril da janela
+            if tipo == "sentado_entrega_meio":                   # mao diante do peito, ainda dentro do carro
+                punho = ombro + lado * L * .10 + frente * L * .55 + cima * L * .24
+            cot = ik_cotovelo(ombro, punho, l1, l2, lado * 1.0 - frente * .45 + cima * .2)      # cotovelo para fora, apoiado na janela
+            M_ua, _ = mira(ua, fa, desejado[ua.parent.name], cot - ombro)
+            M_fa, _ = mira(fa, hd, M_ua, punho - cot)
+            dir_mao = (frente * .78 + lado * .6 + cima * .05).normalized()
+            d2, d0 = osso.get("L Finger2"), osso.get("L Finger0")
+            if d2 and d0:
+                M_hd, _ = mira(hd, d2, M_fa, dir_mao)
+                # gira a mao em torno do proprio eixo ate o polegar ficar para dentro (palma para baixo)
+                t_cur = (M_hd @ (hd.matrix_local.inverted() @ d0.matrix_local)).translation - M_hd.translation
+                t_cur = (t_cur - dir_mao * t_cur.dot(dir_mao)).normalized()
+                t_des = -(lado * .85 - frente * .5) - cima * .25; t_des = (t_des - dir_mao * t_des.dot(dir_mao)).normalized()
+                ang = t_cur.angle(t_des)
+                if t_cur.cross(t_des).dot(dir_mao) < 0: ang = -ang
+                q = Quaternion(dir_mao, ang) @ M_hd.to_quaternion()
+                M_hd = Matrix.Translation(M_hd.translation) @ q.to_matrix().to_4x4()
+                fixar(hd, M_fa, M_hd)
+                p = dir_mao.cross(t_des).normalized()
+                if p.dot(cima) > 0: p = -p                       # lado da palma (para baixo)
+                # indicador desce ao encontro do polegar (pinca); os outros dedos fecham mais, fora do caminho
+                for k, angulos in ((1, (38, 42)), (2, (62, 70)), (3, (66, 72)), (4, (68, 72))):
+                    Mp, soma = M_hd, 0.0
+                    for j, a in enumerate(angulos):
+                        b = osso.get("L Finger%d%s" % (k, "" if j == 0 else str(j)))
+                        filho = osso.get("L Finger%d%d" % (k, j + 1))
+                        if not (b and filho): break
+                        soma += _m.radians(a)
+                        Mp, _ = mira(b, filho, Mp, dir_mao * _m.cos(soma) + p * _m.sin(soma))
+                d01, d02 = osso.get("L Finger01"), osso.get("L Finger02")
+                if d01:                                          # polegar por baixo, apontando para a ponta do indicador
+                    Mp, _ = mira(d0, d01, M_hd, t_des * .35 + dir_mao * .7 + p * .6)
+                    if d02: mira(d01, d02, Mp, dir_mao * .8 - t_des * .35 + p * .45)
+            continue
+        if tipo in ("sentado", "sentado_parado", "sentado_jogando") or (tipo in ("sentado_entrega", "sentado_entrega_meio") and sgn > 0):
+            # sentado ao volante. "sentado" = dirigindo: maos fechadas no aro, na posicao 10h10, cotovelos dobrados para baixo.
+            # "sentado_parado" (e a mao direita na entrega do documento) = carro parado: maos descansando sobre as coxas.
+            from mathutils import Quaternion
+            import math as _m
+            letra = "L" if sgn < 0 else "R"
+            def fixar2(b, M_pai, M):
+                desejado[b.name] = M
+                base = M_pai @ b.parent.matrix_local.inverted() @ b.matrix_local
+                pb = arm.pose.bones[b.name]
+                pb.rotation_quaternion = (base.inverted() @ M).to_quaternion(); pb.keyframe_insert("rotation_quaternion", frame=f)
+            l1 = (ua.matrix_local.inverted() @ fa.matrix_local).translation.length
+            l2 = (fa.matrix_local.inverted() @ hd.matrix_local).translation.length
+            L = l1 + l2
+            ombro = (desejado[ua.parent.name] @ (ua.parent.matrix_local.inverted() @ ua.matrix_local)).translation
+            if tipo == "sentado":
+                punho = pelve + frente * L * .80 + cima * L * .76 + lado * L * .27
+                polo = -cima * .85 + lado * .5 - frente * .1
+                dir_mao = (frente * .62 + cima * .68 - lado * .32).normalized()      # dedos por cima do aro
+                angs, pol = (58, 66), (.45, .55, .6)
+            elif tipo == "sentado_jogando":      # sentado na maquina caca-niquel: maos a frente, sobre a mesa de botoes
+                punho = pelve + frente * L * .78 + cima * L * .50 + lado * L * (.30 if sgn > 0 else .16)
+                polo = -cima * .8 + lado * .6 - frente * .1
+                dir_mao = (frente * .95 - cima * .22 - lado * .1).normalized()
+                angs, pol = (18, 26), (.7, .6, .2)
+            else:
+                punho = pelve + frente * L * .52 + cima * L * .23 + lado * L * .22
+                polo = lado * .8 - frente * .55 - cima * .15
+                dir_mao = (frente * .93 - cima * .28 - lado * .14).normalized()      # mao aberta sobre a coxa
+                angs, pol = (12, 20), (.75, .55, .15)
+            cot = ik_cotovelo(ombro, punho, l1, l2, polo)
+            M_ua, _ = mira(ua, fa, desejado[ua.parent.name], cot - ombro)
+            M_fa, _ = mira(fa, hd, M_ua, punho - cot)
+            d2, d0 = osso.get(letra + " Finger2"), osso.get(letra + " Finger0")
+            if d2 and d0:
+                M_hd, _ = mira(hd, d2, M_fa, dir_mao)
+                # palma para baixo: o polegar fica do lado de dentro
+                t_cur = (M_hd @ (hd.matrix_local.inverted() @ d0.matrix_local)).translation - M_hd.translation
+                t_cur = (t_cur - dir_mao * t_cur.dot(dir_mao)).normalized()
+                t_des = -lado * .9 + cima * .2; t_des = (t_des - dir_mao * t_des.dot(dir_mao)).normalized()
+                ang = t_cur.angle(t_des)
+                if t_cur.cross(t_des).dot(dir_mao) < 0: ang = -ang
+                q = Quaternion(dir_mao, ang) @ M_hd.to_quaternion()
+                M_hd = Matrix.Translation(M_hd.translation) @ q.to_matrix().to_4x4()
+                fixar2(hd, M_fa, M_hd)
+                p = dir_mao.cross(t_des).normalized()
+                if p.dot(cima) > 0: p = -p                       # lado da palma
+                for k in (1, 2, 3, 4):
+                    Mp, soma = M_hd, 0.0
+                    for j, a in enumerate(angs):
+                        b = osso.get("%s Finger%d%s" % (letra, k, "" if j == 0 else str(j)))
+                        filho = osso.get("%s Finger%d%d" % (letra, k, j + 1))
+                        if not (b and filho): break
+                        soma += _m.radians(a)
+                        Mp, _ = mira(b, filho, Mp, dir_mao * _m.cos(soma) + p * _m.sin(soma))
+                d01 = osso.get(letra + " Finger01")
+                if d01: mira(d0, d01, M_hd, t_des * pol[0] + dir_mao * pol[1] + p * pol[2])
+            continue
         if tipo == "maos_na_cabeca":
             # punho apoiado no alto/atras da cabeca (o osso da cabeca nasce na nuca), maos se encontrando no meio
             l1 = (ua.matrix_local.inverted() @ fa.matrix_local).translation.length
@@ -122,6 +260,14 @@ def pose_bracos(arm, desejado, f, tgt_inv, tipo):
             dir_braco = lado * .88 + cima * .3 - frente * .22
         elif tipo == "maos_nas_costas":
             dir_braco = -cima * .85 - frente * .42 + lado * .14
+        elif tipo == "sentado_entrega" and sgn < 0:      # braco esquerdo para fora da janela, entregando o documento
+            dir_braco = lado * .78 + frente * .5 + cima * .12        # ombro -> cotovelo: para fora e um pouco para cima, por cima do peitoril
+        elif tipo in ("sentado", "sentado_entrega"):                          # maos no volante
+            dir_braco = -cima * .5 + frente * .8 + lado * .12
+        elif tipo == "soprando":                         # em pe, uma mao perto da boca (segurando o bocal)
+            dir_braco = (-cima * .75 + frente * .55 + lado * .2) if sgn > 0 else (-cima * 1.0 + lado * .12)
+        elif tipo in ("apontando", "sentado_apontando"):      # sentado_apontando: pernas de quem esta sentado, bracos empunhando a arma                        # arma empunhada com as duas maos, bracos estendidos a frente
+            dir_braco = frente * .92 - lado * .22 + cima * .04
         else:  # bracos_para_cima
             dir_braco = cima * .9 + frente * .35 + lado * .16
         M_ua, l_ua = mira(ua, fa, desejado[ua.parent.name], dir_braco)
@@ -130,6 +276,14 @@ def pose_bracos(arm, desejado, f, tgt_inv, tipo):
             dir_ante = cabeca + cima * l_ua * .72 - frente * l_ua * .22 + lado * l_ua * .03 - cotovelo   # o osso da cabeca nasce na nuca: topo ~0,7 braco acima
         elif tipo == "maos_nas_costas":
             dir_ante = pelve - frente * l_ua * .5 + cima * l_ua * .05 + lado * l_ua * .04 - cotovelo
+        elif tipo == "sentado_entrega" and sgn < 0:
+            dir_ante = lado * .95 + cima * .22 + frente * .05
+        elif tipo in ("sentado", "sentado_entrega"):
+            dir_ante = frente * .9 + cima * .3 - lado * .12
+        elif tipo == "soprando":
+            dir_ante = (cabeca + frente * l_ua * .45 - cima * l_ua * .1 - cotovelo) if sgn > 0 else (-cima * .9 + frente * .3)
+        elif tipo in ("apontando", "sentado_apontando"):      # sentado_apontando: pernas de quem esta sentado, bracos empunhando a arma
+            dir_ante = frente * .9 - lado * .3 + cima * .06
         else:
             dir_ante = cima * .95 + frente * .22 + lado * .04
         M_fa, _ = mira(fa, hd, M_ua, dir_ante)
@@ -137,7 +291,7 @@ def pose_bracos(arm, desejado, f, tgt_inv, tipo):
             # dedos apontando para a outra mao, por cima/atras da cabeca (maos entrelacadas)
             mira(hd, lado_, M_fa, -lado * .85 + cima * .15 - frente * .25)
 
-def redirecionar(src, arm, rest_ref, ini, fim, fator, passo=2, pose=None, no_lugar=False):
+def redirecionar(src, arm, rest_ref, ini, fim, fator, passo=2, pose=None, no_lugar=False, mapa=None, do_inicio=False):
     """Passa a animacao do esqueleto src para arm. Os FBX de animacao do Rocketbox vem com a pose do 1o quadro
     gravada como repouso, entao a rotacao de cada osso e comparada com a T-pose de um personagem adulto
     (rest_ref) no espaco do mundo e aplicada sobre a T-pose deste personagem (funciona tambem nas criancas,
@@ -149,7 +303,7 @@ def redirecionar(src, arm, rest_ref, ini, fim, fator, passo=2, pose=None, no_lug
         ordem.append(b); [visita(c) for c in b.children]
     for b in arm.data.bones:
         if b.parent is None: visita(b)
-    ossos_src = {sufixo(b.name): b.name for b in src.data.bones}
+    ossos_src = {k: v for k, v in mapa.items() if v in src.data.bones} if mapa else {sufixo(b.name): b.name for b in src.data.bones}      # mapa: esqueleto do Mixamo
     pares = [(b, ossos_src.get(sufixo(b.name)) if sufixo(b.name) in rest_ref else None) for b in ordem]
     rest_tgt = repouso_mundo(arm)
     acao = bpy.data.actions.new('retarget'); arm.animation_data.action = acao
@@ -171,6 +325,8 @@ def redirecionar(src, arm, rest_ref, ini, fim, fator, passo=2, pose=None, no_lug
                 w = (src.matrix_world @ src.pose.bones[ns].matrix).translation
                 if no_lugar:
                     xy0 = xy0 or (w.x, w.y); w = Vector((xy0[0], xy0[1], w.z))
+                elif do_inicio:            # animacao cortada no meio: o quadril comeca em cima da origem do personagem
+                    xy0 = xy0 or (w.x, w.y); w = Vector((w.x - xy0[0], w.y - xy0[1], w.z))
                 pos = tgt_inv @ (w * fator)
             else:
                 pos = b.matrix_local.translation
@@ -198,8 +354,8 @@ def reduzir(img, nome, dados):
     import numpy as np
     w, h = img.size
     px = np.empty(w * h * 4, np.float32); img.pixels.foreach_get(px)      # forca a leitura dos pixels
-    if w > 1024:
-        f = w // 1024
+    if True:                                                             # sempre copia para uma imagem nova (salvar a original em outro caminho falha)
+        f = max(1, w // 1024)
         px = px.reshape(h, w, 4)[::f, ::f].copy()                        # reduz 2048 -> 1024
         w, h = px.shape[1], px.shape[0]
         nova = bpy.data.images.new(nome, w, h, alpha=True)
@@ -249,7 +405,7 @@ manifesto = {}
 for papel, (pasta, anims) in PAPEIS.items():
     fbx = os.path.join(RB, pasta, pasta + ".fbx")
     saida = os.path.join(WEB, papel + ".glb")
-    fontes = [fbx] + [os.path.join(RB, "Animacoes", a.split("+")[0] + ".fbx") for a in anims.values()] + [os.path.abspath(__file__)]
+    fontes = [fbx] + [os.path.join(MIX, a[7:].split("@")[0] + ".fbx") if a.startswith("mixamo:") else os.path.join(RB, "Animacoes", a.split("+")[0] + ".fbx") for a in anims.values()] + [os.path.abspath(__file__)]
     if not os.path.exists(fbx):
         say("AVISO: %s nao encontrado (baixe pelo LEIA-ME)" % fbx); continue
     if os.path.exists(saida) and (os.environ.get("SO", papel) != papel or not FORCAR and os.path.getmtime(saida) > max(os.path.getmtime(f) for f in fontes if os.path.exists(f))):   # SO=crianca: so esse papel
@@ -278,7 +434,9 @@ for papel, (pasta, anims) in PAPEIS.items():
     arm.animation_data_create()
     for nome, a in anims.items():
         a, _, pose = a.partition("+")                       # "arquivo+pose" = animacao com pose ajustada
-        caminho = os.path.join(RB, 'Animacoes', a + '.fbx')
+        mixamo = a.startswith("mixamo:")
+        a, _, corte = a.partition("@")                      # "mixamo:arquivo@quadro" = comeca nesse quadro
+        caminho = os.path.join(MIX, a[7:] + '.fbx') if mixamo else os.path.join(RB, 'Animacoes', a + '.fbx')
         if not os.path.exists(caminho):
             say('AVISO: animacao %s nao encontrada' % a); continue
         antes = set(bpy.data.objects)
@@ -289,8 +447,14 @@ for papel, (pasta, anims) in PAPEIS.items():
         acao = src.animation_data.action if src and src.animation_data and src.animation_data.action else None
         if acao:
             ini, fim = acao.frame_range[0], min(acao.frame_range[1], acao.frame_range[0] + 450)   # ate 15 s (loop)
+            if corte: ini = float(corte)
             arm.location, arm.rotation_euler = base_loc, base_rot
-            assada = redirecionar(src, arm, rest_ref, ini, fim, fator, pose=pose or None, no_lugar=a.startswith(('m_run', 'm_walk', 'f_run', 'f_walk')))
+            if mixamo:      # T-pose do proprio Mixamo como referencia; quadril dele a 1,04 m
+                ref_mx = {k: rot(src.matrix_world @ src.data.bones[v].matrix_local) for k, v in MAPA_MIXAMO.items() if v in src.data.bones}
+                h_mx = (src.matrix_world @ src.data.bones[MAPA_MIXAMO["Pelvis"]].head_local).z
+                assada = redirecionar(src, arm, ref_mx, ini, fim, raiz_z / h_mx, mapa=MAPA_MIXAMO, do_inicio=bool(corte))
+            else:
+                assada = redirecionar(src, arm, rest_ref, ini, fim, fator, pose=pose or None, no_lugar=a.startswith(('m_run', 'm_walk', 'f_run', 'f_walk')))
             assada.name = nome; assada.use_fake_user = True
             tr = arm.animation_data.nla_tracks.new(); tr.name = nome
             st = tr.strips.new(nome, int(ini), assada); tr.mute = True

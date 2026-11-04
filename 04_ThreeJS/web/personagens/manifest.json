@@ -6,7 +6,10 @@
    "falando",
    "estressada",
    "nervosa",
-   "ofegante"
+   "ofegante",
+   "morrendo_a",
+   "morrendo_b",
+   "morrendo_tras"
   ]
  },
  "agressor": {
@@ -24,7 +27,10 @@
    "algemado_andando",
    "escalando",
    "maos_cabeca",
-   "levantando"
+   "levantando",
+   "morrendo_a",
+   "morrendo_b",
+   "morrendo_tras"
   ]
  },
  "crianca": {
@@ -38,7 +44,10 @@
   "arquivo": "personagens/vizinho.glb",
   "animacoes": [
    "parada",
-   "falando"
+   "falando",
+   "morrendo_a",
+   "morrendo_b",
+   "morrendo_tras"
   ]
  }
 }
