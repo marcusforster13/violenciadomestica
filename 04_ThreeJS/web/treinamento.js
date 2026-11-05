@@ -289,7 +289,8 @@ export async function iniciar(ctx) {
     // primeira pose ate a queda comecar. Desloca as chaves para o clipe comecar em 0: cai na hora do tiro
     for (const clip of base.animations) if (/^morrendo/.test(clip.name)) {
       const t0 = Math.min(...clip.tracks.map(t => t.times[0]));
-      if (t0 > 0) { for (const t of clip.tracks) for (let i = 0; i < t.times.length; i++) t.times[i] -= t0; clip.resetDuration(); }
+      // varias trilhas (ossos) dividem a mesma lista de tempos do glTF: desloca cada lista uma vez so
+      if (t0 > 0) { for (const tempos of new Set(clip.tracks.map(t => t.times))) for (let i = 0; i < tempos.length; i++) tempos[i] -= t0; clip.resetDuration(); }
     }
     for (const clip of base.animations) acoes[clip.name.replace(/\.\d+$/, '')] = mixer.clipAction(clip);
     const parada = acoes.parada || Object.values(acoes)[0];
