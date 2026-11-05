@@ -581,14 +581,19 @@ export async function iniciar(ctx) {
     });
     return raiz;
   }
+  // desenha uma copia minuscula na frente da camera por alguns segundos: o navegador prepara os materiais antes do primeiro uso
+  function aquecer(obj) {
+    const c = obj.clone(true); c.position.set(0, 0, -1); c.scale.setScalar(1e-4); c.visible = true; camera.add(c);
+    setTimeout(() => camera.remove(c), 4000);
+  }
   // pistola (mesmo modelo do cassino): cano para -Z, boca em (0, 0, -0,15)
   const pistola = new THREE.Group(); pistola.visible = false;
-  gl.loadAsync('modelos/pistola.glb').then(g => pistola.add(realcar(g.scene))).catch(() => { });
+  gl.loadAsync('modelos/pistola.glb').then(g => { pistola.add(realcar(g.scene)); aquecer(g.scene); }).catch(() => { });
   // taser do autor (taser/ = controlador e regras do pacote TaserVR): raiz no centro da empunhadura, frente para +Z
   const taser = new THREE.Group(); taser.visible = false; let taserItem = null;
   Promise.all([gl.loadAsync('modelos/taser.glb'), import('./taser/TaserVRController.mjs')]).then(([g, m]) => {
     taserItem = new m.TaserVRController(g, { capacity: 2, onUse: e => descargaTaser(e) });     // 2 cartuchos, como o modelo de dois disparos
-    taserItem.root.position.set(0, 0, 0); taserItem.root.rotation.set(0, Math.PI, 0); taser.add(taserItem.root); realcar(taserItem.root);
+    taserItem.root.position.set(0, 0, 0); taserItem.root.rotation.set(0, Math.PI, 0); taser.add(taserItem.root); realcar(taserItem.root); aquecer(taserItem.root);
   }).catch(e => console.warn('Taser não carregou:', e));
   // mira laser do taser (ponto vermelho) e fios das sondas
   const laser = new THREE.Mesh(new THREE.SphereGeometry(.012, 8, 6), new THREE.MeshBasicMaterial({ color: 0xff2020, toneMapped: false, fog: false }));
@@ -634,12 +639,15 @@ export async function iniciar(ctx) {
     const g = new THREE.Group(), geo = new THREE.PlaneGeometry(tam, tam);
     const a = new THREE.Mesh(geo, matFlash), b = new THREE.Mesh(geo, matFlash), c = new THREE.Mesh(geo, matFlash);
     b.rotation.y = Math.PI / 2; b.scale.x = 1.5; c.rotation.x = Math.PI / 2; c.scale.y = 1.5; g.add(a, b, c);
-    const l = new THREE.PointLight(0xffc880, 0, 10, 2); g.add(l); g.userData.luz = l; g.visible = false; return g;
+    g.visible = false; return g;
   }
   const fumacas = [], geoFum = new THREE.SphereGeometry(.5, 12, 8);
   function acenderFlash(f) {
-    f.rotation.z = Math.random() * 6.28; f.scale.setScalar(.75 + Math.random() * .6); f.visible = true; f.userData.luz.intensity = 9;
-    setTimeout(() => { f.userData.luz.intensity = 3; }, 40); setTimeout(() => { f.visible = false; f.userData.luz.intensity = 0; }, 85);
+    // luz do clarao: o flash da camera fotografica (sempre na cena; luz nova faria o navegador recompilar todos os materiais)
+    f.rotation.z = Math.random() * 6.28; f.scale.setScalar(.75 + Math.random() * .6); f.visible = true;
+    flash.color.setHex(0xffc880); flash.distance = 10; flash.intensity = 9;
+    setTimeout(() => { flash.intensity = 3; }, 40);
+    setTimeout(() => { f.visible = false; flash.intensity = 0; flash.color.setHex(0xffffff); flash.distance = 6; }, 85);
     f.getWorldPosition(GT);
     const m = new THREE.Mesh(geoFum, new THREE.MeshBasicMaterial({ color: 0xbfbfbf, transparent: true, opacity: .22, depthWrite: false }));
     m.position.copy(GT); m.scale.setScalar(.04); scene.add(m); fumacas.push({ f: m, t: 0, v: new THREE.Vector3(0, .25, 0), s0: .04, cres: .22, vida: 1.1, op: .22 });
@@ -690,6 +698,16 @@ export async function iniciar(ctx) {
     const m = marcas.length >= 40 ? marcas.shift() : new THREE.Mesh(geoMarca, matMarca), n = h.face.normal.clone().transformDirection(h.object.matrixWorld);
     m.position.copy(h.point).addScaledVector(n, .004); m.lookAt(h.point.clone().add(n)); scene.add(m); marcas.push(m);
   }
+  // os materiais do tiro sao desenhados uma vez, minusculos na frente da camera, logo ao abrir: o navegador ja deixa tudo pronto
+  // e o primeiro disparo sai sem travar
+  (() => {
+    const g = new THREE.Group(); g.position.set(0, 0, -1); g.scale.setScalar(1e-4); camera.add(g);
+    g.add(criarFlash(), new THREE.Mesh(geoFum, new THREE.MeshBasicMaterial({ color: 0xbfbfbf, transparent: true, opacity: .22, depthWrite: false })),
+      new THREE.Mesh(geoCaps, matCaps), new THREE.Mesh(geoGota, matGota), new THREE.Mesh(geoMarca, matMarca),
+      new THREE.Mesh(geoMancha, new THREE.MeshBasicMaterial({ map: texSangue, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, toneMapped: false, color: 0x9a9a9a })));
+    g.children[0].visible = true;
+    setTimeout(() => camera.remove(g), 4000);
+  })();
   function efeitosArmas(dt) {
     for (let i = fumacas.length - 1; i >= 0; i--) {
       const o = fumacas[i]; o.t += dt; o.f.position.addScaledVector(o.v, dt); o.f.scale.setScalar(o.s0 + o.t * o.cres); o.f.material.opacity = o.op * Math.max(0, 1 - o.t / o.vida);
