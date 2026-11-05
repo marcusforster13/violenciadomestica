@@ -285,6 +285,12 @@ export async function iniciar(ctx) {
     m.traverse(o => { if (o.isMesh) o.frustumCulled = false; });
     g.add(m);
     const mixer = new THREE.AnimationMixer(m), acoes = {};
+    // quedas do Mixamo: o glTF guarda o tempo do corte (o clipe comeca em ~0,8-1 s) e o personagem ficava parado na
+    // primeira pose ate a queda comecar. Desloca as chaves para o clipe comecar em 0: cai na hora do tiro
+    for (const clip of base.animations) if (/^morrendo/.test(clip.name)) {
+      const t0 = Math.min(...clip.tracks.map(t => t.times[0]));
+      if (t0 > 0) { for (const t of clip.tracks) for (let i = 0; i < t.times.length; i++) t.times[i] -= t0; clip.resetDuration(); }
+    }
     for (const clip of base.animations) acoes[clip.name.replace(/\.\d+$/, '')] = mixer.clipAction(clip);
     const parada = acoes.parada || Object.values(acoes)[0];
     if (parada) { parada.play(); parada.time = Math.random() * parada.getClip().duration; }

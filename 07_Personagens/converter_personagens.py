@@ -25,7 +25,7 @@ PAPEIS = {
     "vitima":   ("Female_Adult_08", {"parada": "f_idle_nervous_01", "falando": "f_gestic_talk_sad_01",
                                      "estressada": "f_gestic_talk_femalestressed_01", "nervosa": "f_gestic_talk_nervous_01",
                                      "ofegante": "f_idle_breathe_01",
-                                     "morrendo_a": "mixamo:morte_a@7", "morrendo_b": "mixamo:morte_b@25", "morrendo_tras": "mixamo:morte_sentado@19"}),
+                                     "morrendo_a": "mixamo:morte_a@32", "morrendo_b": "mixamo:morte_b@25", "morrendo_tras": "mixamo:morte_sentado@23"}),
     "agressor": ("Male_Adult_01",   {"parada": "m_idle_angry_01", "falando": "m_gestic_talk_neutral_01",
                                      "nervoso": "m_idle_nervous_01", "escondido": "m_crouch_idle",
                                      "rendido": "m_crouch_idle+maos_na_cabeca", "correndo": "m_run_fast_01",
@@ -34,10 +34,10 @@ PAPEIS = {
                                      "algemado_andando": "m_walk_fast_01+maos_nas_costas",
                                      "escalando": "m_idle_neutral_01+bracos_para_cima",
                                      "maos_cabeca": "m_idle_neutral_01+maos_na_cabeca", "levantando": "m_crouch_out",
-                                     "morrendo_a": "mixamo:morte_a@7", "morrendo_b": "mixamo:morte_b@25", "morrendo_tras": "mixamo:morte_sentado@19"}),      # quedas ao levar um tiro (Mixamo)
+                                     "morrendo_a": "mixamo:morte_a@32", "morrendo_b": "mixamo:morte_b@25", "morrendo_tras": "mixamo:morte_sentado@23"}),      # quedas ao levar um tiro (Mixamo)
     "crianca":  ("Female_Child_01", {"parada": "f_crouch_idle", "ofegante": "f_idle_breathe_01"}),
     "vizinho":  ("Male_Adult_14",   {"parada": "m_idle_neutral_01", "falando": "m_gestic_talk_neutral_01",
-                                     "morrendo_a": "mixamo:morte_a@7", "morrendo_b": "mixamo:morte_b@25", "morrendo_tras": "mixamo:morte_sentado@19"}),
+                                     "morrendo_a": "mixamo:morte_a@32", "morrendo_b": "mixamo:morte_b@25", "morrendo_tras": "mixamo:morte_sentado@23"}),
 }
 
 MIX = os.path.join(AQUI, "mixamo")      # animacoes do Mixamo baixadas pelo autor (sem malha, 30 qps); fora do repositorio
