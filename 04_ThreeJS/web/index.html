@@ -494,6 +494,15 @@ import('./treinamento.js').then(m => m.iniciar({
   lanternaLigada: () => lantOn, colisao: () => alvosCol,
   setYaw: y => { yaw = y; pitch = 0; }
 })).catch(e => console.error('Treinamento não carregou:', e));
+/* ---------- monitoramento pelo instrutor (portal XPTO VR) ----------
+   So carrega com ?monitor=1 (aluno transmite) ou ?espectador=1 (tela do instrutor). Sem isso, nada muda. */
+{
+  const q = new URLSearchParams(location.search);
+  if (q.has('monitor') || q.has('espectador'))
+    import('./monitor.js').then(m => m.iniciar({ scene, camera, rig, renderer, modo: q.has('espectador') ? 'espectador' : 'aluno',
+      fase: 'casa', cenarios: ["treinamento/cenario_vd_01.json"], modos: [["unico", "Iniciar a ocorrência"]] }))
+      .catch(e => console.warn('Monitoramento não carregou:', e));
+}
 </script>
 </body>
 </html>

@@ -1784,6 +1784,9 @@ export async function iniciar(ctx) {
   bt.onclick = aviso; document.getElementById('acoes')?.prepend(bt);
 
   window.__trein = {
+    _mon: { legenda, personagem, animar, menu, dialogo, relatorio, rig, camera, estado: S, ocorrencia: () => (typeof A !== 'undefined' ? A : null),
+      ...(typeof sacar === 'function' ? { sacar } : {}), ...(typeof portas === 'object' ? { portas } : {}),
+      ...(typeof carregarPapeis === 'function' ? { carregarPapeis } : {}), ...(typeof iniciarCrise === 'function' ? { iniciarCrise } : {}) },   // so para o monitor.js (monitoramento do instrutor)
     clique: ray => usar(ray),
     apontar, painelAberto: () => paineis.some(p => p.mesh.visible),
     gatilho: (ray, c) => usar(ray, c), roleta: roletaQuest,
